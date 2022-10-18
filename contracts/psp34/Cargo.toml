@@ -1,0 +1,90 @@
+[package]
+name ="psp34"
+version = "0.1.0"
+authors = ["Astar <mario@stake.co.jp>"]
+edition = "2018"
+
+license = "MIT"
+readme = "README.md"
+repository = "https://github.com/rmrk-team/rmrk-ink"
+homepage = "https://rmrk.app/"
+description = "ink! implementation of RMRK v2 protocol."
+keywords = ["wasm", "smart-contracts", "ink"]
+categories = ["no-std", "embedded"]
+# include = ["Cargo.toml", "src/**/*.rs"]
+
+[dependencies]
+ink_primitives = { version = "~3.3.0", default-features = false }
+ink_metadata = { version = "~3.3.0", default-features = false, features = ["derive"], optional = true }
+ink_env = { version = "~3.3.0", default-features = false }
+ink_storage = { version = "~3.3.0", default-features = false }
+ink_lang = { version = "~3.3.0", default-features = false }
+ink_prelude = { version = "~3.3.0", default-features = false }
+ink_engine = { version = "~3.3.0", default-features = false, optional = true }
+
+scale = { package = "parity-scale-codec", version = "3", default-features = false, features = ["derive"] }
+scale-info = { version = "2", default-features = false, features = ["derive"], optional = true }
+
+openbrush = { version = "2.2.0", default-features = false }
+# openbrush_lang = { version = "~2.2.0", path = "lang", default-features = false }
+
+[lib]
+name = "psp34"
+path = "lib.rs"
+crate-type = ["cdylib"]
+# [lib]
+# name = "openbrush"
+# path = "src/lib.rs"
+# crate-type = [
+#     "rlib",
+# ]
+
+[features]
+default = ["std"]
+std = [
+    "ink_metadata/std",
+    "ink_env/std",
+    "ink_storage/std",
+    "ink_primitives/std",
+    "scale/std",
+    "scale-info/std",
+
+    # "openbrush_contracts/std",
+    # "openbrush_lang/std",
+]
+# psp22 = ["openbrush_contracts/psp22"]
+# psp22_pallet = ["openbrush_contracts/psp22_pallet"]
+# psp34 = ["openbrush_contracts/psp34"]
+# psp37 = ["openbrush_contracts/psp37"]
+# access_control = ["openbrush_contracts/access_control"]
+# ownable = ["openbrush_contracts/ownable"]
+# payment_splitter = ["openbrush_contracts/payment_splitter"]
+# reentrancy_guard = ["openbrush_contracts/reentrancy_guard"]
+# pausable = ["openbrush_contracts/pausable"]
+# timelock_controller = ["openbrush_contracts/timelock_controller"]
+# proxy = ["openbrush_contracts/proxy"]
+# diamond = ["openbrush_contracts/diamond"]
+
+# test-all = [
+#     "psp22",
+#     # "psp22_pallet", we ignore it during testing. It requries it own run of tests
+#     "psp34",
+#     "psp37",
+#     "access_control",
+#     "ownable",
+#     "payment_splitter",
+#     "reentrancy_guard",
+#     "pausable",
+#     "timelock_controller",
+#     "proxy",
+#     "diamond",
+# ]
+
+[profile.release]
+panic = "abort"
+lto = true
+
+[profile.dev]
+panic = "abort"
+lto = true
+overflow-checks = false
