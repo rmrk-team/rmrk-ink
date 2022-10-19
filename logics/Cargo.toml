@@ -1,5 +1,5 @@
 [package]
-name = "rmrk_contract"
+name = "rmrk"
 version = "0.1.0"
 authors = ["Stake Technologies <devops@stake.co.jp>"]
 edition = "2021"
@@ -15,12 +15,12 @@ ink_prelude = { version = "~3.3.0", default-features = false }
 scale = { package = "parity-scale-codec", version = "3", default-features = false, features = ["derive"] }
 scale-info = { version = "2", default-features = false, features = ["derive"], optional = true }
 
-openbrush = { version = "2.2.0", default-features = false, features = ["ownable"] }
-rmrk = { path = "../../logics", default-features = false }
+openbrush = { version = "2.2.0", default-features = false, features = ["psp34", "ownable", "reentrancy_guard"] }
+primitive-types = { version = "0.11.1", default-features = false, features = ["num-traits"] }
 
 [lib]
 path = "lib.rs"
-crate-type = ["cdylib"]
+crate-type = ["rlib"]
 
 [features]
 default = ["std"]
@@ -35,6 +35,5 @@ std = [
     "scale-info",
     "scale-info/std",
     "openbrush/std",
-    "rmrk/std"
+    "primitive-types/std"
 ]
-ink-as-dependency = []
