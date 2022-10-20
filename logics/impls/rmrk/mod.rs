@@ -1,2 +1,2 @@
-pub mod data;
 pub mod mint;
+pub mod mint_data;
