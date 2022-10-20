@@ -2,7 +2,7 @@
 #![feature(min_specialization)]
 
 #[openbrush::contract]
-pub mod rmrk {
+pub mod rmrk_contract {
     // imports from ink!
     use ink_prelude::string::String;
     use ink_storage::traits::SpreadAllocate;
@@ -16,9 +16,10 @@ pub mod rmrk {
         traits::Storage,
     };
     // local imports
-    // use rmrk::traits::mint::RMRKMintable;
-    // use rmrk::traits::errors::RmrkError;
-    // use rmrk::impls::*;
+    use rmrk::traits::mint::*;
+    // use rmrk::traits::mint::RMRKMintableRef;
+    use rmrk::impls::rmrk::*;
+    // use rmrk::impls::rmrk::mint::*;
 
     #[ink(storage)]
     #[derive(Default, SpreadAllocate, Storage)]
@@ -29,6 +30,8 @@ pub mod rmrk {
         guard: reentrancy_guard::Data,
         #[storage_field]
         ownable: ownable::Data,
+        #[storage_field]
+        rmrk_core: data::Data,
         #[storage_field]
         metadata: metadata::Data,
     }
@@ -44,7 +47,7 @@ pub mod rmrk {
         }
     }
     impl PSP34Metadata for Rmrk {}
-    // impl RMRKMintable for Rmrk {}
+    impl RMRKMintable for Rmrk {}
 
     impl Rmrk {
         #[ink(constructor)]
@@ -58,12 +61,12 @@ pub mod rmrk {
                 _instance._set_attribute(
                     collection_id.clone(),
                     String::from("name").into_bytes(),
-                    String::from("MyPSP34").into_bytes(),
+                    String::from("MyRmrk").into_bytes(),
                 );
                 _instance._set_attribute(
                     collection_id,
                     String::from("symbol").into_bytes(),
-                    String::from("MPSP").into_bytes(),
+                    String::from("RMK").into_bytes(),
                 );
             })
         }
