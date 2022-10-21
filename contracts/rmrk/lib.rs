@@ -30,7 +30,6 @@ pub mod rmrk_contract {
         minting: mint_data::Data,
         #[storage_field]
         metadata: metadata::Data,
-        max_supply: u32,
     }
 
     // Section contains default implementation without any modifications
@@ -44,7 +43,7 @@ pub mod rmrk_contract {
         pub fn new(
             name: String,
             symbol: String,
-            max_supply: u32,
+            max_supply: u128,
             _price_per_mint: Balance,
             collection_metadata: String,
             token_uri: String,
@@ -65,11 +64,7 @@ pub mod rmrk_contract {
                     String::from("symbol").into_bytes(),
                     String::from(symbol).into_bytes(),
                 );
-                // _instance._set_attribute(
-                //     collection_id.clone(),
-                //     String::from("price").into_bytes(),
-                //     price_per_mint.into_bytes(),
-                // );
+
                 _instance._set_attribute(
                     collection_id.clone(),
                     String::from("tokenUri").into_bytes(),
@@ -80,7 +75,8 @@ pub mod rmrk_contract {
                     String::from("collection_metadata").into_bytes(),
                     String::from(collection_metadata).into_bytes(),
                 );
-                _instance.max_supply = max_supply;
+                _instance.minting.max_supply = max_supply;
+                _instance.minting.price_per_mint = _price_per_mint;
             })
         }
     }
