@@ -1,22 +1,15 @@
-use openbrush::{
-    // contracts::{
-    //     reentrancy_guard::*,
-    //     traits::{ownable::*, pausable::*, psp34::PSP34Error},
-    // },
-    modifiers,
-    traits::AccountId,
-};
-
 use crate::traits::errors::RmrkError;
+use openbrush::contracts::psp34::*;
+use openbrush::{modifiers, traits::AccountId};
 
 #[openbrush::wrapper]
-pub type RMRKMintableRef = dyn RMRKMintable;
+pub type RmrkMintableRef = dyn RmrkMintable;
 
 #[openbrush::trait_definition]
-pub trait RMRKMintable {
+pub trait RmrkMintable {
     #[ink(message)]
     #[modifiers(non_reentrant)]
-    fn mint_multiple(&mut self, owner: AccountId, amount: u16) -> Result<(), RmrkError>;
+    fn _mint_to(&mut self, _to: AccountId, _nft_id: Id) -> Result<(), RmrkError>;
 
     // fn nft_mint_directly_to_nft(&self, parent: AccountIdOrCollectionNftTuple) -> Result<(), RmrkError>;
 }
