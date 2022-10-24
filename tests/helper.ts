@@ -24,11 +24,11 @@ export const setupContract = async (name, constructor, ...args) => {
 
     return {
         deployer: alice,
-        bob,
         contract,
+        bob,
         abi,
-        // query: contract.query,
-        // tx: contract.tx
+        query: contract.query,
+        tx: contract.tx
     }
 }
 

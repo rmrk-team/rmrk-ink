@@ -9,18 +9,18 @@ describe('Minting tests', () => {
     async function setup() {
         const royaltyAccount = await getWallet()
         const zero_address = "0x0000000000000000000000000000000000000000000000000000000000000000"
-        const {contract, deployer, bob} = await setupContract(
+        let contract_factory = await setupContract(
             'rmrk_contract', 'new', 'nameRMRK', 'RMK', MAX_SUPPLY, 1000, 'ipfs://collectionmetadata', 'ipfs://tokenUriPrefix', encodeAddress(zero_address), 0)
 
         return {
-            deployer,
-            bob,
-            contract,
+            deployer: contract_factory.deployer,
+            contract: contract_factory.contract,
+            bob: contract_factory.bob
         }
     }
 
     it('create collection works', async () => {
-        const { deployer, bob, contract } = await setup()
+        const { deployer, contract, bob } = await setup()
         console.log("testing in progress")
 
         await expect(contract.query["minting::maxSupply"]()).to.eventually.have.property('output').to.equal(MAX_SUPPLY)
