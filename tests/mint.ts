@@ -3,43 +3,27 @@ import { expect } from "chai";
 import { encodeAddress } from "@polkadot/keyring"
 import * as BN from "bn.js";
 
-describe('FACTORY', () => {
+const MAX_SUPPLY = 888;
+
+describe('Minting tests', () => {
     async function setup() {
-        const wallet = await getWallet()
-        let pair = await setupContract('rmrk_contract', 'new')
-        let pair_code_hash = (await pair.abi).source.hash
-        let factory_contract =  await setupContract('factory_contract', 'new', wallet.address, pair_code_hash)
+        const royaltyAccount = await getWallet()
+        const zero_address = "0x0000000000000000000000000000000000000000000000000000000000000000"
+        const {contract, deployer, bob} = await setupContract(
+            'rmrk_contract', 'new', 'nameRMRK', 'RMK', MAX_SUPPLY, 1000, 'ipfs://collectionmetadata', 'ipfs://tokenUriPrefix', encodeAddress(zero_address), 0)
+
         return {
-            wallet,
-            deployer: factory_contract.deployer,
-            alice: factory_contract.alice,
-            contract: factory_contract.contract,
+            deployer,
+            bob,
+            contract,
         }
     }
 
-    // async function setup_psp22() {
-    //     const wallet = await getWallet()
-    //     let token_1 = await setupContract('psp22_token', 'new', new BN(10000000))
-    //     let token_2 = await setupContract('psp22_token', 'new', new BN(10000000))
-    //     let pair = await setupContract('pair_contract', 'new')
-    //     let pair_code_hash = (await pair.abi).source.hash
-    //     let factory_contract =  await setupContract('factory_contract', 'new', wallet.address, pair_code_hash)
-    //     return {
-    //         wallet,
-    //         deployer: factory_contract.deployer,
-    //         alice: factory_contract.alice,
-    //         contract: factory_contract.contract,
-    //         token_1: token_1.contract,
-    //         token_2: token_2.contract
-    //     }
-    // }
-
-    it('feeTo, feeToSetter, allPairsLength', async () => {
-        const { contract, wallet } = await setup()
+    it('create collection works', async () => {
+        const { deployer, bob, contract } = await setup()
         console.log("testing in progress")
 
-        // const zero_address = "0x0000000000000000000000000000000000000000000000000000000000000000"
-        // await expect(contract.query["factory::feeTo"]()).to.eventually.have.property('output').to.equal(encodeAddress(zero_address))
+        await expect(contract.query["minting::maxSupply"]()).to.eventually.have.property('output').to.equal(MAX_SUPPLY)
         // await expect(contract.query["factory::feeToSetter"]()).to.eventually.have.property('output').to.equal(wallet.address)
         // await expect(contract.query["factory::allPairLength"]()).to.eventually.have.property('output').to.equal(0)
     })

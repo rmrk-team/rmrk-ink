@@ -27,8 +27,8 @@ export const setupContract = async (name, constructor, ...args) => {
         bob,
         contract,
         abi,
-        query: contract.query,
-        tx: contract.tx
+        // query: contract.query,
+        // tx: contract.tx
     }
 }
 
