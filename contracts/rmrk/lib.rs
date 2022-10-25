@@ -27,7 +27,7 @@ pub mod rmrk_contract {
         #[storage_field]
         ownable: ownable::Data,
         #[storage_field]
-        minting: mint_data::Data,
+        minting: data::Data,
         #[storage_field]
         metadata: metadata::Data,
     }
@@ -46,7 +46,7 @@ pub mod rmrk_contract {
             max_supply: u128,
             _price_per_mint: Balance,
             collection_metadata: String,
-            token_uri: String,
+            base_uri: String,
             _royalty_receiver: AccountId,
             _royalty: u8,
         ) -> Self {
@@ -67,8 +67,8 @@ pub mod rmrk_contract {
 
                 _instance._set_attribute(
                     collection_id.clone(),
-                    String::from("tokenUri").into_bytes(),
-                    String::from(token_uri).into_bytes(),
+                    String::from("baseUri").into_bytes(),
+                    String::from(base_uri).into_bytes(),
                 );
                 _instance._set_attribute(
                     collection_id.clone(),

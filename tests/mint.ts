@@ -2,15 +2,19 @@ import {getWallet, setupContract} from './helper'
 import { expect } from "chai";
 import { encodeAddress } from "@polkadot/keyring"
 import * as BN from "bn.js";
+import { u32 } from '@polkadot/types-codec';
 
 const MAX_SUPPLY = 888;
+const PRICE_PER_MINT = 1000;
+const TOKEN_URI = "ipfs://tokenUriPrefix/";
+const TOKEN_URI_1 = "ipfs://tokenUriPrefix/1.json";
 
 describe('Minting tests', () => {
     async function setup() {
         const royaltyAccount = await getWallet()
         const zero_address = "0x0000000000000000000000000000000000000000000000000000000000000000"
         let contract_factory = await setupContract(
-            'rmrk_contract', 'new', 'nameRMRK', 'RMK', MAX_SUPPLY, 1000, 'ipfs://collectionmetadata', 'ipfs://tokenUriPrefix', encodeAddress(zero_address), 0)
+            'rmrk_contract', 'new', 'nameRMRK', 'RMK', MAX_SUPPLY, PRICE_PER_MINT, 'ipfs://collectionmetadata', TOKEN_URI, encodeAddress(zero_address), 0)
 
         return {
             deployer: contract_factory.deployer,
@@ -21,37 +25,36 @@ describe('Minting tests', () => {
 
     it('create collection works', async () => {
         const { deployer, contract, bob } = await setup()
-        console.log("testing in progress")
 
-        await expect(contract.query["minting::maxSupply"]()).to.eventually.have.property('output').to.equal(MAX_SUPPLY)
-        // await expect(contract.query["factory::feeToSetter"]()).to.eventually.have.property('output').to.equal(wallet.address)
-        // await expect(contract.query["factory::allPairLength"]()).to.eventually.have.property('output').to.equal(0)
+        await expect(contract.query["psp34::totalSupply"]()).to.eventually.have.property('output').to.equal(0);
+        await expect(contract.query["ownable::owner"]()).to.eventually.have.property('output').to.equal(deployer.address);
+
+        // console.log("contract.query", contract.query)
+        await expect(contract.query["rmrkMintable::maxSupply"]()).to.eventually.have.property('output').to.equal(MAX_SUPPLY);
+        await expect(contract.query["rmrkMintable::pricePerMint"]()).to.eventually.have.property('output').to.equal(PRICE_PER_MINT);
+        
+    })
+    
+    it('mint 1 token works', async () => {
+        const { deployer, contract, bob } = await setup()
+        
+        console.log("contract.query", contract.query)
+        await expect(contract.query["psp34::totalSupply"]()).to.eventually.have.property('output').to.equal(0);
+        const result = await contract.connect(bob).tx["rmrkMintable::mint"](bob.address, 1, {value: PRICE_PER_MINT})
+        await expect(contract.query["psp34::totalSupply"]()).to.eventually.have.property('output').to.equal(1);
+        await expect(contract.query["rmrkMintable::tokenUri"](1)).to.eventually.have.property('output').to.equal(TOKEN_URI_1);
+        
+        const output_uri = await contract.query["rmrkMintable::tokenUri"](1);
+        console.log(output_uri.output?.toHuman());
+
     })
 
-    // it('create pair', async () => {
-    //     const { contract, token_1, token_2 } = await setup_psp22()
-
-    //     await expect(contract.query["factory::allPairLength"]()).to.eventually.have.property('output').to.equal(0)
-    //     await expect(contract.tx["factory::createPair"](token_1.address, token_2.address)).to.eventually.be.fulfilled
-    //     await expect(contract.query["factory::allPairLength"]()).to.eventually.have.property('output').to.equal(1)
-    // })
-
-    // it('set fee', async () => {
-    //     const { contract, token_1, wallet } = await setup_psp22()
-
-    //     const zero_address = "0x0000000000000000000000000000000000000000000000000000000000000000"
-    //     await expect(contract.query["factory::feeTo"]()).to.eventually.have.property('output').to.equal(encodeAddress(zero_address))
-    //     await expect(contract.tx["factory::setFeeTo"](token_1.address)).to.eventually.be.rejected
-    //     await contract.connect(wallet).tx["factory::setFeeTo"](token_1.address)
-    //     await expect(contract.query["factory::feeTo"]()).to.eventually.have.property('output').to.equal(token_1.address)
-    // })
-
-    // it('set fee setter', async () => {
-    //     const { contract, token_1, wallet } = await setup_psp22()
-
-    //     await expect(contract.query["factory::feeToSetter"]()).to.eventually.have.property('output').to.equal(wallet.address)
-    //     await expect(contract.tx["factory::setFeeToSetter"](token_1.address)).to.eventually.be.rejected
-    //     await contract.connect(wallet).tx["factory::setFeeToSetter"](token_1.address)
-    //     await expect(contract.query["factory::feeToSetter"]()).to.eventually.have.property('output').to.equal(token_1.address)
-    // })
+    it('mint 5 tokens works', async () => {
+        const { deployer, contract, bob } = await setup()
+        
+        await expect(contract.query["psp34::totalSupply"]()).to.eventually.have.property('output').to.equal(0);
+        const result = await contract.connect(bob).tx["rmrkMintable::mint"](bob.address, 5, {value: 5 * PRICE_PER_MINT})
+        await expect(contract.query["psp34::totalSupply"]()).to.eventually.have.property('output').to.equal(5);
+        await expect(contract.query["rmrkMintable::tokenUri"](1)).to.eventually.have.property('output').to.equal(TOKEN_URI_1);
+    })
 })
