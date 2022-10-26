@@ -43,7 +43,7 @@ pub mod rmrk_contract {
         pub fn new(
             name: String,
             symbol: String,
-            max_supply: u128,
+            max_supply: u64,
             _price_per_mint: Balance,
             collection_metadata: String,
             base_uri: String,

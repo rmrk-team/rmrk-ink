@@ -63,19 +63,18 @@ describe('Minting tests', () => {
     it('token transfer works', async () => {
         const { owner, contract, bob } = await setup()
         
-        // let owner mint 1 token
         await expect(contract.query["psp34::totalSupply"]()).to.eventually.have.property('output').to.equal(0);
+
+        // let owner mint 1 token
         const result = await contract.connect(owner).tx["rmrkMintable::mint"](owner.address, 1, {value: PRICE_PER_MINT})
         await expect(contract.query["psp34::totalSupply"]()).to.eventually.have.property('output').to.equal(1);
         await expect(contract.query["psp34::balanceOf"](owner.address)).to.eventually.have.property('output').to.equal(1);
+        await expect(contract.query["psp34::ownerOf"]({u64:1})).to.eventually.have.property('output').to.equal(owner.address);
         
-        // owner transfers token to bob
-        // const transfer_result = await contract.query["psp34::transfer"](bob.address, 1, []);
-        // console.log("transfer", transfer_result.output?.toString());
-        // const transfer_result = await contract.connect(owner).tx['transfer'](bob.address, 1, []);
-        // console.log("transfer", transfer_result.result.toString());
-
-        // await expect(contract.query["psp34::balanceOf"](bob.address)).to.eventually.have.property('output').to.equal(1);
-
+        // Owner transfers token to Bob
+        await expect(contract.query["psp34::balanceOf"](bob.address)).to.eventually.have.property('output').to.equal(0);
+        await expect(contract.tx["psp34::transfer"](bob.address, {u64:1}, [])).to.eventually.be.fulfilled
+        await expect(contract.query["psp34::balanceOf"](bob.address)).to.eventually.have.property('output').to.equal(1);
+        await expect(contract.query["psp34::ownerOf"]({u64:1})).to.eventually.have.property('output').to.equal(bob.address);
     })
 })

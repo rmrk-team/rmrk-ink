@@ -20,39 +20,42 @@ where
 {
     /// Mint new tokens
     #[modifiers(non_reentrant)]
-    default fn mint(&mut self, to: AccountId, mint_amount: u128) -> Result<(), RmrkError> {
+    default fn mint(&mut self, to: AccountId, mint_amount: u64) -> Result<(), RmrkError> {
         // self.data::<ownable::Data>().owner = _to;
         ink_env::debug_println!("####### mint RMRK contract amount:{:?}", mint_amount);
         if mint_amount == 0 {
             return Err(RmrkError::CannotMintZeroTokens);
         }
-        if self.data::<psp34::Data>().total_supply() + mint_amount
+        if self.data::<data::Data>().last_minted_token_id + mint_amount
             > self.data::<data::Data>().max_supply
         {
             ink_env::debug_println!("####### error CollectionFullOrLocked");
             return Err(RmrkError::CollectionFullOrLocked);
         }
-        if Self::env().transferred_value() != mint_amount * self.data::<data::Data>().price_per_mint
+        if Self::env().transferred_value()
+            != mint_amount as u128 * self.data::<data::Data>().price_per_mint
         {
             ink_env::debug_println!("####### error MintUnderpriced");
             return Err(RmrkError::MintUnderpriced);
         }
-        let next_to_mint = self.data::<psp34::Data>().total_supply() + 1; // first mint id is 1
+
+        let next_to_mint = self.data::<data::Data>().last_minted_token_id + 1; // first mint id is 1
         let mint_offset = next_to_mint + mint_amount;
 
         for mint_id in next_to_mint..mint_offset {
             ink_env::debug_println!("####### mint id:{:?}", mint_id);
             assert!(self
                 .data::<psp34::Data>()
-                ._mint_to(to, Id::U32(mint_id as u32))
+                ._mint_to(to, Id::U64(mint_id))
                 .is_ok());
+            self.data::<data::Data>().last_minted_token_id += 1;
         }
 
         Ok(())
     }
 
     /// Maximum amount of mintable tokens in this contract
-    default fn max_supply(&self) -> u128 {
+    default fn max_supply(&self) -> u64 {
         self.data::<data::Data>().max_supply
     }
 

@@ -14,13 +14,13 @@ pub trait RmrkMintable {
     /// Mint new tokens
     #[ink(message, payable)]
     #[modifiers(non_reentrant)]
-    fn mint(&mut self, to: AccountId, mint_amount: u128) -> Result<(), RmrkError>;
+    fn mint(&mut self, to: AccountId, mint_amount: u64) -> Result<(), RmrkError>;
 
     // fn nft_mint_directly_to_nft(&self, parent: AccountIdOrCollectionNftTuple) -> Result<(), RmrkError>;
 
     /// Maximum amount of mintable tokens in this contract
     #[ink(message)]
-    fn max_supply(&self) -> u128;
+    fn max_supply(&self) -> u64;
 
     /// The price to mint a single token in this contract
     #[ink(message)]
