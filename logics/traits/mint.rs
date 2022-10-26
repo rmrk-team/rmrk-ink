@@ -1,15 +1,32 @@
 use crate::traits::errors::RmrkError;
-use openbrush::contracts::psp34::*;
-use openbrush::{modifiers, traits::AccountId};
+// use openbrush::contracts::psp34::*;
+use ink_prelude::string::String;
+use openbrush::{
+    modifiers,
+    traits::{AccountId, Balance},
+};
 
 #[openbrush::wrapper]
 pub type RmrkMintableRef = dyn RmrkMintable;
 
 #[openbrush::trait_definition]
 pub trait RmrkMintable {
-    #[ink(message)]
+    /// Mint new tokens
+    #[ink(message, payable)]
     #[modifiers(non_reentrant)]
-    fn _mint_to(&mut self, _to: AccountId, _nft_id: Id) -> Result<(), RmrkError>;
+    fn mint(&mut self, to: AccountId, mint_amount: u64) -> Result<(), RmrkError>;
 
     // fn nft_mint_directly_to_nft(&self, parent: AccountIdOrCollectionNftTuple) -> Result<(), RmrkError>;
+
+    /// Maximum amount of mintable tokens in this contract
+    #[ink(message)]
+    fn max_supply(&self) -> u64;
+
+    /// The price to mint a single token in this contract
+    #[ink(message)]
+    fn price_per_mint(&self) -> Balance;
+
+    /// Get URI from token ID
+    #[ink(message)]
+    fn token_uri(&self, token_id: u32) -> String;
 }

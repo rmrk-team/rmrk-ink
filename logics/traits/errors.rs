@@ -10,7 +10,9 @@ pub enum RmrkError {
     OwnableError(OwnableError),
     PausableError(PausableError),
     ReentrancyGuardError(ReentrancyGuardError),
-    CannotMintMultiple,
+    CannotMintZeroTokens,
+    CollectionFullOrLocked,
+    MintUnderpriced,
 }
 
 impl From<OwnableError> for RmrkError {
