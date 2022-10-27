@@ -1,9 +1,8 @@
 use crate::impls::rmrk::data;
-pub use crate::traits::{
-    errors::RmrkError,
-    mint::{RmrkMintable, RmrkMintableRef},
-};
+use crate::impls::rmrk::errors::RmrkError;
+pub use crate::traits::mint::{RmrkMintable, RmrkMintableRef};
 use ink_prelude::string::{String, ToString};
+use uniques_extension::*;
 
 use openbrush::{
     contracts::{psp34::*, reentrancy_guard::*},
@@ -51,6 +50,20 @@ where
             self.data::<data::Data>().last_minted_token_id += 1;
         }
 
+        Ok(())
+    }
+
+    /// Create new collection
+    default fn create_collection(&mut self) -> Result<(), RmrkError> {
+        ink_env::debug_println!("####### creating Uniques collection");
+        let create_result = UniquesExt::create(
+            // collection_id
+            0,
+        );
+        ink_env::debug_println!(
+            "####### initializing RMRK contract, create_result: {:?}",
+            create_result
+        );
         Ok(())
     }
 

@@ -16,6 +16,11 @@ pub mod rmrk_contract {
     // local imports
     use rmrk::impls::rmrk::*;
     use rmrk::traits::mint::*;
+    // chain extension for pallet_uniques
+    // use uniques_extension::*;
+
+    // set CollectionDeposit to the value defined for the node runtime
+    pub const CollectionDeposit: Balance = 10 * 1_000_000_000_000_000;
 
     #[ink(storage)]
     #[derive(Default, SpreadAllocate, Storage)]

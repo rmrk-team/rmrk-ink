@@ -2,6 +2,7 @@ use openbrush::contracts::{
     reentrancy_guard::*,
     traits::{ownable::*, pausable::*, psp34::PSP34Error},
 };
+use uniques_extension::UniquesError;
 
 #[derive(Debug, PartialEq, Eq, scale::Encode, scale::Decode)]
 #[cfg_attr(feature = "std", derive(scale_info::TypeInfo))]
@@ -10,6 +11,7 @@ pub enum RmrkError {
     OwnableError(OwnableError),
     PausableError(PausableError),
     ReentrancyGuardError(ReentrancyGuardError),
+    UniquesError(UniquesError),
     CannotMintZeroTokens,
     CollectionFullOrLocked,
     MintUnderpriced,
