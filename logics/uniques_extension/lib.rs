@@ -1,9 +1,9 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
 use ink_env::{
-    // AccountId,
-    DefaultEnvironment,
-    Environment,
+    AccountId,
+    // DefaultEnvironment,
+    // Environment,
 };
 use scale::{
     Decode,
@@ -25,6 +25,16 @@ impl UniquesExt {
             .output::<()>()
             .handle_error_code::<UniquesError>()
             .call(&(collection_id))
+    }
+
+    /// Mint an item in Uniques pallet
+    pub fn mint(collection_id: u32, item_id: u32, to: AccountId) -> Result<(), UniquesError> {
+        ::ink_env::chain_extension::ChainExtensionMethod::build(0x000200A1)
+            // .input::<(Vec<u8>, Option<u32>, Vec<u8>)>()
+            .input::<(u32, u32, AccountId)>()
+            .output::<()>()
+            .handle_error_code::<UniquesError>()
+            .call(&(collection_id, item_id, to))
     }
 
     // pub fn read_unbonding_period() -> u32 {

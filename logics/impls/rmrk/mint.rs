@@ -43,11 +43,23 @@ where
 
         for mint_id in next_to_mint..mint_offset {
             ink_env::debug_println!("####### mint id:{:?}", mint_id);
+            // mint in this contract
             assert!(self
                 .data::<psp34::Data>()
                 ._mint_to(to, Id::U64(mint_id))
                 .is_ok());
             self.data::<data::Data>().last_minted_token_id += 1;
+
+            // mint in pallet
+            let mint_result = UniquesExt::mint(
+                0,          // collection_id
+                mint_id.try_into().unwrap(),    // item_id
+                to,
+            );
+            ink_env::debug_println!(
+                "####### minting in pallet, mint_result: {:?}",
+                mint_result
+            );
         }
 
         Ok(())
