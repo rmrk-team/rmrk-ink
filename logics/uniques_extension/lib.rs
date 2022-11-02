@@ -1,16 +1,11 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
-use ink_env::{
-    AccountId,
-    // DefaultEnvironment,
-    // Environment,
-};
+use ink_env::AccountId;
 use scale::{
     Decode,
     Encode,
     // HasCompact,
 };
-
 
 // type Balance = <DefaultEnvironment as Environment>::Balance;
 
@@ -37,16 +32,15 @@ impl UniquesExt {
             .call(&(collection_id, item_id, to))
     }
 
-    // pub fn read_unbonding_period() -> u32 {
-    //     ::ink_env::chain_extension::ChainExtensionMethod::build(0002u32)
-    //         .input::<()>()
-    //         .output::<u32>()
-    //         .ignore_error_code()
-    //         .call(&())
-    // }
-
+    /// Transfer an item in Uniques pallet
+    pub fn transfer(collection_id: u32, item_id: u32, to: AccountId) -> Result<(), UniquesError> {
+        ::ink_env::chain_extension::ChainExtensionMethod::build(0x000200A2)
+            .input::<(u32, u32, AccountId)>()
+            .output::<()>()
+            .handle_error_code::<UniquesError>()
+            .call(&(collection_id, item_id, to))
+    }
 }
-
 
 #[cfg_attr(feature = "std", derive(scale_info::TypeInfo))]
 #[derive(PartialEq, Eq, Copy, Clone, Encode, Decode, Debug)]
@@ -104,8 +98,11 @@ impl ink_env::chain_extension::FromStatusCode for UniquesError {
             0 => Ok(()),
             1 => Err(Self::NoPermission),
             2 => Err(Self::UnknownCollection),
-
-            
+            3 => Err(Self::AlreadyExists),
+            4 => Err(Self::WrongOwner),
+            5 => Err(Self::BadWitness),
+            6 => Err(Self::InUse),
+            7 => Err(Self::Frozen),
 
             99 => Err(Self::UnknownError),
             _ => panic!("encountered unknown status code"),
@@ -117,4 +114,4 @@ impl From<scale::Error> for UniquesError {
     fn from(_: scale::Error) -> Self {
         panic!("encountered unexpected invalid SCALE encoding")
     }
-}            
+}

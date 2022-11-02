@@ -52,14 +52,11 @@ where
 
             // mint in pallet
             let mint_result = UniquesExt::mint(
-                0,          // collection_id
-                mint_id.try_into().unwrap(),    // item_id
+                self.data::<data::Data>().rmrk_collection_id, // collection_id
+                mint_id.try_into().unwrap(),                  // item_id
                 to,
             );
-            ink_env::debug_println!(
-                "####### minting in pallet, mint_result: {:?}",
-                mint_result
-            );
+            ink_env::debug_println!("####### minting in pallet, mint_result: {:?}", mint_result);
         }
 
         Ok(())
@@ -68,10 +65,7 @@ where
     /// Create new collection
     default fn create_collection(&mut self) -> Result<(), RmrkError> {
         ink_env::debug_println!("####### creating Uniques collection");
-        let create_result = UniquesExt::create(
-            // collection_id
-            0,
-        );
+        let create_result = UniquesExt::create(self.data::<data::Data>().rmrk_collection_id);
         ink_env::debug_println!(
             "####### initializing RMRK contract, create_result: {:?}",
             create_result

@@ -9,6 +9,7 @@ const {getContractFactory, getRandomSigner} = patract
 const {getSigners} = network
 
 const ONE = new BN(10).pow(new BN(api.registry.chainDecimals[0]))
+const COLLECTION_DEPOSIT = ONE;
 
 export const setupContract = async (name, constructor, ...args) => {
     await api.isReady
@@ -19,7 +20,7 @@ export const setupContract = async (name, constructor, ...args) => {
     await buildTx(api.registry, api.tx.balances.transfer(alice.address, ONE.muln(1000)), signer.address)
     const bob = await getRandomSigner(signers[1], ONE.muln(100000))
     const contractFactory = await getContractFactory(name, alice)
-    const contract = await contractFactory.deploy(constructor, ...args)
+    const contract = await contractFactory.deploy(constructor, {value: COLLECTION_DEPOSIT}, ...args)
     const abi = artifacts.readArtifact(name)
 
     return {
@@ -28,7 +29,7 @@ export const setupContract = async (name, constructor, ...args) => {
         bob,
         abi,
         query: contract.query,
-        tx: contract.tx
+        tx: contract.tx,
     }
 }
 
