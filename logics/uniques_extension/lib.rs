@@ -4,7 +4,6 @@ use ink_env::AccountId;
 use scale::{
     Decode,
     Encode,
-    // HasCompact,
 };
 
 // type Balance = <DefaultEnvironment as Environment>::Balance;
@@ -39,6 +38,32 @@ impl UniquesExt {
             .output::<()>()
             .handle_error_code::<UniquesError>()
             .call(&(collection_id, item_id, to))
+    }
+
+    /// Approve the operator for the item in Uniques pallet
+    pub fn approve_transfer(
+        collection_id: u32,
+        item_id: u32,
+        operator: AccountId,
+    ) -> Result<(), UniquesError> {
+        ::ink_env::chain_extension::ChainExtensionMethod::build(0x000200A3)
+            .input::<(u32, u32, AccountId)>()
+            .output::<()>()
+            .handle_error_code::<UniquesError>()
+            .call(&(collection_id, item_id, operator))
+    }
+
+    /// Cancel approval for the item's operator in Uniques pallet
+    pub fn cancel_approval(
+        collection_id: u32,
+        item_id: u32,
+        maybe_check_delegate: AccountId,
+    ) -> Result<(), UniquesError> {
+        ::ink_env::chain_extension::ChainExtensionMethod::build(0x000200A4)
+            .input::<(u32, u32, AccountId)>()
+            .output::<()>()
+            .handle_error_code::<UniquesError>()
+            .call(&(collection_id, item_id, maybe_check_delegate))
     }
 }
 
@@ -91,7 +116,7 @@ pub enum UniquesError {
     UnknownError = 99,
     UnImplemented = 100,
 }
-
+// TODO check new/changed error codes in latest pallet_uniques
 impl ink_env::chain_extension::FromStatusCode for UniquesError {
     fn from_status_code(status_code: u32) -> Result<(), Self> {
         match status_code {
@@ -102,8 +127,19 @@ impl ink_env::chain_extension::FromStatusCode for UniquesError {
             4 => Err(Self::WrongOwner),
             5 => Err(Self::BadWitness),
             6 => Err(Self::InUse),
-            7 => Err(Self::Frozen),
-
+            7 => Err(Self::WrongDelegate),
+            8 => Err(Self::NoDelegate),
+            9 => Err(Self::Unapproved),
+            10 => Err(Self::Unaccepted),
+            11 => Err(Self::Locked),
+            12 => Err(Self::MaxSupplyReached),
+            13 => Err(Self::MaxSupplyAlreadySet),
+            14 => Err(Self::MaxSupplyTooSmall),
+            15 => Err(Self::NextIdNotUsed),
+            16 => Err(Self::NotForSale),
+            17 => Err(Self::BidTooLow),
+            18 => Err(Self::NextIdNotUsed),
+            19 => Err(Self::UnImplemented),
             99 => Err(Self::UnknownError),
             _ => panic!("encountered unknown status code"),
         }

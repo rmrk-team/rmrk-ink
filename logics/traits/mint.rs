@@ -1,5 +1,4 @@
 use crate::impls::rmrk::errors::RmrkError;
-// use openbrush::contracts::psp34::*;
 use ink_prelude::string::String;
 use openbrush::{
     modifiers,
@@ -16,11 +15,8 @@ pub trait RmrkMintable {
     #[modifiers(non_reentrant)]
     fn mint(&mut self, to: AccountId, mint_amount: u64) -> Result<(), RmrkError>;
 
+    // #[ink(message)]
     // fn nft_mint_directly_to_nft(&self, parent: AccountIdOrCollectionNftTuple) -> Result<(), RmrkError>;
-
-    /// Create new collection
-    #[ink(message, payable)]
-    fn create_collection(&mut self) -> Result<(), RmrkError>;
 
     /// Maximum amount of mintable tokens in this contract
     #[ink(message)]

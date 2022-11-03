@@ -122,5 +122,39 @@ pub mod rmrk_contract {
             ink_env::debug_println!("####### !!!!! TransferFailed");
             Err(PSP34Error::Custom("TransferFailed".to_string()))
         }
+
+        #[ink(message)]
+        fn approve(
+            &mut self,
+            operator: AccountId,
+            id: Option<Id>,
+            approved: bool,
+        ) -> Result<(), PSP34Error> {
+            ink_env::debug_println!(
+                "####### approve ({:?},{:?}) approved{:?} operator:{:?}",
+                self.minting.rmrk_collection_id,
+                id,
+                approved,
+                operator,
+            );
+            self._approve_for(operator, id.clone(), approved)?;
+            ink_env::debug_println!("####### _approve_for OK");
+            if let Some(Id::U64(token_id)) = id {
+                if token_id > u32::MAX as u64 {
+                    return Err(PSP34Error::Custom("TokenIdOverflow".to_string()));
+                }
+                // Uniques pallet is defined to take u32 as item/token id
+                UniquesExt::approve_transfer(
+                    self.minting.rmrk_collection_id,
+                    token_id as u32,
+                    operator,
+                )
+                .map_err(|_| PSP34Error::Custom("UniquesApproveFailed".to_string()))?;
+                ink_env::debug_println!("####### approve OK");
+                return Ok(());
+            }
+            ink_env::debug_println!("####### !!!!! ApproveFailed");
+            Err(PSP34Error::Custom("ApproveFailed".to_string()))
+        }
     }
 }

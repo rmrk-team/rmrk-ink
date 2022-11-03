@@ -62,17 +62,6 @@ where
         Ok(())
     }
 
-    /// Create new collection
-    default fn create_collection(&mut self) -> Result<(), RmrkError> {
-        ink_env::debug_println!("####### creating Uniques collection");
-        let create_result = UniquesExt::create(self.data::<data::Data>().rmrk_collection_id);
-        ink_env::debug_println!(
-            "####### initializing RMRK contract, create_result: {:?}",
-            create_result
-        );
-        Ok(())
-    }
-
     /// Maximum amount of mintable tokens in this contract
     default fn max_supply(&self) -> u64 {
         self.data::<data::Data>().max_supply
