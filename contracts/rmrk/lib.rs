@@ -101,13 +101,25 @@ pub mod rmrk_contract {
     impl PSP34 for Rmrk {
         #[ink(message)]
         fn transfer(&mut self, to: AccountId, id: Id, data: Vec<u8>) -> Result<(), PSP34Error> {
+            ink_env::debug_println!(
+                "####### transfer ({:?},{:?}) to:{:?}",
+                self.minting.rmrk_collection_id,
+                id,
+                to
+            );
             self._transfer_token(to, id.clone(), data)?;
-            if let Id::U32(token_id) = id {
-                UniquesExt::transfer(self.minting.rmrk_collection_id, token_id, to)
+            ink_env::debug_println!("####### _transfer_token OK");
+            if let Id::U64(token_id) = id {
+                if token_id > u32::MAX as u64 {
+                    return Err(PSP34Error::Custom("TokenIdOverflow".to_string()));
+                }
+                // Uniques pallet is defined to take u32 as item/token id
+                UniquesExt::transfer(self.minting.rmrk_collection_id, token_id as u32, to)
                     .map_err(|_| PSP34Error::Custom("UniquesTransferFailed".to_string()))?;
+                ink_env::debug_println!("####### transfer OK");
                 return Ok(());
             }
-
+            ink_env::debug_println!("####### !!!!! TransferFailed");
             Err(PSP34Error::Custom("TransferFailed".to_string()))
         }
     }
