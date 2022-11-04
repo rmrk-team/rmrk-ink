@@ -18,9 +18,10 @@ export const setupContract = async (name, constructor, ...args) => {
     // @ts-ignore
     const alice = createSigner(signer, new Keyring({ type: 'sr25519'}).addFromUri('//Alice'));
     await buildTx(api.registry, api.tx.balances.transfer(alice.address, ONE.muln(1000)), signer.address)
-    const bob = await getRandomSigner(signers[1], ONE.muln(100000))
+    const bob = createSigner(signer, new Keyring({ type: 'sr25519'}).addFromUri('//Bob'));
+    await buildTx(api.registry, api.tx.balances.transfer(alice.address, ONE.muln(1000)), signer.address)
     const contractFactory = await getContractFactory(name, alice)
-    const contract = await contractFactory.deploy(constructor, {value: COLLECTION_DEPOSIT}, ...args)
+    const contract = await contractFactory.deploy(constructor, ...args,  {value: '1000000000000000000'})
     const abi = artifacts.readArtifact(name)
 
     return {
@@ -29,9 +30,10 @@ export const setupContract = async (name, constructor, ...args) => {
         bob,
         abi,
         query: contract.query,
-        tx: contract.tx,
+        tx: contract.tx
     }
 }
+
 
 export const attachContract = async (name, address) => {
     await api.isReady
