@@ -96,7 +96,7 @@ describe('Minting tests', () => {
         await expect(contract.query["psp34::balanceOf"](bob.address)).to.eventually.have.property('output').to.equal(new BN("1"));
 
         // verify that the owner in the Uniques pallet is Bob
-        await expect((await api.query.uniques.asset(uniquesCollectionId, 1)).toHuman().owner).to.be.equal(bob.address);
+        await expect((await api.query.uniques.asset(uniquesCollectionId, 1)).toHuman()?.owner).to.be.equal(bob.address);
 
         // Bob transfers token to Owner
         await expect(contract.connect(bob).tx["psp34::transfer"](owner.address, {u64:1}, [])).to.be.eventually.fulfilled;
@@ -104,7 +104,30 @@ describe('Minting tests', () => {
         await expect(contract.query["psp34::balanceOf"](bob.address)).to.eventually.have.property('output').to.equal(0);
         await expect(contract.query["psp34::ownerOf"]({u64:1})).to.eventually.have.property('output').to.equal(owner.address);
 
-        // verify that the owner in the Uniques pallet os "owner"
-        await expect((await api.query.uniques.asset(uniquesCollectionId, 1)).toHuman().owner).to.be.equal(owner.address);
+        // verify that the owner in the Uniques pallet is "owner"
+        await expect((await api.query.uniques.asset(uniquesCollectionId, 1)).toHuman()?.owner).to.be.equal(owner.address);
+    })
+
+    it('token aprove works', async () => {
+        const { owner, contract, bob, uniquesCollectionId } = await setup();
+        
+        // Bob mints 1 token
+        await expect(contract.connect(bob).tx["rmrkMintable::mint"](bob.address, 1, {value: PRICE_PER_MINT})).to.be.eventually.fulfilled;
+        await expect(contract.query["psp34::balanceOf"](bob.address)).to.eventually.have.property('output').to.equal(new BN("1"));
+
+        // verify that the owner in the Uniques pallet is Bob
+        await expect((await api.query.uniques.asset(uniquesCollectionId, 1)).toHuman()?.owner).to.be.equal(bob.address);
+        await expect(contract.query["psp34::ownerOf"]({u64:1})).to.eventually.have.property('output').to.equal(bob.address);
+        
+        // Bob approves owner to be operator of the token
+        await expect(contract.connect(bob).tx["psp34::approve"](owner.address, {u64:1}, true)).to.be.eventually.fulfilled;
+        await expect(contract.query["psp34::allowance"](bob.address, owner.address, {u64:1})).to.eventually.have.property('output').to.equal(true);
+        
+        // verify that Bob is still the owner
+        await expect((await api.query.uniques.asset(uniquesCollectionId, 1)).toHuman()?.owner).to.be.equal(bob.address);
+        await expect(contract.query["psp34::ownerOf"]({u64:1})).to.eventually.have.property('output').to.equal(bob.address);
+
+        // verify allowance in Uniques pallet
+        await expect((await api.query.uniques.asset(uniquesCollectionId, 1)).toHuman()?.approved).to.be.equal(owner.address);
     })
 })
