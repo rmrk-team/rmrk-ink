@@ -43,7 +43,7 @@ pub mod rmrk_contract {
     impl RmrkMintable for Rmrk {}
 
     impl Rmrk {
-        #[ink(constructor, payable)]
+        #[ink(constructor)]
         pub fn new(
             name: String,
             symbol: String,
@@ -83,17 +83,19 @@ pub mod rmrk_contract {
                 _instance.minting.max_supply = max_supply;
                 _instance.minting.price_per_mint = _price_per_mint;
 
-                assert!(_instance.env().transferred_value() >= COLLECTION_DEPOSIT);
-                if let Id::Bytes(data) = collection_id {
-                    let collection = u32::from_le_bytes(data[0..4].try_into().unwrap());
+
+                // assert!(_instance.env().transferred_value() >= COLLECTION_DEPOSIT);
+                _instance.minting.rmrk_collection_id = tmp_collection_id;
+                // if let Id::Bytes(data) = collection_id {
+                    // let collection = u32::from_le_bytes(data[0..4].try_into().unwrap());
                     // _instance.minting.rmrk_collection_id = collection.clone(); TODO use this after uniques supports collection_id as input
-                    _instance.minting.rmrk_collection_id = tmp_collection_id;
-                    let create_result = UniquesExt::create(collection);
-                    ink_env::debug_println!(
-                        "####### initializing RMRK contract, create_result: {:?}",
-                        create_result
-                    );
-                }
+                    // TODO uncomment below code when RMRKminting::create is removed
+                    // let create_result = UniquesExt::create(collection);
+                    // ink_env::debug_println!(
+                    //     "####### initializing RMRK contract, create_result: {:?}",
+                    //     create_result
+                    // );
+                // }
             })
         }
     }
@@ -120,7 +122,7 @@ pub mod rmrk_contract {
                 return Ok(());
             }
             ink_env::debug_println!("####### !!!!! TransferFailed");
-            Err(PSP34Error::Custom("TransferFailed".to_string()))
+            Err(PSP34Error::Custom("TransferFailedxxx".to_string()))
         }
 
         #[ink(message)]

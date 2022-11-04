@@ -10,6 +10,10 @@ pub type RmrkMintableRef = dyn RmrkMintable;
 
 #[openbrush::trait_definition]
 pub trait RmrkMintable {
+    /// Create new collection
+    #[ink(message, payable)]
+    fn create_collection(&mut self) -> Result<(), RmrkError>;
+
     /// Mint new tokens
     #[ink(message, payable)]
     #[modifiers(non_reentrant)]
