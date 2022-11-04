@@ -17,5 +17,6 @@ git clone https://github.com/rmrk-team/rmrk-ink.git
 3. Compile & Build
 
 ```sh
+cd ./rmrk-ink/contracts/rmrk
 cargo +nightly-2022-08-15 contract build
 ```
