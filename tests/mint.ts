@@ -10,6 +10,7 @@ const { api } = network;
 const MAX_SUPPLY = 888;
 const TOKEN_URI = "ipfs://tokenUriPrefix/";
 const TOKEN_URI_1 = "ipfs://tokenUriPrefix/1.json";
+const TOKEN_URI_5 = "ipfs://tokenUriPrefix/5.json";
 const ONE = new BN(10).pow(new BN(18));
 const PRICE_PER_MINT = ONE;
 
@@ -26,7 +27,6 @@ describe('Minting tests', () => {
 
         // workaround to send some funds to contract during instantiation
         const result = await contract_factory.contract.connect(contract_factory.deployer).tx["rmrkMintable::createCollection"]({value: ONE.muln(1)})
-        // console.log("createCollection:", result);
 
         return {
             owner: contract_factory.deployer,
@@ -37,7 +37,7 @@ describe('Minting tests', () => {
     }
     
     it('create collection works', async () => {
-        const { owner, contract, uniquesCollectionId } = await setup()
+        const { owner, contract, uniquesCollectionId } = await setup();
 
         await expect(contract.query["psp34::totalSupply"]()).to.eventually.have.property('output').to.equal(0);
         await expect(contract.query["ownable::owner"]()).to.eventually.have.property('output').to.equal(owner.address);
@@ -48,20 +48,18 @@ describe('Minting tests', () => {
         
         // check that the collection is created in the Uniques pallet
         const unique_response = await api.query.uniques.class<u32>(uniquesCollectionId);
-        // console.log("uniques class response", unique_response.toHuman());
-        // console.log("owner:", owner.address.toString());
-        // console.log("contract:", contract.address.toString());
+
         expect(unique_response.toHuman().owner).to.be.eq(contract.address.toString());
     })
     
     it('mint 1 token works', async () => {
-        const { uniquesCollectionId, owner, contract, bob } = await setup()
+        const { uniquesCollectionId, contract, bob } = await setup();
         const tokenId = 1;
 
         await expect(contract.query["psp34::totalSupply"]()).to.eventually.have.property('output').to.equal(0);
 
-        // mint TODO: how to check result is ok?
-        await contract.connect(bob).tx["rmrkMintable::mint"](bob.address, tokenId, {value: PRICE_PER_MINT})
+        // mint
+        await expect(contract.connect(bob).tx["rmrkMintable::mint"](bob.address, 1, {value: PRICE_PER_MINT})).to.be.eventually.fulfilled;
 
         // verify minting results
         await expect(contract.query["psp34::totalSupply"]()).to.eventually.have.property('output').to.equal(new BN("1"));
@@ -72,34 +70,41 @@ describe('Minting tests', () => {
         await expect(contract.query["rmrkMintable::tokenUri"](1)).to.eventually.have.property('output').to.equal(TOKEN_URI_1);
         
         // verify that the item is created in the Uniques pallet
-        await expect((await api.query.uniques.asset(uniquesCollectionId, tokenId)).toHuman().owner).to.be.equal(bob.address);
+        await expect((await api.query.uniques.asset(uniquesCollectionId, tokenId)).toHuman()?.owner).to.be.equal(bob.address);
 
     })
 
-    // it('mint 5 tokens works', async () => {
-    //     const { owner, contract, bob } = await setup()
+    it('mint 5 tokens works', async () => {
+        const { contract, bob, uniquesCollectionId} = await setup();
         
-    //     await expect(contract.query["psp34::totalSupply"]()).to.eventually.have.property('output').to.equal(0);
-    //     const result = await contract.connect(bob).tx["rmrkMintable::mint"](bob.address, 5, {value: 5 * PRICE_PER_MINT})
-    //     await expect(contract.query["psp34::totalSupply"]()).to.eventually.have.property('output').to.equal(5);
-    //     await expect(contract.query["rmrkMintable::tokenUri"](1)).to.eventually.have.property('output').to.equal(TOKEN_URI_1);
-    // })
+        await expect(contract.query["psp34::totalSupply"]()).to.eventually.have.property('output').to.equal(0);
+        await expect(contract.connect(bob).tx["rmrkMintable::mint"](bob.address, 5, {value: PRICE_PER_MINT.muln(5)})).to.be.eventually.fulfilled;
+        await expect(contract.query["psp34::totalSupply"]()).to.eventually.have.property('output').to.equal(new BN("5"));
+        await expect(contract.query["rmrkMintable::tokenUri"](5)).to.eventually.have.property('output').to.equal(TOKEN_URI_5);
+        await expect(contract.query["psp34::ownerOf"]({u64: 5})).to.eventually.have.property('output').to.equal(bob.address);
 
-    // it('token transfer works', async () => {
-    //     const { owner, contract, bob } = await setup()
-        
-    //     await expect(contract.query["psp34::totalSupply"]()).to.eventually.have.property('output').to.equal(0);
+        // verify that the item is created in the Uniques pallet
+        await expect((await api.query.uniques.asset(uniquesCollectionId, 5)).toHuman()?.owner).to.be.equal(bob.address);
 
-    //     // let owner mint 1 token
-    //     const result = await contract.connect(owner).tx["rmrkMintable::mint"](owner.address, 1, {value: PRICE_PER_MINT})
-    //     await expect(contract.query["psp34::totalSupply"]()).to.eventually.have.property('output').to.equal(1);
-    //     await expect(contract.query["psp34::balanceOf"](owner.address)).to.eventually.have.property('output').to.equal(1);
-    //     await expect(contract.query["psp34::ownerOf"]({u64:1})).to.eventually.have.property('output').to.equal(owner.address);
+    })
+
+    it('token transfer works', async () => {
+        const { owner, contract, bob, uniquesCollectionId } = await setup();
         
-    //     // Owner transfers token to Bob
-    //     await expect(contract.query["psp34::balanceOf"](bob.address)).to.eventually.have.property('output').to.equal(0);
-    //     await expect(contract.tx["psp34::transfer"](bob.address, {u64:1}, [])).to.eventually.be.fulfilled
-    //     await expect(contract.query["psp34::balanceOf"](bob.address)).to.eventually.have.property('output').to.equal(1);
-    //     await expect(contract.query["psp34::ownerOf"]({u64:1})).to.eventually.have.property('output').to.equal(bob.address);
-    // })
+        // Bob mints 1 token
+        await expect(contract.connect(bob).tx["rmrkMintable::mint"](bob.address, 1, {value: PRICE_PER_MINT})).to.be.eventually.fulfilled;
+        await expect(contract.query["psp34::balanceOf"](bob.address)).to.eventually.have.property('output').to.equal(new BN("1"));
+
+        // verify that the owner in the Uniques pallet is Bob
+        await expect((await api.query.uniques.asset(uniquesCollectionId, 1)).toHuman().owner).to.be.equal(bob.address);
+
+        // Bob transfers token to Owner
+        await expect(contract.connect(bob).tx["psp34::transfer"](owner.address, {u64:1}, [])).to.be.eventually.fulfilled;
+        await expect(contract.query["psp34::balanceOf"](owner.address)).to.eventually.have.property('output').to.equal(new BN("1"));
+        await expect(contract.query["psp34::balanceOf"](bob.address)).to.eventually.have.property('output').to.equal(0);
+        await expect(contract.query["psp34::ownerOf"]({u64:1})).to.eventually.have.property('output').to.equal(owner.address);
+
+        // verify that the owner in the Uniques pallet os "owner"
+        await expect((await api.query.uniques.asset(uniquesCollectionId, 1)).toHuman().owner).to.be.equal(owner.address);
+    })
 })

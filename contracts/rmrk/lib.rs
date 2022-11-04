@@ -83,18 +83,17 @@ pub mod rmrk_contract {
                 _instance.minting.max_supply = max_supply;
                 _instance.minting.price_per_mint = _price_per_mint;
 
-
                 // assert!(_instance.env().transferred_value() >= COLLECTION_DEPOSIT);
                 _instance.minting.rmrk_collection_id = tmp_collection_id;
                 // if let Id::Bytes(data) = collection_id {
-                    // let collection = u32::from_le_bytes(data[0..4].try_into().unwrap());
-                    // _instance.minting.rmrk_collection_id = collection.clone(); TODO use this after uniques supports collection_id as input
-                    // TODO uncomment below code when RMRKminting::create is removed
-                    // let create_result = UniquesExt::create(collection);
-                    // ink_env::debug_println!(
-                    //     "####### initializing RMRK contract, create_result: {:?}",
-                    //     create_result
-                    // );
+                // let collection = u32::from_le_bytes(data[0..4].try_into().unwrap());
+                // _instance.minting.rmrk_collection_id = collection.clone(); TODO use this after uniques supports collection_id as input
+                // TODO uncomment below code when RMRKminting::create is removed
+                // let create_result = UniquesExt::create(collection);
+                // ink_env::debug_println!(
+                //     "####### initializing RMRK contract, create_result: {:?}",
+                //     create_result
+                // );
                 // }
             })
         }

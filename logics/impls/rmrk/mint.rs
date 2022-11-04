@@ -18,28 +18,37 @@ where
         + psp34::extensions::metadata::PSP34Metadata,
 {
     /// Create new collection
-    // This is just a temporary implementation since 
+    // This is just a temporary implementation since
     // integration test will not send value in contract instantiation.
     // pallet_uniques requires some value for the collection creation
     default fn create_collection(&mut self) -> Result<(), RmrkError> {
-        ink_env::debug_println!("####### creating Uniques collectionId {:?}", self.data::<data::Data>().rmrk_collection_id);
+        ink_env::debug_println!(
+            "####### creating Uniques collectionId {:?}",
+            self.data::<data::Data>().rmrk_collection_id
+        );
         let create_result = UniquesExt::create(
             // collection_id
             self.data::<data::Data>().rmrk_collection_id,
         );
         ink_env::debug_println!(
             "####### create_result: {:?}, last_minted_token_id={:?}",
-            create_result, self.data::<data::Data>().last_minted_token_id
+            create_result,
+            self.data::<data::Data>().last_minted_token_id
         );
         self.data::<data::Data>().last_minted_token_id = 0;
         Ok(())
     }
-        
+
     /// Mint new tokens
     #[modifiers(non_reentrant)]
     default fn mint(&mut self, to: AccountId, mint_amount: u64) -> Result<(), RmrkError> {
         // self.data::<ownable::Data>().owner = _to;
-        ink_env::debug_println!("####### mint RMRK contract for {:?}, amount:{:?}, last_minted_id {:?}", to, mint_amount, self.data::<data::Data>().last_minted_token_id);
+        ink_env::debug_println!(
+            "####### mint RMRK contract for {:?}, amount:{:?}, last_minted_id {:?}",
+            to,
+            mint_amount,
+            self.data::<data::Data>().last_minted_token_id
+        );
         if mint_amount == 0 {
             return Err(RmrkError::CannotMintZeroTokens);
         }
@@ -60,7 +69,11 @@ where
         let mint_offset = next_to_mint + mint_amount;
 
         for mint_id in next_to_mint..mint_offset {
-            ink_env::debug_println!("####### mint in contract ({:?}, {:?})", self.data::<data::Data>().rmrk_collection_id, mint_id);
+            ink_env::debug_println!(
+                "####### mint in contract ({:?}, {:?})",
+                self.data::<data::Data>().rmrk_collection_id,
+                mint_id
+            );
             // mint in this contract
             assert!(self
                 .data::<psp34::Data>()
