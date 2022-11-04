@@ -25,9 +25,6 @@ describe('Minting tests', () => {
             uniquesCollectionId
             );
 
-        // workaround to send some funds to contract during instantiation
-        const result = await contract_factory.contract.connect(contract_factory.deployer).tx["rmrkMintable::createCollection"]({value: ONE.muln(1)})
-
         return {
             owner: contract_factory.deployer,
             contract: contract_factory.contract,

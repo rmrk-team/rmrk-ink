@@ -21,7 +21,7 @@ export const setupContract = async (name, constructor, ...args) => {
     const bob = createSigner(signer, new Keyring({ type: 'sr25519'}).addFromUri('//Bob'));
     await buildTx(api.registry, api.tx.balances.transfer(alice.address, ONE.muln(1000)), signer.address)
     const contractFactory = await getContractFactory(name, alice)
-    const contract = await contractFactory.deploy(constructor, ...args)
+    const contract = await contractFactory.deploy(constructor, ...args,  {value: '1000000000000000000'})
     const abi = artifacts.readArtifact(name)
 
     return {
