@@ -1,9 +1,8 @@
 use crate::impls::rmrk::data;
-pub use crate::traits::{
-    errors::RmrkError,
-    mint::{RmrkMintable, RmrkMintableRef},
-};
+use crate::impls::rmrk::errors::RmrkError;
+pub use crate::traits::mint::{RmrkMintable, RmrkMintableRef};
 use ink_prelude::string::{String, ToString};
+use uniques_extension::*;
 
 use openbrush::{
     contracts::{psp34::*, reentrancy_guard::*},
@@ -44,11 +43,20 @@ where
 
         for mint_id in next_to_mint..mint_offset {
             ink_env::debug_println!("####### mint id:{:?}", mint_id);
+            // mint in this contract
             assert!(self
                 .data::<psp34::Data>()
                 ._mint_to(to, Id::U64(mint_id))
                 .is_ok());
             self.data::<data::Data>().last_minted_token_id += 1;
+
+            // mint in pallet
+            let mint_result = UniquesExt::mint(
+                self.data::<data::Data>().rmrk_collection_id, // collection_id
+                mint_id.try_into().unwrap(),                  // item_id
+                to,
+            );
+            ink_env::debug_println!("####### minting in pallet, mint_result: {:?}", mint_result);
         }
 
         Ok(())

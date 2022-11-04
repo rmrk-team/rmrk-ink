@@ -17,6 +17,7 @@ scale-info = { version = "2", default-features = false, features = ["derive"], o
 
 openbrush = { version = "2.2.0", default-features = false, features = ["ownable", "psp34"] }
 rmrk = { path = "../../logics", default-features = false }
+uniques_extension = { path = "../../logics/uniques_extension", default-features = false }
 
 [lib]
 path = "lib.rs"
@@ -35,6 +36,6 @@ std = [
     "scale-info",
     "scale-info/std",
     "openbrush/std",
-    "rmrk/std"
+    "rmrk/std",
 ]
 ink-as-dependency = []

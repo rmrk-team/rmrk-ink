@@ -8,4 +8,5 @@ pub struct Data {
     pub max_supply: u64,
     pub price_per_mint: Balance,
     pub last_minted_token_id: u64,
+    pub rmrk_collection_id: u32,
 }
