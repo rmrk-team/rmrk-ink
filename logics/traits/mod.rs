@@ -1,1 +1,1 @@
-pub mod mint;
+pub mod psp34_custom;

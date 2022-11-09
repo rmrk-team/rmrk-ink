@@ -1,3 +1,2 @@
-pub mod data;
-pub mod errors;
-pub mod mint;
+pub mod psp34_custom;
+pub mod psp34_custom_types;

@@ -2,7 +2,6 @@ use crate::impls::rmrk::data;
 use crate::impls::rmrk::errors::RmrkError;
 pub use crate::traits::mint::{RmrkMintable, RmrkMintableRef};
 use ink_prelude::string::{String, ToString};
-use uniques_extension::*;
 
 use openbrush::{
     contracts::{psp34::*, reentrancy_guard::*},
@@ -44,44 +43,14 @@ where
         for mint_id in next_to_mint..mint_offset {
             ink_env::debug_println!("####### mint id:{:?}", mint_id);
             // mint in this contract
-            assert!(self
+            let mint_result = self
                 .data::<psp34::Data>()
-                ._mint_to(to, Id::U64(mint_id))
-                .is_ok());
+                ._mint_to(to, Id::U64(mint_id));
             self.data::<data::Data>().last_minted_token_id += 1;
 
-            // mint in pallet
-            let mint_result = UniquesExt::mint(
-                self.data::<data::Data>().rmrk_collection_id, // collection_id
-                mint_id.try_into().unwrap(),                  // item_id
-                to,
-            );
-            ink_env::debug_println!("####### minting in pallet, mint_result: {:?}", mint_result);
+            ink_env::debug_println!("####### minting mint_result: {:?}", mint_result);
         }
 
         Ok(())
-    }
-
-    /// Maximum amount of mintable tokens in this contract
-    default fn max_supply(&self) -> u64 {
-        self.data::<data::Data>().max_supply
-    }
-
-    /// The price to mint a single token in this contract
-    default fn price_per_mint(&self) -> Balance {
-        self.data::<data::Data>().price_per_mint
-    }
-
-    /// Get URI from token ID
-    default fn token_uri(&self, token_id: u32) -> String {
-        ink_env::debug_println!("####### get tokenUri for: {:?}", token_id);
-        let value = self.get_attribute(
-            self.data::<psp34::Data>().collection_id(),
-            String::from("baseUri").into_bytes(),
-        );
-        let mut token_uri = String::from_utf8(value.unwrap()).unwrap();
-        token_uri = token_uri + &token_id.to_string() + &String::from(".json");
-        ink_env::debug_println!("####### tokenUri is: [{:?}]", token_uri);
-        return token_uri;
     }
 }
