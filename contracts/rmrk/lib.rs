@@ -11,22 +11,21 @@ pub mod rmrk_contract {
     use ink_storage::traits::SpreadAllocate;
     // imports from openbrush
     use openbrush::{
-        contracts::{ownable::*, psp34::extensions::metadata::*, reentrancy_guard::*},
+        contracts::{
+            ownable::*,
+            psp34::extensions::{enumerable::*, metadata::*},
+            reentrancy_guard::*,
+        },
         traits::Storage,
     };
     // local imports
-    use rmrk::impls::rmrk::psp34_custom::*;
-    use rmrk::impls::rmrk::*;
-    use rmrk::traits::psp34_custom::*;
-
-    // set CollectionDeposit to the value defined in the node runtime
-    pub const COLLECTION_DEPOSIT: Balance = 10 * 1_000_000_000_000_000;
+    use rmrk::{impls::rmrk::*, traits::psp34_custom::*};
 
     #[ink(storage)]
     #[derive(Default, SpreadAllocate, Storage)]
     pub struct Rmrk {
         #[storage_field]
-        psp34: psp34::Data,
+        psp34: psp34::Data<enumerable::Balances>,
         #[storage_field]
         guard: reentrancy_guard::Data,
         #[storage_field]
@@ -63,6 +62,7 @@ pub mod rmrk_contract {
     // Section contains default implementation without any modifications
     impl Ownable for Rmrk {}
     impl PSP34Metadata for Rmrk {}
+    impl PSP34Enumerable for Rmrk {}
     impl PSP34Custom for Rmrk {}
 
     impl Rmrk {
@@ -70,10 +70,10 @@ pub mod rmrk_contract {
         pub fn new(
             name: String,
             symbol: String,
-            max_supply: u64,
-            _price_per_mint: Balance,
-            collection_metadata: String,
             base_uri: String,
+            max_supply: u64,
+            price_per_mint: Balance,
+            collection_metadata: String,
             _royalty_receiver: AccountId,
             _royalty: u8,
         ) -> Self {
@@ -103,9 +103,7 @@ pub mod rmrk_contract {
                     collection_metadata.into_bytes(),
                 );
                 _instance.psp34_custom.max_supply = max_supply;
-                _instance.psp34_custom.price_per_mint = _price_per_mint;
-
-                assert!(_instance.env().transferred_value() >= COLLECTION_DEPOSIT);
+                _instance.psp34_custom.price_per_mint = price_per_mint;
             })
         }
     }
@@ -139,6 +137,247 @@ pub mod rmrk_contract {
             _data: &Vec<u8>,
         ) -> Result<(), PSP34Error> {
             Ok(())
+        }
+    }
+
+    #[cfg(test)]
+    mod tests {
+        // use super::*;
+        // // use crate::rmrk_contract::Rmrk;
+        // use ink_lang as ink;
+        // use ink_env::Environment;
+        // use ink_env::test;
+
+        use super::*;
+        use ink_env::test;
+        use ink_lang as ink;
+
+        // use crate::rmrk_contract::PSP34Error::*;
+
+        // use openbrush::{
+        //     contracts::{
+        //         psp34::{
+        //             extensions::{enumerable::*, metadata::*},
+        //         },
+        //     },
+        //     traits::{AccountId, Balance},
+        // };
+        // use rmrk::impls::rmrk::psp34_custom::*;
+
+        const PRICE: Balance = 100_000_000_000_000_000;
+        const BASE_URI: &str = "ipfs://myIpfsUri/";
+        const MAX_SUPPLY: u64 = 10;
+
+        #[ink::test]
+        fn init_works() {
+            let rmrk_contract = init();
+            let collection_id = rmrk_contract.collection_id();
+            assert_eq!(
+                rmrk_contract
+                    .get_attribute(collection_id.clone(), String::from("name").into_bytes()),
+                Some(String::from("Remark Project").into_bytes())
+            );
+            assert_eq!(
+                rmrk_contract
+                    .get_attribute(collection_id.clone(), String::from("symbol").into_bytes()),
+                Some(String::from("RMK").into_bytes())
+            );
+            assert_eq!(
+                rmrk_contract.get_attribute(collection_id, String::from("baseUri").into_bytes()),
+                Some(String::from(BASE_URI).into_bytes())
+            );
+            assert_eq!(rmrk_contract.max_supply(), MAX_SUPPLY);
+            assert_eq!(rmrk_contract.price(), PRICE);
+        }
+
+        fn init() -> Rmrk {
+            let accounts = default_accounts();
+            Rmrk::new(
+                String::from("Remark Project"),
+                String::from("RMK"),
+                String::from(BASE_URI),
+                MAX_SUPPLY,
+                PRICE,
+                String::from(BASE_URI),
+                accounts.eve,
+                0,
+            )
+        }
+
+        #[ink::test]
+        fn mint_single_works() {
+            let mut rmrk_contract = init();
+            let accounts = default_accounts();
+            assert_eq!(rmrk_contract.owner(), accounts.alice);
+            set_sender(accounts.bob);
+
+            assert_eq!(rmrk_contract.total_supply(), 0);
+            test::set_value_transferred::<ink_env::DefaultEnvironment>(PRICE);
+            assert!(rmrk_contract.mint_next().is_ok());
+            assert_eq!(rmrk_contract.total_supply(), 1);
+            assert_eq!(rmrk_contract.owner_of(Id::U64(1)), Some(accounts.bob));
+            assert_eq!(rmrk_contract.balance_of(accounts.bob), 1);
+            assert_eq!(
+                rmrk_contract.owners_token_by_index(accounts.bob, 0),
+                Ok(Id::U64(1))
+            );
+            assert_eq!(rmrk_contract.psp34_custom.last_token_id, 1);
+            assert_eq!(1, ink_env::test::recorded_events().count());
+        }
+
+        // #[ink::test]
+        // fn mint_multiple_works() {
+        //     let mut rmrk_contract = init();
+        //     let accounts = default_accounts();
+        //     set_sender(accounts.alice);
+        //     let num_of_mints: u64 = 5;
+
+        //     assert_eq!(rmrk_contract.total_supply(), 0);
+        //     test::set_value_transferred::<ink_env::DefaultEnvironment>(PRICE * num_of_mints as u128);
+        //     assert!(rmrk_contract.mint_for(accounts.bob, num_of_mints).is_ok());
+        //     assert_eq!(rmrk_contract.total_supply(), num_of_mints as u128);
+        //     assert_eq!(rmrk_contract.balance_of(accounts.bob), 5);
+        //     assert_eq!(rmrk_contract.owners_token_by_index(accounts.bob, 0), Ok(Id::U64(1)));
+        //     assert_eq!(rmrk_contract.owners_token_by_index(accounts.bob, 1), Ok(Id::U64(2)));
+        //     assert_eq!(rmrk_contract.owners_token_by_index(accounts.bob, 2), Ok(Id::U64(3)));
+        //     assert_eq!(rmrk_contract.owners_token_by_index(accounts.bob, 3), Ok(Id::U64(4)));
+        //     assert_eq!(rmrk_contract.owners_token_by_index(accounts.bob, 4), Ok(Id::U64(5)));
+        //     assert_eq!(5, ink_env::test::recorded_events().count());
+        //     assert_eq!(
+        //         rmrk_contract.owners_token_by_index(accounts.bob, 5),
+        //         Err(TokenNotExists)
+        //     );
+        // }
+
+        // #[ink::test]
+        // fn mint_above_limit_fails() {
+        //     let mut rmrk_contract = init();
+        //     let accounts = default_accounts();
+        //     set_sender(accounts.alice);
+        //     let num_of_mints: u64 = MAX_SUPPLY + 1;
+
+        //     assert_eq!(rmrk_contract.total_supply(), 0);
+        //     test::set_value_transferred::<ink_env::DefaultEnvironment>(PRICE * num_of_mints as u128);
+        //     assert_eq!(
+        //         rmrk_contract.mint_for(accounts.bob, num_of_mints),
+        //         Err(Custom("CollectionFullOrLocked".to_string()))
+        //     );
+        // }
+
+        // #[ink::test]
+        // fn mint_low_value_fails() {
+        //     let mut rmrk_contract = init();
+        //     let accounts = default_accounts();
+        //     set_sender(accounts.bob);
+        //     let num_of_mints = 1;
+
+        //     assert_eq!(rmrk_contract.total_supply(), 0);
+        //     test::set_value_transferred::<ink_env::DefaultEnvironment>(
+        //         PRICE * num_of_mints as u128 - 1,
+        //     );
+        //     assert_eq!(
+        //         rmrk_contract.mint_for(accounts.bob, num_of_mints),
+        //         Err(Custom("BadMintValue".to_string()))
+        //     );
+        //     test::set_value_transferred::<ink_env::DefaultEnvironment>(
+        //         PRICE * num_of_mints as u128 - 1,
+        //     );
+        //     assert_eq!(rmrk_contract.mint_next(), Err(Custom("BadMintValue".to_string())));
+        //     assert_eq!(rmrk_contract.total_supply(), 0);
+        // }
+
+        // #[ink::test]
+        // fn token_uri_works() {
+        //     let mut rmrk_contract = init();
+        //     let accounts = default_accounts();
+        //     set_sender(accounts.alice);
+
+        //     test::set_value_transferred::<ink_env::DefaultEnvironment>(PRICE);
+        //     assert!(rmrk_contract.mint_next().is_ok());
+        //     assert_eq!(
+        //         rmrk_contract.token_uri(1),
+        //         Ok(BASE_URI.to_owned() + &String::from("1.json"))
+        //     );
+        //     // return error if request is for not yet minted token
+        //     assert_eq!(rmrk_contract.token_uri(42), Err(TokenNotExists));
+        // }
+
+        // #[ink::test]
+        // fn owner_is_set() {
+        //     let accounts = default_accounts();
+        //     let rmrk_contract = init();
+        //     assert_eq!(rmrk_contract.owner(), accounts.alice);
+        // }
+
+        // #[ink::test]
+        // fn set_base_uri_works() {
+        //     let accounts = default_accounts();
+        //     const NEW_BASE_URI: &str = "new_uri/";
+        //     let mut rmrk_contract = init();
+
+        //     set_sender(accounts.alice);
+        //     assert!(rmrk_contract.set_base_uri(NEW_BASE_URI.to_string()).is_ok());
+        //     assert_eq!(
+        //         rmrk_contract.get_attribute(Id::U8(0), String::from("baseUri").into_bytes()),
+        //         Some(String::from(NEW_BASE_URI).into_bytes())
+        //     );
+        //     set_sender(accounts.bob);
+        //     assert_eq!(
+        //         rmrk_contract.set_base_uri("shallFail".to_string()),
+        //         Err(Custom("O::CallerIsNotOwner".to_string()))
+        //     );
+        // }
+
+        // #[ink::test]
+        // fn check_supply_overflow_ok() {
+        //     let max_supply = u64::MAX - 1;
+        //     let mut rmrk_contract = Shiden34Contract::new(
+        //         String::from("Shiden34"),
+        //         String::from("rmrk_contract"),
+        //         String::from(BASE_URI),
+        //         max_supply,
+        //         PRICE,
+        //     );
+        //     rmrk_contract.last_token_id = max_supply - 1;
+
+        //     // check case when last_token_id.add(mint_amount) if more than u64::MAX
+        //     assert_eq!(
+        //         rmrk_contract._check_amount(3),
+        //         Err(Custom("CollectionFullOrLocked".to_string()))
+        //     );
+
+        //     // check case when mint_amount is 0
+        //     assert_eq!(
+        //         rmrk_contract._check_amount(0),
+        //         Err(Custom("CannotMintZeroTokens".to_string()))
+        //     );
+        // }
+
+        // #[ink::test]
+        // fn check_value_overflow_ok() {
+        //     let max_supply = u64::MAX;
+        //     let price = u128::MAX as u128;
+        //     let rmrk_contract = Shiden34Contract::new(
+        //         String::from("Shiden34"),
+        //         String::from("rmrk_contract"),
+        //         String::from(BASE_URI),
+        //         max_supply,
+        //         price,
+        //     );
+        //     let transferred_value = u128::MAX;
+        //     let mint_amount = u64::MAX;
+        //     assert_eq!(
+        //         rmrk_contract._check_value(transferred_value, mint_amount),
+        //         Err(Custom("BadMintValue".to_string()))
+        //     );
+        // }
+
+        fn default_accounts() -> test::DefaultAccounts<ink_env::DefaultEnvironment> {
+            test::default_accounts::<Environment>()
+        }
+
+        fn set_sender(sender: AccountId) {
+            ink_env::test::set_caller::<Environment>(sender);
         }
     }
 }
