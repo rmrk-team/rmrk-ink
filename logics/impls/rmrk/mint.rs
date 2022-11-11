@@ -19,8 +19,6 @@ where
     /// Mint new tokens
     #[modifiers(non_reentrant)]
     default fn mint(&mut self, to: AccountId, mint_amount: u64) -> Result<(), RmrkError> {
-        // self.data::<ownable::Data>().owner = _to;
-        ink_env::debug_println!("####### mint RMRK contract amount:{:?}", mint_amount);
         if mint_amount == 0 {
             return Err(RmrkError::CannotMintZeroTokens);
         }

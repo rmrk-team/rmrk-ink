@@ -7,13 +7,15 @@ pub mod rmrk_contract {
     use ink_env;
     use ink_lang::codegen::{EmitEvent, Env};
     use ink_prelude::string::String;
-    use ink_prelude::vec::Vec;
     use ink_storage::traits::SpreadAllocate;
     // imports from openbrush
     use openbrush::{
         contracts::{
             ownable::*,
-            psp34::extensions::{enumerable::*, metadata::*},
+            psp34::{
+                balances::Balances,
+                extensions::{enumerable::*, metadata::*},
+            },
             reentrancy_guard::*,
         },
         traits::Storage,
@@ -21,20 +23,7 @@ pub mod rmrk_contract {
     // local imports
     use rmrk::{impls::rmrk::*, traits::psp34_custom::*};
 
-    #[ink(storage)]
-    #[derive(Default, SpreadAllocate, Storage)]
-    pub struct Rmrk {
-        #[storage_field]
-        psp34: psp34::Data,
-        #[storage_field]
-        guard: reentrancy_guard::Data,
-        #[storage_field]
-        ownable: ownable::Data,
-        #[storage_field]
-        metadata: metadata::Data,
-        #[storage_field]
-        psp34_custom: psp34_custom_types::Data,
-    }
+    // Event definition
 
     /// Event emitted when a token transfer occurs.
     #[ink(event)]
@@ -59,10 +48,27 @@ pub mod rmrk_contract {
         approved: bool,
     }
 
+    #[ink(storage)]
+    #[derive(Default, SpreadAllocate, Storage)]
+    pub struct Rmrk {
+        #[storage_field]
+        psp34: psp34::Data<Balances>,
+        #[storage_field]
+        guard: reentrancy_guard::Data,
+        #[storage_field]
+        ownable: ownable::Data,
+        #[storage_field]
+        metadata: metadata::Data,
+        #[storage_field]
+        psp34_custom: psp34_custom_types::Data,
+    }
+
     // Section contains default implementation without any modifications
     impl Ownable for Rmrk {}
     impl PSP34Metadata for Rmrk {}
     // impl PSP34Enumerable for Rmrk {}
+
+    // Rmrk specific implementations
     impl PSP34Custom for Rmrk {}
 
     impl Rmrk {
@@ -108,11 +114,13 @@ pub mod rmrk_contract {
         }
     }
 
-    impl psp34::Internal for Rmrk {
+    impl psp34_custom::Internal for Rmrk {
+        /// Emit Transfer event
         fn _emit_transfer_event(&self, from: Option<AccountId>, to: Option<AccountId>, id: Id) {
             self.env().emit_event(Transfer { from, to, id });
         }
 
+        /// Emit Approval event
         fn _emit_approval_event(
             &self,
             from: AccountId,
@@ -127,45 +135,16 @@ pub mod rmrk_contract {
                 approved,
             });
         }
-
-        fn _do_safe_transfer_check(
-            &mut self,
-            _operator: &AccountId,
-            _from: &AccountId,
-            _to: &AccountId,
-            _id: &Id,
-            _data: &Vec<u8>,
-        ) -> Result<(), PSP34Error> {
-            Ok(())
-        }
     }
 
     #[cfg(test)]
     mod tests {
-        // use super::*;
-        // // use crate::rmrk_contract::Rmrk;
-        // use ink_lang as ink;
-        // use ink_env::Environment;
-        // use ink_env::test;
-
         use super::*;
         use ink_env::test;
         use ink_lang as ink;
 
-        // use crate::rmrk_contract::PSP34Error::*;
-
-        // use openbrush::{
-        //     contracts::{
-        //         psp34::{
-        //             extensions::{enumerable::*, metadata::*},
-        //         },
-        //     },
-        //     traits::{AccountId, Balance},
-        // };
-        // use rmrk::impls::rmrk::psp34_custom::*;
-
         const PRICE: Balance = 100_000_000_000_000_000;
-        const BASE_URI: &str = "ipfs://myIpfsUri/";
+        const BASE_URI: &str = "ipfs://ipfs/myIpfsUri/";
         const MAX_SUPPLY: u64 = 10;
 
         #[ink::test]
@@ -222,32 +201,34 @@ pub mod rmrk_contract {
             //     Ok(Id::U64(1))
             // );
             assert_eq!(rmrk_contract.psp34_custom.last_token_id, 1);
-            // assert_eq!(1, ink_env::test::recorded_events().count());
+            assert_eq!(1, ink_env::test::recorded_events().count());
         }
 
-        // #[ink::test]
-        // fn mint_multiple_works() {
-        //     let mut rmrk_contract = init();
-        //     let accounts = default_accounts();
-        //     set_sender(accounts.alice);
-        //     let num_of_mints: u64 = 5;
+        #[ink::test]
+        fn mint_multiple_works() {
+            let mut rmrk_contract = init();
+            let accounts = default_accounts();
+            set_sender(accounts.alice);
+            let num_of_mints: u64 = 5;
 
-        //     assert_eq!(rmrk_contract.total_supply(), 0);
-        //     test::set_value_transferred::<ink_env::DefaultEnvironment>(PRICE * num_of_mints as u128);
-        //     assert!(rmrk_contract.mint_for(accounts.bob, num_of_mints).is_ok());
-        //     assert_eq!(rmrk_contract.total_supply(), num_of_mints as u128);
-        //     assert_eq!(rmrk_contract.balance_of(accounts.bob), 5);
-        //     assert_eq!(rmrk_contract.owners_token_by_index(accounts.bob, 0), Ok(Id::U64(1)));
-        //     assert_eq!(rmrk_contract.owners_token_by_index(accounts.bob, 1), Ok(Id::U64(2)));
-        //     assert_eq!(rmrk_contract.owners_token_by_index(accounts.bob, 2), Ok(Id::U64(3)));
-        //     assert_eq!(rmrk_contract.owners_token_by_index(accounts.bob, 3), Ok(Id::U64(4)));
-        //     assert_eq!(rmrk_contract.owners_token_by_index(accounts.bob, 4), Ok(Id::U64(5)));
-        //     assert_eq!(5, ink_env::test::recorded_events().count());
-        //     assert_eq!(
-        //         rmrk_contract.owners_token_by_index(accounts.bob, 5),
-        //         Err(TokenNotExists)
-        //     );
-        // }
+            assert_eq!(rmrk_contract.total_supply(), 0);
+            test::set_value_transferred::<ink_env::DefaultEnvironment>(
+                PRICE * num_of_mints as u128,
+            );
+            assert!(rmrk_contract.mint_for(accounts.bob, num_of_mints).is_ok());
+            assert_eq!(rmrk_contract.total_supply(), num_of_mints as u128);
+            assert_eq!(rmrk_contract.balance_of(accounts.bob), 5);
+            // assert_eq!(rmrk_contract.owners_token_by_index(accounts.bob, 0), Ok(Id::U64(1)));
+            // assert_eq!(rmrk_contract.owners_token_by_index(accounts.bob, 1), Ok(Id::U64(2)));
+            // assert_eq!(rmrk_contract.owners_token_by_index(accounts.bob, 2), Ok(Id::U64(3)));
+            // assert_eq!(rmrk_contract.owners_token_by_index(accounts.bob, 3), Ok(Id::U64(4)));
+            // assert_eq!(rmrk_contract.owners_token_by_index(accounts.bob, 4), Ok(Id::U64(5)));
+            assert_eq!(5, ink_env::test::recorded_events().count());
+            // assert_eq!(
+            //     rmrk_contract.owners_token_by_index(accounts.bob, 5),
+            //     Err(TokenNotExists)
+            // );
+        }
 
         // #[ink::test]
         // fn mint_above_limit_fails() {

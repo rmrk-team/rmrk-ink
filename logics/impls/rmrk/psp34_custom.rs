@@ -21,7 +21,6 @@
 
 #![cfg_attr(not(feature = "std"), no_std)]
 // imports from ink!
-use ink_env;
 use ink_prelude::string::{String, ToString};
 
 // imports from openbrush
@@ -46,6 +45,12 @@ pub trait Internal {
 
     /// Check if token is minted
     fn _token_exists(&self, id: Id) -> Result<(), PSP34Error>;
+
+    /// Emit Transfer event
+    fn _emit_transfer_event(&self, from: Option<AccountId>, to: Option<AccountId>, id: Id);
+
+    /// Emit Approval event
+    fn _emit_approval_event(&self, from: AccountId, to: AccountId, id: Option<Id>, approved: bool);
 }
 
 impl<T> PSP34Custom for T
@@ -69,7 +74,7 @@ where
 
             ink_env::debug_println!("####### minting mint_result: {:?}", mint_result);
             assert!(mint_result.is_ok());
-
+            self._emit_transfer_event(None, Some(caller), Id::U64(token_id));
             return Ok(());
         }
         return Err(PSP34Error::Custom(
@@ -77,7 +82,7 @@ where
         ));
     }
 
-    /// Mint several tokens
+    /// Mint one or more tokens
     #[modifiers(non_reentrant)]
     default fn mint_for(&mut self, to: AccountId, mint_amount: u64) -> Result<(), PSP34Error> {
         self._check_value(Self::env().transferred_value(), mint_amount)?;
@@ -92,6 +97,7 @@ where
                 ._mint_to(to, Id::U64(mint_id))
                 .is_ok());
             self.data::<Data>().last_token_id += 1;
+            self._emit_transfer_event(None, Some(to), Id::U64(mint_id));
         }
 
         Ok(())
@@ -144,6 +150,7 @@ where
     }
 }
 
+/// Helper trait for PSP34Custom
 impl<T> Internal for T
 where
     T: Storage<Data> + Storage<psp34::Data>,
@@ -159,7 +166,6 @@ where
                 return Ok(());
             }
         }
-
         return Err(PSP34Error::Custom("BadMintValue".to_string()));
     }
 
@@ -182,5 +188,24 @@ where
             .owner_of(id)
             .ok_or(PSP34Error::TokenNotExists)?;
         Ok(())
+    }
+
+    /// Emit Transfer event
+    default fn _emit_transfer_event(
+        &self,
+        _from: Option<AccountId>,
+        _to: Option<AccountId>,
+        _id: Id,
+    ) {
+    }
+
+    /// Emit Approval event
+    default fn _emit_approval_event(
+        &self,
+        _from: AccountId,
+        _to: AccountId,
+        _id: Option<Id>,
+        _approved: bool,
+    ) {
     }
 }
