@@ -1,32 +1,30 @@
-use crate::impls::rmrk::errors::RmrkError;
 use ink_prelude::string::String;
-use openbrush::{
-    modifiers,
-    traits::{AccountId, Balance},
-};
+use openbrush::{contracts::psp34::extensions::enumerable::*, traits::AccountId};
 
 #[openbrush::wrapper]
 pub type RmrkMintableRef = dyn RmrkMintable;
 
 #[openbrush::trait_definition]
 pub trait RmrkMintable {
-    /// Mint new tokens
     #[ink(message, payable)]
-    #[modifiers(non_reentrant)]
-    fn mint(&mut self, to: AccountId, mint_amount: u64) -> Result<(), RmrkError>;
-
-    // #[ink(message)]
-    // fn nft_mint_directly_to_nft(&self, parent: AccountIdOrCollectionNftTuple) -> Result<(), RmrkError>;
-
-    /// Maximum amount of mintable tokens in this contract
+    fn mint_next(&mut self) -> Result<(), PSP34Error>;
+    #[ink(message, payable)]
+    fn mint_for(&mut self, to: AccountId, mint_amount: u64) -> Result<(), PSP34Error>;
+    #[ink(message)]
+    fn set_base_uri(&mut self, uri: String) -> Result<(), PSP34Error>;
+    #[ink(message)]
+    fn token_uri(&self, token_id: u64) -> Result<String, PSP34Error>;
     #[ink(message)]
     fn max_supply(&self) -> u64;
-
-    /// The price to mint a single token in this contract
     #[ink(message)]
-    fn price_per_mint(&self) -> Balance;
+    fn withdraw(&mut self) -> Result<(), PSP34Error>;
 
-    /// Get URI from token ID
-    #[ink(message)]
-    fn token_uri(&self, token_id: u32) -> String;
+    /// Check if the transferred mint values is as expected
+    fn _check_value(&self, transfered_value: u128, mint_amount: u64) -> Result<(), PSP34Error>;
+
+    /// Check amount of tokens to be minted
+    fn _check_amount(&self, mint_amount: u64) -> Result<(), PSP34Error>;
+
+    /// Check if token is minted
+    fn _token_exists(&self, id: Id) -> Result<(), PSP34Error>;
 }
