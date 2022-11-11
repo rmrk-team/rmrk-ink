@@ -25,7 +25,7 @@ use ink_prelude::string::{String, ToString};
 
 // imports from openbrush
 use crate::impls::rmrk::psp34_custom_types::{Data, RmrkError};
-pub use crate::traits::psp34_custom::PSP34Custom;
+pub use crate::traits::psp34_custom::Psp34Custom;
 use openbrush::{
     contracts::{
         ownable::*,
@@ -53,7 +53,7 @@ pub trait Internal {
     fn _emit_approval_event(&self, from: AccountId, to: AccountId, id: Option<Id>, approved: bool);
 }
 
-impl<T> PSP34Custom for T
+impl<T> Psp34Custom for T
 where
     T: Storage<Data>
         + Storage<psp34::Data>
@@ -150,7 +150,7 @@ where
     }
 }
 
-/// Helper trait for PSP34Custom
+/// Helper trait for Psp34Custom
 impl<T> Internal for T
 where
     T: Storage<Data> + Storage<psp34::Data>,

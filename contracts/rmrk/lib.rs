@@ -69,7 +69,7 @@ pub mod rmrk_contract {
     // impl PSP34Enumerable for Rmrk {}
 
     // Rmrk specific implementations
-    impl PSP34Custom for Rmrk {}
+    impl Psp34Custom for Rmrk {}
 
     impl Rmrk {
         #[ink(constructor, payable)]
