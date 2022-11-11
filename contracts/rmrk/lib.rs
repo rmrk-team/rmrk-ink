@@ -25,7 +25,7 @@ pub mod rmrk_contract {
     #[derive(Default, SpreadAllocate, Storage)]
     pub struct Rmrk {
         #[storage_field]
-        psp34: psp34::Data<enumerable::Balances>,
+        psp34: psp34::Data,
         #[storage_field]
         guard: reentrancy_guard::Data,
         #[storage_field]
@@ -62,7 +62,7 @@ pub mod rmrk_contract {
     // Section contains default implementation without any modifications
     impl Ownable for Rmrk {}
     impl PSP34Metadata for Rmrk {}
-    impl PSP34Enumerable for Rmrk {}
+    // impl PSP34Enumerable for Rmrk {}
     impl PSP34Custom for Rmrk {}
 
     impl Rmrk {
@@ -217,12 +217,12 @@ pub mod rmrk_contract {
             assert_eq!(rmrk_contract.total_supply(), 1);
             assert_eq!(rmrk_contract.owner_of(Id::U64(1)), Some(accounts.bob));
             assert_eq!(rmrk_contract.balance_of(accounts.bob), 1);
-            assert_eq!(
-                rmrk_contract.owners_token_by_index(accounts.bob, 0),
-                Ok(Id::U64(1))
-            );
+            // assert_eq!(
+            //     rmrk_contract.owners_token_by_index(accounts.bob, 0),
+            //     Ok(Id::U64(1))
+            // );
             assert_eq!(rmrk_contract.psp34_custom.last_token_id, 1);
-            assert_eq!(1, ink_env::test::recorded_events().count());
+            // assert_eq!(1, ink_env::test::recorded_events().count());
         }
 
         // #[ink::test]
