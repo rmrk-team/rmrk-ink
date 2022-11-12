@@ -16,7 +16,8 @@ pub struct Data {
 pub enum RmrkError {
     CannotMintZeroTokens,
     CollectionFullOrLocked,
-    MintUnderpriced,
+    BadMintValue,
+    WithdrawalFailed,
 }
 
 impl RmrkError {
@@ -24,7 +25,8 @@ impl RmrkError {
         match self {
             RmrkError::CannotMintZeroTokens => "CannotMintZeroTokens".to_string(),
             RmrkError::CollectionFullOrLocked => "CollectionFullOrLocked".to_string(),
-            RmrkError::MintUnderpriced => "MintUnderpriced".to_string(),
+            RmrkError::BadMintValue => "BadMintValue".to_string(),
+            RmrkError::WithdrawalFailed => "WithdrawalFailed".to_string(),
         }
     }
 }

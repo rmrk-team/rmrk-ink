@@ -145,7 +145,7 @@ where
             .unwrap_or_default();
         Self::env()
             .transfer(self.data::<ownable::Data>().owner(), current_balance)
-            .map_err(|_| PSP34Error::Custom("WithdrawFailed".to_string()))?;
+            .map_err(|_| PSP34Error::Custom(RmrkError::WithdrawalFailed.as_str()))?;
         Ok(())
     }
 }
@@ -166,7 +166,7 @@ where
                 return Ok(());
             }
         }
-        return Err(PSP34Error::Custom("BadMintValue".to_string()));
+        return Err(PSP34Error::Custom(RmrkError::BadMintValue.as_str()));
     }
 
     /// Check amount of tokens to be minted
@@ -179,7 +179,9 @@ where
                 return Ok(());
             }
         }
-        return Err(PSP34Error::Custom("CollectionFullOrLocked".to_string()));
+        return Err(PSP34Error::Custom(
+            RmrkError::CollectionFullOrLocked.as_str(),
+        ));
     }
 
     /// Check if token is minted
@@ -208,4 +210,10 @@ where
         _approved: bool,
     ) {
     }
+}
+//---------------------- T E S T ---------------------------------------------
+
+#[cfg(test)]
+mod tests {
+   
 }
