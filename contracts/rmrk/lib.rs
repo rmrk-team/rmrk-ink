@@ -64,6 +64,7 @@ pub mod rmrk_contract {
     }
 
     // Section contains default implementation without any modifications
+    impl PSP34 for Rmrk {}
     impl Ownable for Rmrk {}
     impl PSP34Metadata for Rmrk {}
     // impl PSP34Enumerable for Rmrk {}
