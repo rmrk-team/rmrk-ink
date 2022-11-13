@@ -20,3 +20,11 @@ git clone https://github.com/rmrk-team/rmrk-ink.git
 cd ./rmrk-ink/contracts/rmrk
 cargo +nightly-2022-08-15 contract build
 ```
+
+3. Run ink! unit tests
+
+```sh
+cargo test
+```
+
+4. Integration test is broken for now

@@ -1,6 +1,6 @@
 [package]
 name = "rmrk_contract"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["Stake Technologies <devops@stake.co.jp>"]
 edition = "2021"
 
@@ -17,7 +17,6 @@ scale-info = { version = "2", default-features = false, features = ["derive"], o
 
 openbrush = { version = "2.2.0", default-features = false, features = ["ownable", "psp34"] }
 rmrk = { path = "../../logics", default-features = false }
-uniques_extension = { path = "../../logics/uniques_extension", default-features = false }
 
 [lib]
 path = "lib.rs"
