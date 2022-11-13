@@ -72,7 +72,7 @@ pub mod rmrk_contract {
     impl Psp34Custom for Rmrk {}
 
     impl Rmrk {
-        #[ink(constructor, payable)]
+        #[ink(constructor)]
         pub fn new(
             name: String,
             symbol: String,
