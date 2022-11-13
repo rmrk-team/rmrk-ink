@@ -19,7 +19,6 @@
 // OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-#![cfg_attr(not(feature = "std"), no_std)]
 // imports from ink!
 use ink_prelude::string::{String, ToString};
 
@@ -106,8 +105,9 @@ where
     /// Set new value for the baseUri
     #[modifiers(only_owner)]
     default fn set_base_uri(&mut self, uri: String) -> Result<(), PSP34Error> {
+        let cid = self.data::<psp34::Data>().collection_id();
         self.data::<metadata::Data>()._set_attribute(
-            Id::U8(0),
+            cid,
             String::from("baseUri").into_bytes(),
             uri.into_bytes(),
         );
@@ -214,6 +214,4 @@ where
 //---------------------- T E S T ---------------------------------------------
 
 #[cfg(test)]
-mod tests {
-   
-}
+mod tests {}

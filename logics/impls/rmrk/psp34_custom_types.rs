@@ -1,4 +1,4 @@
-use ink_prelude::string::String;
+use ink_prelude::string::{String, ToString};
 use openbrush::traits::Balance;
 pub const STORAGE_KEY: u32 = openbrush::storage_unique_key!(Data);
 
