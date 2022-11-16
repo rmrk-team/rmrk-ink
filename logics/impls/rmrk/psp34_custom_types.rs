@@ -1,5 +1,4 @@
-use ink_prelude::string::{String, ToString};
-use openbrush::traits::Balance;
+use openbrush::traits::{Balance, String};
 pub const STORAGE_KEY: u32 = openbrush::storage_unique_key!(Data);
 
 #[derive(Default, Debug)]
@@ -15,7 +14,7 @@ pub struct Data {
 #[cfg_attr(feature = "std", derive(scale_info::TypeInfo))]
 pub enum RmrkError {
     CannotMintZeroTokens,
-    CollectionFullOrLocked,
+    CollectionIsFull,
     BadMintValue,
     WithdrawalFailed,
 }
@@ -23,10 +22,10 @@ pub enum RmrkError {
 impl RmrkError {
     pub fn as_str(&self) -> String {
         match self {
-            RmrkError::CannotMintZeroTokens => "CannotMintZeroTokens".to_string(),
-            RmrkError::CollectionFullOrLocked => "CollectionFullOrLocked".to_string(),
-            RmrkError::BadMintValue => "BadMintValue".to_string(),
-            RmrkError::WithdrawalFailed => "WithdrawalFailed".to_string(),
+            RmrkError::CannotMintZeroTokens => String::from("CannotMintZeroTokens"),
+            RmrkError::CollectionIsFull => String::from("CollectionIsFull"),
+            RmrkError::BadMintValue => String::from("BadMintValue"),
+            RmrkError::WithdrawalFailed => String::from("WithdrawalFailed"),
         }
     }
 }

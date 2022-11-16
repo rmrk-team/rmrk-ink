@@ -20,7 +20,7 @@
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 // imports from ink!
-use ink_prelude::string::{String, ToString};
+use ink_prelude::string::{String as PreludeString, ToString};
 
 // imports from openbrush
 use crate::impls::rmrk::psp34_custom_types::{Data, RmrkError};
@@ -32,7 +32,7 @@ use openbrush::{
         reentrancy_guard::*,
     },
     modifiers,
-    traits::{AccountId, Balance, Storage},
+    traits::{AccountId, Balance, Storage, String},
 };
 
 pub trait Internal {
@@ -55,7 +55,7 @@ pub trait Internal {
 impl<T> Psp34Custom for T
 where
     T: Storage<Data>
-        + Storage<psp34::Data>
+        + Storage<psp34::Data<enumerable::Balances>>
         + Storage<reentrancy_guard::Data>
         + Storage<ownable::Data>
         + Storage<metadata::Data>
@@ -65,20 +65,19 @@ where
     default fn mint_next(&mut self) -> Result<(), PSP34Error> {
         self._check_value(Self::env().transferred_value(), 1)?;
         let caller = Self::env().caller();
-        if let Some(token_id) = self.data::<Data>().last_token_id.checked_add(1) {
-            let mint_result = self
-                .data::<psp34::Data>()
-                ._mint_to(caller, Id::U64(token_id));
-            self.data::<Data>().last_token_id += 1;
+        let token_id =
+            self.data::<Data>()
+                .last_token_id
+                .checked_add(1)
+                .ok_or(PSP34Error::Custom(String::from(
+                    RmrkError::CollectionIsFull.as_str(),
+                )))?;
+        self.data::<psp34::Data<enumerable::Balances>>()
+            ._mint_to(caller, Id::U64(token_id))?;
+        self.data::<Data>().last_token_id += 1;
 
-            ink_env::debug_println!("####### minting mint_result: {:?}", mint_result);
-            assert!(mint_result.is_ok());
-            self._emit_transfer_event(None, Some(caller), Id::U64(token_id));
-            return Ok(());
-        }
-        return Err(PSP34Error::Custom(
-            RmrkError::CollectionFullOrLocked.as_str(),
-        ));
+        self._emit_transfer_event(None, Some(caller), Id::U64(token_id));
+        return Ok(());
     }
 
     /// Mint one or more tokens
@@ -92,7 +91,7 @@ where
 
         for mint_id in next_to_mint..mint_offset {
             assert!(self
-                .data::<psp34::Data>()
+                .data::<psp34::Data<enumerable::Balances>>()
                 ._mint_to(to, Id::U64(mint_id))
                 .is_ok());
             self.data::<Data>().last_token_id += 1;
@@ -104,25 +103,25 @@ where
 
     /// Set new value for the baseUri
     #[modifiers(only_owner)]
-    default fn set_base_uri(&mut self, uri: String) -> Result<(), PSP34Error> {
-        let cid = self.data::<psp34::Data>().collection_id();
-        self.data::<metadata::Data>()._set_attribute(
-            cid,
-            String::from("baseUri").into_bytes(),
-            uri.into_bytes(),
-        );
+    default fn set_base_uri(&mut self, uri: PreludeString) -> Result<(), PSP34Error> {
+        let id = self
+            .data::<psp34::Data<enumerable::Balances>>()
+            .collection_id();
+        self.data::<metadata::Data>()
+            ._set_attribute(id, String::from("baseUri"), uri.into_bytes());
         Ok(())
     }
 
     /// Get URI from token ID
-    default fn token_uri(&self, token_id: u64) -> Result<String, PSP34Error> {
-        _ = self._token_exists(Id::U64(token_id))?;
+    default fn token_uri(&self, token_id: u64) -> Result<PreludeString, PSP34Error> {
+        self._token_exists(Id::U64(token_id))?;
         let value = self.get_attribute(
-            self.data::<psp34::Data>().collection_id(),
-            String::from("baseUri").into_bytes(),
+            self.data::<psp34::Data<enumerable::Balances>>()
+                .collection_id(),
+            String::from("baseUri"),
         );
-        let mut token_uri = String::from_utf8(value.unwrap()).unwrap();
-        token_uri = token_uri + &token_id.to_string() + &String::from(".json");
+        let mut token_uri = PreludeString::from_utf8(value.unwrap()).unwrap();
+        token_uri = token_uri + &token_id.to_string() + &PreludeString::from(".json");
         Ok(token_uri)
     }
 
@@ -145,7 +144,7 @@ where
             .unwrap_or_default();
         Self::env()
             .transfer(self.data::<ownable::Data>().owner(), current_balance)
-            .map_err(|_| PSP34Error::Custom(RmrkError::WithdrawalFailed.as_str()))?;
+            .map_err(|_| PSP34Error::Custom(String::from(RmrkError::WithdrawalFailed.as_str())))?;
         Ok(())
     }
 }
@@ -153,7 +152,7 @@ where
 /// Helper trait for Psp34Custom
 impl<T> Internal for T
 where
-    T: Storage<Data> + Storage<psp34::Data>,
+    T: Storage<Data> + Storage<psp34::Data<enumerable::Balances>>,
 {
     /// Check if the transferred mint values is as expected
     default fn _check_value(
@@ -166,27 +165,31 @@ where
                 return Ok(());
             }
         }
-        return Err(PSP34Error::Custom(RmrkError::BadMintValue.as_str()));
+        return Err(PSP34Error::Custom(String::from(
+            RmrkError::BadMintValue.as_str(),
+        )));
     }
 
     /// Check amount of tokens to be minted
     default fn _check_amount(&self, mint_amount: u64) -> Result<(), PSP34Error> {
         if mint_amount == 0 {
-            return Err(PSP34Error::Custom("CannotMintZeroTokens".to_string()));
+            return Err(PSP34Error::Custom(String::from(
+                RmrkError::CannotMintZeroTokens.as_str(),
+            )));
         }
         if let Some(amount) = self.data::<Data>().last_token_id.checked_add(mint_amount) {
             if amount <= self.data::<Data>().max_supply {
                 return Ok(());
             }
         }
-        return Err(PSP34Error::Custom(
-            RmrkError::CollectionFullOrLocked.as_str(),
-        ));
+        return Err(PSP34Error::Custom(String::from(
+            RmrkError::CollectionIsFull.as_str(),
+        )));
     }
 
     /// Check if token is minted
     default fn _token_exists(&self, id: Id) -> Result<(), PSP34Error> {
-        self.data::<psp34::Data>()
+        self.data::<psp34::Data<enumerable::Balances>>()
             .owner_of(id)
             .ok_or(PSP34Error::TokenNotExists)?;
         Ok(())
