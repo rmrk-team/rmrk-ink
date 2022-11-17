@@ -17,6 +17,11 @@ pub enum RmrkError {
     CollectionIsFull,
     BadMintValue,
     WithdrawalFailed,
+    AlreadyAddedChild,
+    AddingPendingChild,
+    InvalidParentId,
+    ChildNotFound,
+    NotAuthorised,
 }
 
 impl RmrkError {
@@ -26,6 +31,11 @@ impl RmrkError {
             RmrkError::CollectionIsFull => String::from("CollectionIsFull"),
             RmrkError::BadMintValue => String::from("BadMintValue"),
             RmrkError::WithdrawalFailed => String::from("WithdrawalFailed"),
+            RmrkError::AlreadyAddedChild => String::from("AlreadyAddedChild"),
+            RmrkError::AddingPendingChild => String::from("AddingPendingChild"),
+            RmrkError::InvalidParentId => String::from("InvalidParentId"),
+            RmrkError::ChildNotFound => String::from("ChildNotFound"),
+            RmrkError::NotAuthorised => String::from("NotAuthorised"),
         }
     }
 }

@@ -1,4 +1,4 @@
-use ink_prelude::collections::BTreeMap;
+use ink_prelude::collections::{BTreeMap, BTreeSet};
 use openbrush::{contracts::psp34::Id, traits::AccountId};
 
 pub const STORAGE_KEY: u32 = openbrush::storage_unique_key!(Data);
@@ -6,8 +6,8 @@ pub const STORAGE_KEY: u32 = openbrush::storage_unique_key!(Data);
 #[derive(Default, Debug)]
 #[openbrush::upgradeable_storage(STORAGE_KEY)]
 pub struct NestingData {
-    pub pending_children: BTreeMap<ItemId, Nft>,
-    pub accepted_children: BTreeMap<ItemId, Nft>,
+    pub pending_children: BTreeMap<ItemId, BTreeSet<ChildNft>>,
+    pub accepted_children: BTreeMap<ItemId, BTreeSet<ChildNft>>,
 }
 
 #[derive(Debug, PartialEq, Eq, scale::Encode, scale::Decode)]
@@ -21,7 +21,7 @@ pub enum ChildStatus {
 pub type CollectionId = AccountId;
 
 // Nft is a tuple of collection and TokenId and refers to the Child nft
-pub type Nft = (CollectionId, Id);
+pub type ChildNft = (CollectionId, Id);
 
 // ItemId is member of this collection
 pub type ItemId = Id;
