@@ -14,7 +14,10 @@ pub mod rmrk_contract {
         },
         traits::{Storage, String},
     };
-    use psp34_helper::{impls::rmrk::*, traits::psp34_custom::*};
+    use rmrk::{
+        impls::rmrk::{types, *},
+        traits::psp34_custom::*,
+    };
 
     // Event definitions
     /// Event emitted when a token transfer occurs.
@@ -40,6 +43,32 @@ pub mod rmrk_contract {
         approved: bool,
     }
 
+    /// New child added.
+    #[ink(event)]
+    pub struct AddedChild {
+        #[ink(topic)]
+        from: AccountId,
+        #[ink(topic)]
+        to: Id,
+        #[ink(topic)]
+        child_collection: AccountId,
+        #[ink(topic)]
+        child_token_id: Id,
+    }
+
+    /// Child accepted.
+    #[ink(event)]
+    pub struct ChildAccepted {
+        #[ink(topic)]
+        by: AccountId,
+        #[ink(topic)]
+        to: Id,
+        #[ink(topic)]
+        child_collection: AccountId,
+        #[ink(topic)]
+        child_token_id: Id,
+    }
+
     // Rmrk contract storage
     #[ink(storage)]
     #[derive(Default, SpreadAllocate, Storage)]
@@ -54,6 +83,8 @@ pub mod rmrk_contract {
         metadata: metadata::Data,
         #[storage_field]
         psp34_custom: psp34_custom_types::Data,
+        #[storage_field]
+        nesting: types::NestingData,
     }
 
     impl PSP34 for Rmrk {}
@@ -119,6 +150,40 @@ pub mod rmrk_contract {
         }
     }
 
+    impl nesting::NestingEvents for Rmrk {
+        /// Emit AddedChild event
+        fn _emit_added_child_event(
+            &self,
+            from: AccountId,
+            to: Id,
+            child_collection: AccountId,
+            child_token_id: Id,
+        ) {
+            self.env().emit_event(AddedChild {
+                from,
+                to,
+                child_collection,
+                child_token_id,
+            });
+        }
+
+        /// Emit ChildAccepted event
+        fn _emit_child_accepted_event(
+            &self,
+            by: AccountId,
+            to: Id,
+            child_collection: AccountId,
+            child_token_id: Id,
+        ) {
+            self.env().emit_event(ChildAccepted {
+                by,
+                to,
+                child_collection,
+                child_token_id,
+            });
+        }
+    }
+
     #[cfg(test)]
     mod tests {
         use super::*;
@@ -126,7 +191,7 @@ pub mod rmrk_contract {
         use ink_env::{pay_with_call, test};
         use ink_lang as ink;
         use ink_prelude::string::String as PreludeString;
-        use psp34_helper::impls::rmrk::{psp34_custom::Internal, psp34_custom_types::RmrkError};
+        use rmrk::impls::rmrk::{psp34_custom::Internal, psp34_custom_types::RmrkError};
         const PRICE: Balance = 100_000_000_000_000_000;
         const BASE_URI: &str = "ipfs://myIpfsUri/";
         const MAX_SUPPLY: u64 = 10;

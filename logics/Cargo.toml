@@ -1,5 +1,5 @@
 [package]
-name = "psp34_helper"
+name = "rmrk"
 version = "0.2.0"
 authors = ["Stake Technologies <devops@stake.co.jp>"]
 edition = "2021"
