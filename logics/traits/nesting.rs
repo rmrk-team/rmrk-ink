@@ -11,25 +11,14 @@ pub trait Nesting {
     #[ink(message)]
     fn remove_child(&mut self, parent_token_is: Id, child_nft: ChildNft) -> Result<(), PSP34Error>;
     #[ink(message)]
-    fn accept_child(
-        &mut self,
-        parent_token_is: Id,
-        child_contract_address: AccountId,
-        child_token_id: Id,
-    ) -> Result<(), PSP34Error>;
+    fn accept_child(&mut self, parent_token_is: Id, child_nft: ChildNft) -> Result<(), PSP34Error>;
     #[ink(message, payable)]
-    fn reject_child(
-        &mut self,
-        parent_token_is: Id,
-        child_contract_address: AccountId,
-        child_token_id: Id,
-    ) -> Result<(), PSP34Error>;
+    fn reject_child(&mut self, parent_token_is: Id, child_nft: ChildNft) -> Result<(), PSP34Error>;
     #[ink(message, payable)]
     fn transfer_child(
         &mut self,
         parent_token_is: Id,
-        child_contract_address: AccountId,
-        child_token_id: Id,
+        child_nft: ChildNft,
         to: AccountId,
     ) -> Result<(), PSP34Error>;
 }

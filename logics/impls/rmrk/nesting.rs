@@ -38,8 +38,15 @@ pub trait Internal {
     fn add_to_accepted(&mut self, caller: AccountId, parent_token_id: Id, child_nft: ChildNft);
     ///
     fn add_to_pending(&mut self, caller: AccountId, parent_token_id: Id, child_nft: ChildNft);
+    ///
+    fn remove_from_pending(
+        &mut self,
+        parent_token_id: Id,
+        child_nft: ChildNft,
+    ) -> Result<(), PSP34Error>;
+
     /// Check if token is minted
-    fn token_owner(&self, id: Id) -> Result<AccountId, PSP34Error>;
+    fn ensure_owner(&self, id: Id) -> Result<AccountId, PSP34Error>;
     ///
     fn is_caller_owner(&self, caller: AccountId, parent_token_id: Id) -> Result<(), PSP34Error>;
     ///
@@ -109,6 +116,7 @@ where
     }
 
     ///
+
     default fn add_to_pending(
         &mut self,
         caller: AccountId,
@@ -124,7 +132,26 @@ where
             .or_insert_with(|| BTreeSet::from([child_nft.clone()]));
     }
 
-    default fn token_owner(&self, id: Id) -> Result<AccountId, PSP34Error> {
+    default fn remove_from_pending(
+        &mut self,
+        parent_token_id: Id,
+        child_nft: ChildNft,
+    ) -> Result<(), PSP34Error> {
+        if let Some(children) = self
+            .data::<NestingData>()
+            .pending_children
+            .get_mut(&parent_token_id.clone())
+        {
+            if !children.remove(&child_nft) {
+                return Err(PSP34Error::Custom(String::from(
+                    RmrkError::ChildNotFound.as_str(),
+                )));
+            }
+        }
+        Ok(())
+    }
+
+    default fn ensure_owner(&self, id: Id) -> Result<AccountId, PSP34Error> {
         let token_owner = self
             .data::<psp34::Data<enumerable::Balances>>()
             .owner_of(id)
@@ -183,6 +210,13 @@ pub trait NestingEvents {
         child_collection_address: AccountId,
         child_token_id: Id,
     );
+    /// Emit ChildRejected event
+    fn _emit_child_rejected_event(
+        &self,
+        parent: Id,
+        child_collection_address: AccountId,
+        child_token_id: Id,
+    );
 }
 
 impl<T> Nesting for T
@@ -212,7 +246,7 @@ where
         parent_token_id: ItemId,
         child_nft: ChildNft,
     ) -> Result<(), PSP34Error> {
-        self.token_owner(parent_token_id.clone())?;
+        self.ensure_owner(parent_token_id.clone())?;
         let caller = Self::env().caller();
         self.is_caller_owner(caller, parent_token_id.clone())?;
         self.already_accepted(parent_token_id.clone(), child_nft.clone())?;
@@ -224,18 +258,17 @@ where
         let child_owner = caller; // TODO
 
         // Insert child nft and emit event
+        self._emit_added_child_event(
+            caller,
+            parent_token_id.clone(),
+            child_nft.0.clone(),
+            child_nft.1.clone(),
+        );
         if child_owner == caller {
             self.add_to_accepted(caller, parent_token_id.clone(), child_nft.clone());
-            self._emit_added_child_event(
-                caller,
-                parent_token_id.clone(),
-                child_nft.0.clone(),
-                child_nft.1.clone(),
-            );
         } else {
             self.add_to_pending(caller, parent_token_id.clone(), child_nft.clone());
         }
-        self._emit_added_child_event(caller, parent_token_id, child_nft.0, child_nft.1);
 
         Ok(())
     }
@@ -259,7 +292,7 @@ where
         parent_token_id: Id,
         child_nft: ChildNft,
     ) -> Result<(), PSP34Error> {
-        self.token_owner(parent_token_id.clone())?;
+        self.ensure_owner(parent_token_id.clone())?;
         let caller = Self::env().caller();
         self.is_caller_owner(caller, parent_token_id.clone())?;
 
@@ -277,34 +310,75 @@ where
         }
 
         // TODO return ownership of the child nft to parent token owner
-        let token_owner = self.token_owner(parent_token_id.clone())?;
+        let token_owner = self.ensure_owner(parent_token_id.clone())?;
         self.transfer_child_ownership(Self::env().account_id(), token_owner)?;
         self._emit_child_removed_event(parent_token_id, child_nft.0, child_nft.1);
 
         Ok(())
     }
 
+    /// Accept a child NFT (from different collection) to be owned by parent token
+    ///
+    /// # Requirements:
+    /// * The status of the child is `Pending`
+    /// *
+    ///
+    /// # Arguments:
+    /// * `parent_token_id`: is the tokenId of the parent NFT.
+    /// * `child_nft`: (collection_id, token_id) of the child instance.
+    ///
+    /// # Result:
+    /// Child Nft is moved from pending to accepted
+    /// On success emitts `RmrkEvent::ChildAccepted`
     default fn accept_child(
         &mut self,
         parent_token_id: Id,
-        child_contract_address: AccountId,
-        child_token_id: Id,
+        child_nft: ChildNft,
     ) -> Result<(), PSP34Error> {
-        todo!()
+        self.ensure_owner(parent_token_id.clone())?;
+        let caller = Self::env().caller();
+        self.is_caller_owner(caller, parent_token_id.clone())?;
+        self.already_accepted(parent_token_id.clone(), child_nft.clone())?;
+
+        self.remove_from_pending(parent_token_id.clone(), child_nft.clone())?;
+        self.add_to_accepted(caller, parent_token_id, child_nft);
+
+        Ok(())
     }
+
+    /// Reject a child NFT (from different collection)
+    ///
+    /// # Requirements:
+    /// * The status of the child is `Pending`
+    /// *
+    ///
+    /// # Arguments:
+    /// * `parent_token_id`: is the tokenId of the parent NFT.
+    /// * `child_nft`: (collection_id, token_id) of the child instance.
+    ///
+    /// # Result:
+    /// Child Nft is removed from pending
+    /// On success emitts `RmrkEvent::ChildRejected`
     default fn reject_child(
         &mut self,
         parent_token_id: Id,
-        child_contract_address: AccountId,
-        child_token_id: Id,
+        child_nft: ChildNft,
     ) -> Result<(), PSP34Error> {
-        todo!()
+        self.ensure_owner(parent_token_id.clone())?;
+        let caller = Self::env().caller();
+        self.is_caller_owner(caller, parent_token_id.clone())?;
+        self.already_accepted(parent_token_id.clone(), child_nft.clone())?;
+
+        self.remove_from_pending(parent_token_id.clone(), child_nft.clone())?;
+        self._emit_child_rejected_event(parent_token_id, child_nft.0, child_nft.1);
+
+        Ok(())
     }
+
     default fn transfer_child(
         &mut self,
         parent_token_id: Id,
-        child_contract_address: AccountId,
-        child_token_id: Id,
+        child_token_id: ChildNft,
         to: AccountId,
     ) -> Result<(), PSP34Error> {
         todo!()
@@ -337,6 +411,15 @@ where
 
     /// Emit ChildRemoved event
     default fn _emit_child_removed_event(
+        &self,
+        _parent: Id,
+        _child_collection_address: AccountId,
+        _child_token_id: Id,
+    ) {
+    }
+
+    /// Emit ChildRejected event
+    default fn _emit_child_rejected_event(
         &self,
         _parent: Id,
         _child_collection_address: AccountId,
