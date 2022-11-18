@@ -1,0 +1,6 @@
+{
+    "projectFiles": ["contracts/**/*"],
+    "typechainGeneratedPath": "types",
+    "isWorkspace": true,
+    "workspacePath": "./"
+  }
