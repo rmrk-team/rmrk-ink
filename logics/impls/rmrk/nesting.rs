@@ -271,8 +271,8 @@ where
         }
 
         // TODO return ownership of the child nft to parent token owner
-        let token_owner = self.ensure_exists(parent_token_id.clone())?;
-        self.transfer_child_ownership(Self::env().account_id(), token_owner)?;
+        let _token_owner = self.ensure_exists(parent_token_id.clone())?;
+        // self.transfer_child_ownership(Self::env().account_id(), token_owner)?;
         self._emit_child_removed_event(parent_token_id, child_nft.0, child_nft.1);
 
         Ok(())

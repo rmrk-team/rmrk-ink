@@ -16,6 +16,7 @@ pub mod rmrk_contract {
     };
     use rmrk::{
         impls::rmrk::{types, *},
+        traits::nesting::*,
         traits::psp34_custom::*,
     };
 
@@ -80,6 +81,17 @@ pub mod rmrk_contract {
         child_token_id: Id,
     }
 
+    /// Child rejected.
+    #[ink(event)]
+    pub struct ChildRejected {
+        #[ink(topic)]
+        parent: Id,
+        #[ink(topic)]
+        child_collection: AccountId,
+        #[ink(topic)]
+        child_token_id: Id,
+    }
+
     // Rmrk contract storage
     #[ink(storage)]
     #[derive(Default, SpreadAllocate, Storage)]
@@ -107,6 +119,8 @@ pub mod rmrk_contract {
     impl PSP34Enumerable for Rmrk {}
 
     impl Psp34Custom for Rmrk {}
+
+    impl Nesting for Rmrk {}
 
     impl Rmrk {
         #[ink(constructor)]
@@ -207,6 +221,20 @@ pub mod rmrk_contract {
                 child_token_id,
             });
         }
+
+        /// Emit ChildRejected event
+        fn _emit_child_rejected_event(
+            &self,
+            parent: Id,
+            child_collection: AccountId,
+            child_token_id: Id,
+        ) {
+            self.env().emit_event(ChildRejected {
+                parent,
+                child_collection,
+                child_token_id,
+            });
+        }
     }
 
     #[cfg(test)]
@@ -216,7 +244,7 @@ pub mod rmrk_contract {
         use ink_env::{pay_with_call, test};
         use ink_lang as ink;
         use ink_prelude::string::String as PreludeString;
-        use rmrk::impls::rmrk::{psp34_custom::Internal, psp34_custom_types::RmrkError};
+        use rmrk::impls::rmrk::{errors::RmrkError, psp34_custom::Internal};
         const PRICE: Balance = 100_000_000_000_000_000;
         const BASE_URI: &str = "ipfs://myIpfsUri/";
         const MAX_SUPPLY: u64 = 10;
@@ -298,6 +326,54 @@ pub mod rmrk_contract {
                 rmrk.owners_token_by_index(accounts.bob, 5),
                 Err(TokenNotExists)
             );
+        }
+
+        #[ink::test]
+        fn nesting_works() {
+            let mut rmrk = init();
+            ink_env::debug_println!("####### {:?}", rmrk);
+            let parent_token_id = Id::U64(1);
+            let child_token_id = Id::U64(2);
+            let accounts = default_accounts();
+            assert_eq!(rmrk.owner(), accounts.alice);
+            set_sender(accounts.bob);
+            test::set_value_transferred::<ink_env::DefaultEnvironment>(PRICE);
+            assert!(rmrk.mint_next().is_ok());
+
+            // use dummy contract_id for child, say accounts.ferdie
+            let dummy_account = accounts.frank;
+            assert!(rmrk
+                .add_child(
+                    parent_token_id.clone(),
+                    (dummy_account, child_token_id.clone())
+                )
+                .is_ok());
+            assert_eq!(
+                rmrk.add_child(
+                    parent_token_id.clone(),
+                    (dummy_account, child_token_id.clone())
+                ),
+                Err(PSP34Error::Custom(RmrkError::AlreadyAddedChild.as_str()))
+            );
+            assert_eq!(
+                rmrk.accept_child(
+                    parent_token_id.clone(),
+                    (dummy_account, child_token_id.clone())
+                ),
+                Err(PSP34Error::Custom(RmrkError::AlreadyAddedChild.as_str()))
+            );
+            assert_eq!(
+                rmrk.reject_child(
+                    parent_token_id.clone(),
+                    (dummy_account, child_token_id.clone())
+                ),
+                Err(PSP34Error::Custom(RmrkError::AlreadyAddedChild.as_str()))
+            );
+            assert_eq!(3, ink_env::test::recorded_events().count());
+            assert!(rmrk
+                .remove_child(parent_token_id, (dummy_account, child_token_id))
+                .is_ok());
+            assert_eq!(4, ink_env::test::recorded_events().count());
         }
 
         #[ink::test]
