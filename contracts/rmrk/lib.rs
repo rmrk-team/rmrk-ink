@@ -69,6 +69,17 @@ pub mod rmrk_contract {
         child_token_id: Id,
     }
 
+    /// Child removed.
+    #[ink(event)]
+    pub struct ChildRemoved {
+        #[ink(topic)]
+        parent: Id,
+        #[ink(topic)]
+        child_collection: AccountId,
+        #[ink(topic)]
+        child_token_id: Id,
+    }
+
     // Rmrk contract storage
     #[ink(storage)]
     #[derive(Default, SpreadAllocate, Storage)]
@@ -178,6 +189,20 @@ pub mod rmrk_contract {
             self.env().emit_event(ChildAccepted {
                 by,
                 to,
+                child_collection,
+                child_token_id,
+            });
+        }
+
+        /// Emit ChildRemoved event
+        fn _emit_child_removed_event(
+            &self,
+            parent: Id,
+            child_collection: AccountId,
+            child_token_id: Id,
+        ) {
+            self.env().emit_event(ChildRemoved {
+                parent,
                 child_collection,
                 child_token_id,
             });
