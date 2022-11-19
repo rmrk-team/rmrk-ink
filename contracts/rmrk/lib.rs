@@ -329,54 +329,6 @@ pub mod rmrk_contract {
         }
 
         #[ink::test]
-        fn nesting_works() {
-            let mut rmrk = init();
-            ink_env::debug_println!("####### {:?}", rmrk);
-            let parent_token_id = Id::U64(1);
-            let child_token_id = Id::U64(2);
-            let accounts = default_accounts();
-            assert_eq!(rmrk.owner(), accounts.alice);
-            set_sender(accounts.bob);
-            test::set_value_transferred::<ink_env::DefaultEnvironment>(PRICE);
-            assert!(rmrk.mint_next().is_ok());
-
-            // use dummy contract_id for child, say accounts.ferdie
-            let dummy_account = accounts.frank;
-            assert!(rmrk
-                .add_child(
-                    parent_token_id.clone(),
-                    (dummy_account, child_token_id.clone())
-                )
-                .is_ok());
-            assert_eq!(
-                rmrk.add_child(
-                    parent_token_id.clone(),
-                    (dummy_account, child_token_id.clone())
-                ),
-                Err(PSP34Error::Custom(RmrkError::AlreadyAddedChild.as_str()))
-            );
-            assert_eq!(
-                rmrk.accept_child(
-                    parent_token_id.clone(),
-                    (dummy_account, child_token_id.clone())
-                ),
-                Err(PSP34Error::Custom(RmrkError::AlreadyAddedChild.as_str()))
-            );
-            assert_eq!(
-                rmrk.reject_child(
-                    parent_token_id.clone(),
-                    (dummy_account, child_token_id.clone())
-                ),
-                Err(PSP34Error::Custom(RmrkError::AlreadyAddedChild.as_str()))
-            );
-            assert_eq!(3, ink_env::test::recorded_events().count());
-            assert!(rmrk
-                .remove_child(parent_token_id, (dummy_account, child_token_id))
-                .is_ok());
-            assert_eq!(4, ink_env::test::recorded_events().count());
-        }
-
-        #[ink::test]
         fn mint_above_limit_fails() {
             let mut rmrk = init();
             let accounts = default_accounts();

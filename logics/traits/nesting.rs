@@ -90,5 +90,9 @@ pub trait Internal {
     ) -> Result<(), PSP34Error>;
 
     /// Cross contract call to transfer child nft ownership
-    fn transfer_child_ownership(&self, signer: AccountId, to: AccountId) -> Result<(), PSP34Error>;
+    fn transfer_child_ownership(
+        &self,
+        to: AccountId,
+        child_nft: ChildNft,
+    ) -> Result<(), PSP34Error>;
 }

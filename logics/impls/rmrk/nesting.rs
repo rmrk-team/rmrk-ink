@@ -173,10 +173,15 @@ where
     /// Cross contract call to transfer child nft ownership
     default fn transfer_child_ownership(
         &self,
-        _signer: AccountId,
-        _to: AccountId,
+        to: AccountId,
+        child_nft: ChildNft,
     ) -> Result<(), PSP34Error> {
-        todo!()
+        // TODO check child collection is approved by this (parent) collection
+        // let collection = self.get_collection(child_nft.0)
+        //      .ok_or(RmrkError::ChildContractNotApproved)?;
+
+        PSP34Ref::transfer(&child_nft.0, to, child_nft.1, Vec::new())?;
+        Ok(())
     }
 }
 
@@ -187,15 +192,19 @@ where
     /// Add a child NFT (from different collection) to the NFT to NFT in this collection
     /// The status of added child is `Pending` if caller is not owner of child NFT
     /// The status of added child is `Accepted` if caller is is owner of child NFT
+    /// The caller needs not to be the owner of the to_parent_token_id, but
+    /// Caller must be owner of the child NFT,
+    /// in order to perform transfer() ownership of the child nft to to_parent_token_id.
     ///
     /// # Requirements:
     /// * `child_contract_address` needs to be added by collecion owner
-    /// * `parent_token_id` must exist.
+    /// * `to_parent_token_id` must exist.
     /// * `child_token_id` must exist.
     /// * There cannot be two identical children.
+    /// **
     ///
     /// # Arguments:
-    /// * `parent_token_id`: is the tokenId of the parent NFT.
+    /// * `to_parent_token_id`: is the tokenId of the parent NFT. The receiver of child.
     /// * `child_nft`: (collection_id, token_id) of the child instance.
     ///
     /// # Result:
@@ -204,31 +213,31 @@ where
     /// On success emitts `RmrkEvent::ChildAccepted` - only if caller is already owner of child NFT
     default fn add_child(
         &mut self,
-        parent_token_id: ItemId,
+        to_parent_token_id: ItemId,
         child_nft: ChildNft,
     ) -> Result<(), PSP34Error> {
-        self.ensure_exists(parent_token_id.clone())?;
+        self.ensure_exists(to_parent_token_id.clone())?;
         let caller = Self::env().caller();
-        self.is_caller_parent_owner(caller, parent_token_id.clone())?;
-        self.already_accepted(parent_token_id.clone(), child_nft.clone())?;
-        self.already_pending(parent_token_id.clone(), child_nft.clone())?;
+        self.is_caller_parent_owner(caller, to_parent_token_id.clone())?;
+        self.already_accepted(to_parent_token_id.clone(), child_nft.clone())?;
+        self.already_pending(to_parent_token_id.clone(), child_nft.clone())?;
 
-        // TODO check child collection is approved by this (parent) collection
-
-        // TODO send transfer() to child contract
+        // Transfer child ownership to this contract.
+        // This call will fail if caller is not parent owner
+        self.transfer_child_ownership(Self::env().account_id(), child_nft.clone())?;
         let child_owner = caller; // TODO
 
         // Insert child nft and emit event
         self._emit_added_child_event(
             caller,
-            parent_token_id.clone(),
+            to_parent_token_id.clone(),
             child_nft.0.clone(),
             child_nft.1.clone(),
         );
         if child_owner == caller {
-            self.add_to_accepted(caller, parent_token_id.clone(), child_nft.clone());
+            self.add_to_accepted(caller, to_parent_token_id.clone(), child_nft.clone());
         } else {
-            self.add_to_pending(parent_token_id.clone(), child_nft.clone());
+            self.add_to_pending(to_parent_token_id.clone(), child_nft.clone());
         }
 
         Ok(())
@@ -270,9 +279,10 @@ where
             }
         }
 
-        // TODO return ownership of the child nft to parent token owner
-        let _token_owner = self.ensure_exists(parent_token_id.clone())?;
-        // self.transfer_child_ownership(Self::env().account_id(), token_owner)?;
+        // Transfer child ownership from this contract to parent_token owner.
+        // This call will fail if this contract is not child owner
+        let token_owner = self.ensure_exists(parent_token_id.clone())?;
+        self.transfer_child_ownership(token_owner, child_nft.clone())?;
         self._emit_child_removed_event(parent_token_id, child_nft.0, child_nft.1);
 
         Ok(())
