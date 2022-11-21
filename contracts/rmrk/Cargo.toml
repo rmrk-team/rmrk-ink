@@ -16,7 +16,7 @@ scale = { package = "parity-scale-codec", version = "3", default-features = fals
 scale-info = { version = "2", default-features = false, features = ["derive"], optional = true }
 
 openbrush = { tag = "v2.3.0", git = "https://github.com/Supercolony-net/openbrush-contracts", default-features = false, features = ["ownable", "psp34", "reentrancy_guard"] }
-psp34_helper = { path = "../../logics", default-features = false }
+rmrk = { path = "../../logics", default-features = false }
 
 
 [lib]
@@ -37,6 +37,6 @@ std = [
     "scale/std",
     "scale-info/std",
     "openbrush/std",
-    "psp34_helper/std",
+    "rmrk/std",
 ]
 ink-as-dependency = []
