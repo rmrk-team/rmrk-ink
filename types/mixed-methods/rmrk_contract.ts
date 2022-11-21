@@ -35,25 +35,6 @@ export default class Methods {
 	}
 
 	/**
-	* approve
-	*
-	* @param { ArgumentTypes.AccountId } operator,
-	* @param { ArgumentTypes.Id | null } id,
-	* @param { boolean } approved,
-	* @returns { void }
-	*/
-	"approve" (
-		operator: ArgumentTypes.AccountId,
-		id: ArgumentTypes.Id | null,
-		approved: boolean,
-		__options: GasLimit,
-	){
-		return txSignAndSend( this.__apiPromise, this.__nativeContract, this.__keyringPair, "psp34::approve", (events: EventRecord) => {
-			return decodeEvents(events, this.__nativeContract, "rmrk_contract");
-		}, [operator, id, approved], __options);
-	}
-
-	/**
 	* transfer
 	*
 	* @param { ArgumentTypes.AccountId } to,
@@ -73,14 +54,16 @@ export default class Methods {
 	}
 
 	/**
-	* collectionId
+	* ownerOf
 	*
-	* @returns { ReturnTypes.Id }
+	* @param { ArgumentTypes.Id } id,
+	* @returns { ReturnTypes.AccountId | null }
 	*/
-	"collectionId" (
+	"ownerOf" (
+		id: ArgumentTypes.Id,
 		__options: GasLimit,
-	): Promise< QueryReturnType< ReturnTypes.Id > >{
-		return queryJSON( this.__nativeContract, this.__callerAddress, "psp34::collectionId", [], __options, (result) => { return handleReturnType(result, getTypeDescription(1, 'rmrk_contract')); });
+	): Promise< QueryReturnType< ReturnTypes.AccountId | null > >{
+		return queryJSON( this.__nativeContract, this.__callerAddress, "psp34::ownerOf", [id], __options, (result) => { return handleReturnType(result, getTypeDescription(19, 'rmrk_contract')); });
 	}
 
 	/**
@@ -98,6 +81,36 @@ export default class Methods {
 		__options: GasLimit,
 	): Promise< QueryReturnType< boolean > >{
 		return queryJSON( this.__nativeContract, this.__callerAddress, "psp34::allowance", [owner, operator, id], __options);
+	}
+
+	/**
+	* collectionId
+	*
+	* @returns { ReturnTypes.Id }
+	*/
+	"collectionId" (
+		__options: GasLimit,
+	): Promise< QueryReturnType< ReturnTypes.Id > >{
+		return queryJSON( this.__nativeContract, this.__callerAddress, "psp34::collectionId", [], __options, (result) => { return handleReturnType(result, getTypeDescription(1, 'rmrk_contract')); });
+	}
+
+	/**
+	* approve
+	*
+	* @param { ArgumentTypes.AccountId } operator,
+	* @param { ArgumentTypes.Id | null } id,
+	* @param { boolean } approved,
+	* @returns { void }
+	*/
+	"approve" (
+		operator: ArgumentTypes.AccountId,
+		id: ArgumentTypes.Id | null,
+		approved: boolean,
+		__options: GasLimit,
+	){
+		return txSignAndSend( this.__apiPromise, this.__nativeContract, this.__keyringPair, "psp34::approve", (events: EventRecord) => {
+			return decodeEvents(events, this.__nativeContract, "rmrk_contract");
+		}, [operator, id, approved], __options);
 	}
 
 	/**
@@ -125,32 +138,6 @@ export default class Methods {
 	}
 
 	/**
-	* ownerOf
-	*
-	* @param { ArgumentTypes.Id } id,
-	* @returns { ReturnTypes.AccountId | null }
-	*/
-	"ownerOf" (
-		id: ArgumentTypes.Id,
-		__options: GasLimit,
-	): Promise< QueryReturnType< ReturnTypes.AccountId | null > >{
-		return queryJSON( this.__nativeContract, this.__callerAddress, "psp34::ownerOf", [id], __options, (result) => { return handleReturnType(result, getTypeDescription(19, 'rmrk_contract')); });
-	}
-
-	/**
-	* renounceOwnership
-	*
-	* @returns { void }
-	*/
-	"renounceOwnership" (
-		__options: GasLimit,
-	){
-		return txSignAndSend( this.__apiPromise, this.__nativeContract, this.__keyringPair, "ownable::renounceOwnership", (events: EventRecord) => {
-			return decodeEvents(events, this.__nativeContract, "rmrk_contract");
-		}, [], __options);
-	}
-
-	/**
 	* owner
 	*
 	* @returns { ReturnTypes.AccountId }
@@ -174,6 +161,19 @@ export default class Methods {
 		return txSignAndSend( this.__apiPromise, this.__nativeContract, this.__keyringPair, "ownable::transferOwnership", (events: EventRecord) => {
 			return decodeEvents(events, this.__nativeContract, "rmrk_contract");
 		}, [newOwner], __options);
+	}
+
+	/**
+	* renounceOwnership
+	*
+	* @returns { void }
+	*/
+	"renounceOwnership" (
+		__options: GasLimit,
+	){
+		return txSignAndSend( this.__apiPromise, this.__nativeContract, this.__keyringPair, "ownable::renounceOwnership", (events: EventRecord) => {
+			return decodeEvents(events, this.__nativeContract, "rmrk_contract");
+		}, [], __options);
 	}
 
 	/**
@@ -220,40 +220,31 @@ export default class Methods {
 	}
 
 	/**
-	* mintNext
+	* withdraw
 	*
 	* @returns { void }
 	*/
-	"mintNext" (
-		__options: GasLimitAndRequiredValue,
+	"withdraw" (
+		__options: GasLimit,
 	){
-		return txSignAndSend( this.__apiPromise, this.__nativeContract, this.__keyringPair, "psp34Custom::mintNext", (events: EventRecord) => {
+		return txSignAndSend( this.__apiPromise, this.__nativeContract, this.__keyringPair, "psp34Custom::withdraw", (events: EventRecord) => {
 			return decodeEvents(events, this.__nativeContract, "rmrk_contract");
 		}, [], __options);
 	}
 
 	/**
-	* tokenUri
+	* setBaseUri
 	*
-	* @param { (number | string | BN) } tokenId,
-	* @returns { Result<string, ReturnTypes.PSP34Error> }
+	* @param { string } uri,
+	* @returns { void }
 	*/
-	"tokenUri" (
-		tokenId: (number | string | BN),
+	"setBaseUri" (
+		uri: string,
 		__options: GasLimit,
-	): Promise< QueryReturnType< Result<string, ReturnTypes.PSP34Error> > >{
-		return queryOkJSON( this.__nativeContract, this.__callerAddress, "psp34Custom::tokenUri", [tokenId], __options, (result) => { return handleReturnType(result, getTypeDescription(39, 'rmrk_contract')); });
-	}
-
-	/**
-	* maxSupply
-	*
-	* @returns { number }
-	*/
-	"maxSupply" (
-		__options: GasLimit,
-	): Promise< QueryReturnType< number > >{
-		return queryJSON( this.__nativeContract, this.__callerAddress, "psp34Custom::maxSupply", [], __options);
+	){
+		return txSignAndSend( this.__apiPromise, this.__nativeContract, this.__keyringPair, "psp34Custom::setBaseUri", (events: EventRecord) => {
+			return decodeEvents(events, this.__nativeContract, "rmrk_contract");
+		}, [uri], __options);
 	}
 
 	/**
@@ -274,18 +265,40 @@ export default class Methods {
 	}
 
 	/**
-	* setBaseUri
+	* mintNext
 	*
-	* @param { string } uri,
 	* @returns { void }
 	*/
-	"setBaseUri" (
-		uri: string,
-		__options: GasLimit,
+	"mintNext" (
+		__options: GasLimitAndRequiredValue,
 	){
-		return txSignAndSend( this.__apiPromise, this.__nativeContract, this.__keyringPair, "psp34Custom::setBaseUri", (events: EventRecord) => {
+		return txSignAndSend( this.__apiPromise, this.__nativeContract, this.__keyringPair, "psp34Custom::mintNext", (events: EventRecord) => {
 			return decodeEvents(events, this.__nativeContract, "rmrk_contract");
-		}, [uri], __options);
+		}, [], __options);
+	}
+
+	/**
+	* maxSupply
+	*
+	* @returns { number }
+	*/
+	"maxSupply" (
+		__options: GasLimit,
+	): Promise< QueryReturnType< number > >{
+		return queryJSON( this.__nativeContract, this.__callerAddress, "psp34Custom::maxSupply", [], __options);
+	}
+
+	/**
+	* tokenUri
+	*
+	* @param { (number | string | BN) } tokenId,
+	* @returns { Result<string, ReturnTypes.PSP34Error> }
+	*/
+	"tokenUri" (
+		tokenId: (number | string | BN),
+		__options: GasLimit,
+	): Promise< QueryReturnType< Result<string, ReturnTypes.PSP34Error> > >{
+		return queryOkJSON( this.__nativeContract, this.__callerAddress, "psp34Custom::tokenUri", [tokenId], __options, (result) => { return handleReturnType(result, getTypeDescription(40, 'rmrk_contract')); });
 	}
 
 	/**
@@ -300,16 +313,22 @@ export default class Methods {
 	}
 
 	/**
-	* withdraw
+	* transferChild
 	*
+	* @param { ArgumentTypes.Id } from,
+	* @param { ArgumentTypes.Id } to,
+	* @param { [ArgumentTypes.AccountId, ArgumentTypes.Id] } childNft,
 	* @returns { void }
 	*/
-	"withdraw" (
+	"transferChild" (
+		from: ArgumentTypes.Id,
+		to: ArgumentTypes.Id,
+		childNft: [ArgumentTypes.AccountId, ArgumentTypes.Id],
 		__options: GasLimit,
 	){
-		return txSignAndSend( this.__apiPromise, this.__nativeContract, this.__keyringPair, "psp34Custom::withdraw", (events: EventRecord) => {
+		return txSignAndSend( this.__apiPromise, this.__nativeContract, this.__keyringPair, "nesting::transferChild", (events: EventRecord) => {
 			return decodeEvents(events, this.__nativeContract, "rmrk_contract");
-		}, [], __options);
+		}, [from, to, childNft], __options);
 	}
 
 	/**
@@ -330,23 +349,6 @@ export default class Methods {
 	}
 
 	/**
-	* removeChild
-	*
-	* @param { ArgumentTypes.Id } parentTokenIs,
-	* @param { [ArgumentTypes.AccountId, ArgumentTypes.Id] } childNft,
-	* @returns { void }
-	*/
-	"removeChild" (
-		parentTokenIs: ArgumentTypes.Id,
-		childNft: [ArgumentTypes.AccountId, ArgumentTypes.Id],
-		__options: GasLimit,
-	){
-		return txSignAndSend( this.__apiPromise, this.__nativeContract, this.__keyringPair, "nesting::removeChild", (events: EventRecord) => {
-			return decodeEvents(events, this.__nativeContract, "rmrk_contract");
-		}, [parentTokenIs, childNft], __options);
-	}
-
-	/**
 	* rejectChild
 	*
 	* @param { ArgumentTypes.Id } parentTokenIs,
@@ -359,6 +361,23 @@ export default class Methods {
 		__options: GasLimit,
 	){
 		return txSignAndSend( this.__apiPromise, this.__nativeContract, this.__keyringPair, "nesting::rejectChild", (events: EventRecord) => {
+			return decodeEvents(events, this.__nativeContract, "rmrk_contract");
+		}, [parentTokenIs, childNft], __options);
+	}
+
+	/**
+	* removeChild
+	*
+	* @param { ArgumentTypes.Id } parentTokenIs,
+	* @param { [ArgumentTypes.AccountId, ArgumentTypes.Id] } childNft,
+	* @returns { void }
+	*/
+	"removeChild" (
+		parentTokenIs: ArgumentTypes.Id,
+		childNft: [ArgumentTypes.AccountId, ArgumentTypes.Id],
+		__options: GasLimit,
+	){
+		return txSignAndSend( this.__apiPromise, this.__nativeContract, this.__keyringPair, "nesting::removeChild", (events: EventRecord) => {
 			return decodeEvents(events, this.__nativeContract, "rmrk_contract");
 		}, [parentTokenIs, childNft], __options);
 	}
@@ -389,25 +408,6 @@ export default class Methods {
 		__options: GasLimit,
 	): Promise< QueryReturnType< Result<[number, number], ReturnTypes.PSP34Error> > >{
 		return queryOkJSON( this.__nativeContract, this.__callerAddress, "nesting::childrenBalance", [], __options, (result) => { return handleReturnType(result, getTypeDescription(41, 'rmrk_contract')); });
-	}
-
-	/**
-	* transferChild
-	*
-	* @param { ArgumentTypes.Id } from,
-	* @param { ArgumentTypes.Id } to,
-	* @param { [ArgumentTypes.AccountId, ArgumentTypes.Id] } childNft,
-	* @returns { void }
-	*/
-	"transferChild" (
-		from: ArgumentTypes.Id,
-		to: ArgumentTypes.Id,
-		childNft: [ArgumentTypes.AccountId, ArgumentTypes.Id],
-		__options: GasLimit,
-	){
-		return txSignAndSend( this.__apiPromise, this.__nativeContract, this.__keyringPair, "nesting::transferChild", (events: EventRecord) => {
-			return decodeEvents(events, this.__nativeContract, "rmrk_contract");
-		}, [from, to, childNft], __options);
 	}
 
 }

@@ -64,7 +64,6 @@ describe('Minting rmrk as psp34 tests', () => {
     expect((await contract.query.maxSupply()).value).to.equal(MAX_SUPPLY);
     expect((await contract.query.price()).value.rawNumber.toString()).to.equal(PRICE_PER_MINT.toString());
     const collectionId = (await contract.query.collectionId());
-    console.log("collectionId", collectionId);
 
     // expect((await contract.query.getAttribute({u128: collectionId}, ["baseUri"])).value).to.equal(BASE_URI);
     // expect((await contract.query.getAttribute(collectionId, ["baseUri"])).value).to.equal(BASE_URI);
