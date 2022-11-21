@@ -62,7 +62,7 @@ pub trait Internal {
     fn already_pending(&self, parent_token_id: Id, child_nft: ChildNft) -> Result<(), PSP34Error>;
 
     /// Add the child to the list of accepted children
-    fn add_to_accepted(&mut self, caller: AccountId, parent_token_id: Id, child_nft: ChildNft);
+    fn add_to_accepted(&mut self, parent_token_id: Id, child_nft: ChildNft);
 
     /// Remove the child to the list of accepted children
     fn remove_accepted(

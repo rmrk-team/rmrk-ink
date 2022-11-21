@@ -78,7 +78,6 @@ where
     /// Add the child to the list of accepted children
     default fn add_to_accepted(
         &mut self,
-        caller: AccountId,
         parent_token_id: Id,
         child_nft: ChildNft,
     ) {
@@ -244,7 +243,7 @@ where
         // );
         if child_owner == caller {
             ink_env::debug_println!("####### add_to_accepted  before");
-            self.add_to_accepted(caller, to_parent_token_id.clone(), child_nft.clone());
+            self.add_to_accepted(to_parent_token_id.clone(), child_nft.clone());
             ink_env::debug_println!("####### add_to_accepted  after");
         } else {
             ink_env::debug_println!("####### add_to_pending  before");
@@ -324,7 +323,7 @@ where
         self.already_accepted(parent_token_id.clone(), child_nft.clone())?;
 
         self.remove_from_pending(parent_token_id.clone(), child_nft.clone())?;
-        self.add_to_accepted(caller, parent_token_id, child_nft);
+        self.add_to_accepted(parent_token_id, child_nft);
 
         Ok(())
     }
@@ -390,7 +389,7 @@ where
             child_nft.1.clone(),
         );
         if current_parent_owner == new_parent_owner {
-            self.add_to_accepted(new_parent_owner, new_parent.clone(), child_nft.clone());
+            self.add_to_accepted(new_parent.clone(), child_nft.clone());
         } else {
             self.add_to_pending(new_parent.clone(), child_nft.clone());
         }
