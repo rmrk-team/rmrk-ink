@@ -29,7 +29,7 @@ describe('Minting rmrk as psp34 tests', () => {
   let rmrkFactory: Rmrk_factory;
   let api: ApiPromise;
   let deployer: KeyringPair;
-  let wallet: KeyringPair;
+  let bob: KeyringPair;
   let contract: Rmrk;
 
   const gasLimit = 18750000000;
@@ -41,7 +41,7 @@ describe('Minting rmrk as psp34 tests', () => {
   async function setup(): Promise<void> {
     api = await ApiPromise.create({ provider: wsProvider });
     deployer = keyring.addFromUri('//Alice');
-    wallet = keyring.addFromUri('//Bob');
+    bob = keyring.addFromUri('//Bob');
     rmrkFactory = new Rmrk_factory(api, deployer);
     contract = new Rmrk((await rmrkFactory.new(
       ["RmrkProject"],
@@ -63,6 +63,11 @@ describe('Minting rmrk as psp34 tests', () => {
     expect((await contract.query.owner()).value).to.equal(deployer.address);
     expect((await contract.query.maxSupply()).value).to.equal(MAX_SUPPLY);
     expect((await contract.query.price()).value.rawNumber.toString()).to.equal(PRICE_PER_MINT.toString());
+    const collectionId = (await contract.query.collectionId());
+    console.log("collectionId", collectionId);
+
+    // expect((await contract.query.getAttribute({u128: collectionId}, ["baseUri"])).value).to.equal(BASE_URI);
+    // expect((await contract.query.getAttribute(collectionId, ["baseUri"])).value).to.equal(BASE_URI);
   })
 
   it('mintNext works', async () => {
@@ -72,74 +77,62 @@ describe('Minting rmrk as psp34 tests', () => {
     expect((await contract.query.totalSupply()).value.rawNumber.toNumber()).to.equal(0);
 
     // mint
-    const { gasRequired } = await contract.withSigner(wallet).query.mintNext();
-    console.log("gasRequired", gasRequired);
-    await contract.withSigner(wallet).tx.mintNext({ value: PRICE_PER_MINT, gasLimit: gasRequired * 2n});
+    const { gasRequired } = await contract.withSigner(bob).query.mintNext();
+    // console.log("gasRequired", gasRequired);
+    await contract.withSigner(bob).tx.mintNext({ value: PRICE_PER_MINT, gasLimit: gasRequired * 2n });
 
     // verify minting results. The totalSupply value is BN
     expect((await contract.query.totalSupply()).value.rawNumber.toNumber()).to.equal(1);
 
-    expect((await contract.query.balanceOf(wallet.address)).value).to.equal(1);
-    expect((await contract.query.ownerOf({u64: tokenId})).value).to.equal(wallet.address);
+    expect((await contract.query.balanceOf(bob.address)).value).to.equal(1);
+    expect((await contract.query.ownerOf({ u64: tokenId })).value).to.equal(bob.address);
 
-    // verify tokenUri call
+    // TODO verify tokenUri call
+    // console.log("tokenUri", (await contract.query.tokenUri(1)).value);
     // expect((await contract.query.tokenUri(1))).to.equal(TOKEN_URI_1);
   })
 
-  // it('mint 5 tokens works', async () => {
-  //     const { contract, bob, uniquesCollectionId} = await setup();
+  it('mint 5 tokens works', async () => {
+    await setup();
 
-  //     await expect(contract.query["psp34::totalSupply"]()).to.eventually.have.property('output').to.equal(0);
-  //     await expect(contract.connect(bob).tx["rmrkMintable::mint"](bob.address, 5, {value: PRICE_PER_MINT.muln(5)})).to.be.eventually.fulfilled;
-  //     await expect(contract.query["psp34::totalSupply"]()).to.eventually.have.property('output').to.equal(new BN("5"));
-  //     await expect(contract.query["rmrkMintable::tokenUri"](5)).to.eventually.have.property('output').to.equal(TOKEN_URI_5);
-  //     await expect(contract.query["psp34::ownerOf"]({u64: 5})).to.eventually.have.property('output').to.equal(bob.address);
+    expect((await contract.query.totalSupply()).value.rawNumber.toNumber()).to.equal(0);
 
-  //     // verify that the item is created in the Uniques pallet
-  //     await expect((await api.query.uniques.asset(uniquesCollectionId, 5)).toHuman()?.owner).to.be.equal(bob.address);
+    const { gasRequired } = await contract.withSigner(bob).query.mintNext();
+    await contract.withSigner(bob).tx.mintFor(bob.address, 5, { value: PRICE_PER_MINT.muln(5), gasLimit: gasRequired * 2n });
 
-  // })
+    expect((await contract.query.totalSupply()).value.rawNumber.toNumber()).to.equal(5);
+    expect((await contract.query.ownerOf({ u64: 5 })).value).to.equal(bob.address);
+  })
 
-  // it('token transfer works', async () => {
-  //     const { owner, contract, bob, uniquesCollectionId } = await setup();
+  it('token transfer works', async () => {
+    await setup();
 
-  //     // Bob mints 1 token
-  //     await expect(contract.connect(bob).tx["rmrkMintable::mint"](bob.address, 1, {value: PRICE_PER_MINT})).to.be.eventually.fulfilled;
-  //     await expect(contract.query["psp34::balanceOf"](bob.address)).to.eventually.have.property('output').to.equal(new BN("1"));
+    // Bob mints
+    let { gasRequired } = await contract.withSigner(bob).query.mintNext();
+    await contract.withSigner(bob).tx.mintNext({ value: PRICE_PER_MINT, gasLimit: gasRequired * 2n });
 
-  //     // verify that the owner in the Uniques pallet is Bob
-  //     await expect((await api.query.uniques.asset(uniquesCollectionId, 1)).toHuman()?.owner).to.be.equal(bob.address);
+    // Bob transfers token to Deployer
+    const transferGas = (await contract.withSigner(bob).query.transfer(deployer.address, { u64: 1 }, [])).gasRequired;
+    await contract.withSigner(bob).tx.transfer(deployer.address, { u64: 1 }, [], { gasLimit: transferGas });
 
-  //     // Bob transfers token to Owner
-  //     await expect(contract.connect(bob).tx["psp34::transfer"](owner.address, {u64:1}, [])).to.be.eventually.fulfilled;
-  //     await expect(contract.query["psp34::balanceOf"](owner.address)).to.eventually.have.property('output').to.equal(new BN("1"));
-  //     await expect(contract.query["psp34::balanceOf"](bob.address)).to.eventually.have.property('output').to.equal(0);
-  //     await expect(contract.query["psp34::ownerOf"]({u64:1})).to.eventually.have.property('output').to.equal(owner.address);
+    // Verify transfer
+    expect((await contract.query.ownerOf({ u64: 1 })).value).to.equal(deployer.address);
+    expect((await contract.query.balanceOf(bob.address)).value).to.equal(0);
+  })
 
-  //     // verify that the owner in the Uniques pallet is "owner"
-  //     await expect((await api.query.uniques.asset(uniquesCollectionId, 1)).toHuman()?.owner).to.be.equal(owner.address);
-  // })
+  it('token aprove works', async () => {
+    await setup();
 
-  // it('token aprove works', async () => {
-  //     const { owner, contract, bob, uniquesCollectionId } = await setup();
+    // Bob mints
+    let { gasRequired } = await contract.withSigner(bob).query.mintNext();
+    await contract.withSigner(bob).tx.mintNext({ value: PRICE_PER_MINT, gasLimit: gasRequired * 2n });
 
-  //     // Bob mints 1 token
-  //     await expect(contract.connect(bob).tx["rmrkMintable::mint"](bob.address, 1, {value: PRICE_PER_MINT})).to.be.eventually.fulfilled;
-  //     await expect(contract.query["psp34::balanceOf"](bob.address)).to.eventually.have.property('output').to.equal(new BN("1"));
+    // Bob approves deployer to be operator of the token
+    const approveGas = (await contract.withSigner(bob).query.approve(deployer.address, { u64: 1 }, true)).gasRequired;
+    await contract.withSigner(bob).tx.approve(deployer.address, { u64: 1 }, true, { gasLimit: approveGas });
 
-  //     // verify that the owner in the Uniques pallet is Bob
-  //     await expect((await api.query.uniques.asset(uniquesCollectionId, 1)).toHuman()?.owner).to.be.equal(bob.address);
-  //     await expect(contract.query["psp34::ownerOf"]({u64:1})).to.eventually.have.property('output').to.equal(bob.address);
-
-  //     // Bob approves owner to be operator of the token
-  //     await expect(contract.connect(bob).tx["psp34::approve"](owner.address, {u64:1}, true)).to.be.eventually.fulfilled;
-  //     await expect(contract.query["psp34::allowance"](bob.address, owner.address, {u64:1})).to.eventually.have.property('output').to.equal(true);
-
-  //     // verify that Bob is still the owner
-  //     await expect((await api.query.uniques.asset(uniquesCollectionId, 1)).toHuman()?.owner).to.be.equal(bob.address);
-  //     await expect(contract.query["psp34::ownerOf"]({u64:1})).to.eventually.have.property('output').to.equal(bob.address);
-
-  //     // verify allowance in Uniques pallet
-  //     await expect((await api.query.uniques.asset(uniquesCollectionId, 1)).toHuman()?.approved).to.be.equal(owner.address);
-  // })
+    // Verify that Bob is still the owner and allowance is set
+    expect((await contract.query.ownerOf({ u64: 1 })).value).to.equal(bob.address);
+    expect((await contract.query.allowance(bob.address, deployer.address, { u64: 1 })).value).to.equal(true);
+  })
 })
