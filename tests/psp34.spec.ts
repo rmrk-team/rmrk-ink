@@ -7,8 +7,8 @@ import Rmrk from '../types/contracts/rmrk_contract';
 
 import { ApiPromise, WsProvider, Keyring } from '@polkadot/api';
 import { KeyringPair } from '@polkadot/keyring/types';
-import { AccountId } from '../types/types-arguments/rmrk_contract';
-import { ReturnNumber } from '@supercolony/typechain-types';
+// import { AccountId } from '../types/types-arguments/rmrk_contract';
+// import { ReturnNumber } from '@supercolony/typechain-types';
 
 use(chaiAsPromised);
 
@@ -58,7 +58,7 @@ describe('Minting rmrk as psp34 tests', () => {
   it('create collection works', async () => {
     await setup();
     const queryList = await contract.query;
-    console.log("Query list for rmrk:", queryList);
+    // console.log("Query list for rmrk:", queryList);
     expect((await contract.query.totalSupply()).value.rawNumber.toNumber()).to.equal(0);
     expect((await contract.query.owner()).value).to.equal(deployer.address);
     expect((await contract.query.maxSupply()).value).to.equal(MAX_SUPPLY);
@@ -72,21 +72,18 @@ describe('Minting rmrk as psp34 tests', () => {
     expect((await contract.query.totalSupply()).value.rawNumber.toNumber()).to.equal(0);
 
     // mint
-    const {gasRequired} = await contract.withSigner(wallet).query.mintNext();
-    await contract.withSigner(wallet).tx.mintNext({ value: PRICE_PER_MINT, gasLimit: gasRequired });
+    const { gasRequired } = await contract.withSigner(wallet).query.mintNext();
+    console.log("gasRequired", gasRequired);
+    await contract.withSigner(wallet).tx.mintNext({ value: PRICE_PER_MINT, gasLimit: gasRequired * 2n});
 
-    // verify minting results
+    // verify minting results. The totalSupply value is BN
     expect((await contract.query.totalSupply()).value.rawNumber.toNumber()).to.equal(1);
 
-    // expect((await contract.query.balanceOf(wallet.address)).value.rawNumber.toString()).to.equal("1");
-    // await expect(contract.query["psp34::ownerOf"]({u64: tokenId})).to.eventually.have.property('output').to.equal(bob.address);
+    expect((await contract.query.balanceOf(wallet.address)).value).to.equal(1);
+    expect((await contract.query.ownerOf({u64: tokenId})).value).to.equal(wallet.address);
 
-    // // verify tokenUri call
-    // await expect(contract.query["rmrkMintable::tokenUri"](1)).to.eventually.have.property('output').to.equal(TOKEN_URI_1);
-
-    // // verify that the item is created in the Uniques pallet
-    // await expect((await api.query.uniques.asset(uniquesCollectionId, tokenId)).toHuman()?.owner).to.be.equal(bob.address);
-
+    // verify tokenUri call
+    // expect((await contract.query.tokenUri(1))).to.equal(TOKEN_URI_1);
   })
 
   // it('mint 5 tokens works', async () => {

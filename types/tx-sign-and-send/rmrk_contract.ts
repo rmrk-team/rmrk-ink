@@ -28,32 +28,6 @@ export default class Methods {
 	}
 
 	/**
-	* collectionId
-	*
-	*/
-	"collectionId" (
-		__options ? : GasLimit,
-	){
-		return txSignAndSend( this.__apiPromise, this.__nativeContract, this.__keyringPair, "psp34::collectionId", (events: EventRecord) => {
-			return decodeEvents(events, this.__nativeContract, "rmrk_contract");
-		}, [], __options);
-	}
-
-	/**
-	* ownerOf
-	*
-	* @param { ArgumentTypes.Id } id,
-	*/
-	"ownerOf" (
-		id: ArgumentTypes.Id,
-		__options ? : GasLimit,
-	){
-		return txSignAndSend( this.__apiPromise, this.__nativeContract, this.__keyringPair, "psp34::ownerOf", (events: EventRecord) => {
-			return decodeEvents(events, this.__nativeContract, "rmrk_contract");
-		}, [id], __options);
-	}
-
-	/**
 	* approve
 	*
 	* @param { ArgumentTypes.AccountId } operator,
@@ -90,17 +64,15 @@ export default class Methods {
 	}
 
 	/**
-	* balanceOf
+	* collectionId
 	*
-	* @param { ArgumentTypes.AccountId } owner,
 	*/
-	"balanceOf" (
-		owner: ArgumentTypes.AccountId,
+	"collectionId" (
 		__options ? : GasLimit,
 	){
-		return txSignAndSend( this.__apiPromise, this.__nativeContract, this.__keyringPair, "psp34::balanceOf", (events: EventRecord) => {
+		return txSignAndSend( this.__apiPromise, this.__nativeContract, this.__keyringPair, "psp34::collectionId", (events: EventRecord) => {
 			return decodeEvents(events, this.__nativeContract, "rmrk_contract");
-		}, [owner], __options);
+		}, [], __options);
 	}
 
 	/**
@@ -131,6 +103,34 @@ export default class Methods {
 		return txSignAndSend( this.__apiPromise, this.__nativeContract, this.__keyringPair, "psp34::totalSupply", (events: EventRecord) => {
 			return decodeEvents(events, this.__nativeContract, "rmrk_contract");
 		}, [], __options);
+	}
+
+	/**
+	* balanceOf
+	*
+	* @param { ArgumentTypes.AccountId } owner,
+	*/
+	"balanceOf" (
+		owner: ArgumentTypes.AccountId,
+		__options ? : GasLimit,
+	){
+		return txSignAndSend( this.__apiPromise, this.__nativeContract, this.__keyringPair, "psp34::balanceOf", (events: EventRecord) => {
+			return decodeEvents(events, this.__nativeContract, "rmrk_contract");
+		}, [owner], __options);
+	}
+
+	/**
+	* ownerOf
+	*
+	* @param { ArgumentTypes.Id } id,
+	*/
+	"ownerOf" (
+		id: ArgumentTypes.Id,
+		__options ? : GasLimit,
+	){
+		return txSignAndSend( this.__apiPromise, this.__nativeContract, this.__keyringPair, "psp34::ownerOf", (events: EventRecord) => {
+			return decodeEvents(events, this.__nativeContract, "rmrk_contract");
+		}, [id], __options);
 	}
 
 	/**
@@ -188,6 +188,20 @@ export default class Methods {
 	}
 
 	/**
+	* tokenByIndex
+	*
+	* @param { (string | number | BN) } index,
+	*/
+	"tokenByIndex" (
+		index: (string | number | BN),
+		__options ? : GasLimit,
+	){
+		return txSignAndSend( this.__apiPromise, this.__nativeContract, this.__keyringPair, "psp34Enumerable::tokenByIndex", (events: EventRecord) => {
+			return decodeEvents(events, this.__nativeContract, "rmrk_contract");
+		}, [index], __options);
+	}
+
+	/**
 	* ownersTokenByIndex
 	*
 	* @param { ArgumentTypes.AccountId } owner,
@@ -204,27 +218,39 @@ export default class Methods {
 	}
 
 	/**
-	* tokenByIndex
+	* mintNext
 	*
-	* @param { (string | number | BN) } index,
 	*/
-	"tokenByIndex" (
-		index: (string | number | BN),
-		__options ? : GasLimit,
+	"mintNext" (
+		__options ? : GasLimitAndRequiredValue,
 	){
-		return txSignAndSend( this.__apiPromise, this.__nativeContract, this.__keyringPair, "psp34Enumerable::tokenByIndex", (events: EventRecord) => {
+		return txSignAndSend( this.__apiPromise, this.__nativeContract, this.__keyringPair, "psp34Custom::mintNext", (events: EventRecord) => {
 			return decodeEvents(events, this.__nativeContract, "rmrk_contract");
-		}, [index], __options);
+		}, [], __options);
 	}
 
 	/**
-	* price
+	* tokenUri
 	*
+	* @param { (number | string | BN) } tokenId,
 	*/
-	"price" (
+	"tokenUri" (
+		tokenId: (number | string | BN),
 		__options ? : GasLimit,
 	){
-		return txSignAndSend( this.__apiPromise, this.__nativeContract, this.__keyringPair, "psp34Custom::price", (events: EventRecord) => {
+		return txSignAndSend( this.__apiPromise, this.__nativeContract, this.__keyringPair, "psp34Custom::tokenUri", (events: EventRecord) => {
+			return decodeEvents(events, this.__nativeContract, "rmrk_contract");
+		}, [tokenId], __options);
+	}
+
+	/**
+	* maxSupply
+	*
+	*/
+	"maxSupply" (
+		__options ? : GasLimit,
+	){
+		return txSignAndSend( this.__apiPromise, this.__nativeContract, this.__keyringPair, "psp34Custom::maxSupply", (events: EventRecord) => {
 			return decodeEvents(events, this.__nativeContract, "rmrk_contract");
 		}, [], __options);
 	}
@@ -260,41 +286,15 @@ export default class Methods {
 	}
 
 	/**
-	* mintNext
+	* price
 	*
 	*/
-	"mintNext" (
-		__options ? : GasLimitAndRequiredValue,
-	){
-		return txSignAndSend( this.__apiPromise, this.__nativeContract, this.__keyringPair, "psp34Custom::mintNext", (events: EventRecord) => {
-			return decodeEvents(events, this.__nativeContract, "rmrk_contract");
-		}, [], __options);
-	}
-
-	/**
-	* maxSupply
-	*
-	*/
-	"maxSupply" (
+	"price" (
 		__options ? : GasLimit,
 	){
-		return txSignAndSend( this.__apiPromise, this.__nativeContract, this.__keyringPair, "psp34Custom::maxSupply", (events: EventRecord) => {
+		return txSignAndSend( this.__apiPromise, this.__nativeContract, this.__keyringPair, "psp34Custom::price", (events: EventRecord) => {
 			return decodeEvents(events, this.__nativeContract, "rmrk_contract");
 		}, [], __options);
-	}
-
-	/**
-	* tokenUri
-	*
-	* @param { (number | string | BN) } tokenId,
-	*/
-	"tokenUri" (
-		tokenId: (number | string | BN),
-		__options ? : GasLimit,
-	){
-		return txSignAndSend( this.__apiPromise, this.__nativeContract, this.__keyringPair, "psp34Custom::tokenUri", (events: EventRecord) => {
-			return decodeEvents(events, this.__nativeContract, "rmrk_contract");
-		}, [tokenId], __options);
 	}
 
 	/**
@@ -321,40 +321,6 @@ export default class Methods {
 		__options ? : GasLimit,
 	){
 		return txSignAndSend( this.__apiPromise, this.__nativeContract, this.__keyringPair, "nesting::addChild", (events: EventRecord) => {
-			return decodeEvents(events, this.__nativeContract, "rmrk_contract");
-		}, [parentTokenIs, childNft], __options);
-	}
-
-	/**
-	* transferChild
-	*
-	* @param { ArgumentTypes.Id } from,
-	* @param { ArgumentTypes.Id } to,
-	* @param { [ArgumentTypes.AccountId, ArgumentTypes.Id] } childNft,
-	*/
-	"transferChild" (
-		from: ArgumentTypes.Id,
-		to: ArgumentTypes.Id,
-		childNft: [ArgumentTypes.AccountId, ArgumentTypes.Id],
-		__options ? : GasLimit,
-	){
-		return txSignAndSend( this.__apiPromise, this.__nativeContract, this.__keyringPair, "nesting::transferChild", (events: EventRecord) => {
-			return decodeEvents(events, this.__nativeContract, "rmrk_contract");
-		}, [from, to, childNft], __options);
-	}
-
-	/**
-	* acceptChild
-	*
-	* @param { ArgumentTypes.Id } parentTokenIs,
-	* @param { [ArgumentTypes.AccountId, ArgumentTypes.Id] } childNft,
-	*/
-	"acceptChild" (
-		parentTokenIs: ArgumentTypes.Id,
-		childNft: [ArgumentTypes.AccountId, ArgumentTypes.Id],
-		__options ? : GasLimit,
-	){
-		return txSignAndSend( this.__apiPromise, this.__nativeContract, this.__keyringPair, "nesting::acceptChild", (events: EventRecord) => {
 			return decodeEvents(events, this.__nativeContract, "rmrk_contract");
 		}, [parentTokenIs, childNft], __options);
 	}
@@ -389,6 +355,52 @@ export default class Methods {
 		return txSignAndSend( this.__apiPromise, this.__nativeContract, this.__keyringPair, "nesting::rejectChild", (events: EventRecord) => {
 			return decodeEvents(events, this.__nativeContract, "rmrk_contract");
 		}, [parentTokenIs, childNft], __options);
+	}
+
+	/**
+	* acceptChild
+	*
+	* @param { ArgumentTypes.Id } parentTokenIs,
+	* @param { [ArgumentTypes.AccountId, ArgumentTypes.Id] } childNft,
+	*/
+	"acceptChild" (
+		parentTokenIs: ArgumentTypes.Id,
+		childNft: [ArgumentTypes.AccountId, ArgumentTypes.Id],
+		__options ? : GasLimit,
+	){
+		return txSignAndSend( this.__apiPromise, this.__nativeContract, this.__keyringPair, "nesting::acceptChild", (events: EventRecord) => {
+			return decodeEvents(events, this.__nativeContract, "rmrk_contract");
+		}, [parentTokenIs, childNft], __options);
+	}
+
+	/**
+	* childrenBalance
+	*
+	*/
+	"childrenBalance" (
+		__options ? : GasLimit,
+	){
+		return txSignAndSend( this.__apiPromise, this.__nativeContract, this.__keyringPair, "nesting::childrenBalance", (events: EventRecord) => {
+			return decodeEvents(events, this.__nativeContract, "rmrk_contract");
+		}, [], __options);
+	}
+
+	/**
+	* transferChild
+	*
+	* @param { ArgumentTypes.Id } from,
+	* @param { ArgumentTypes.Id } to,
+	* @param { [ArgumentTypes.AccountId, ArgumentTypes.Id] } childNft,
+	*/
+	"transferChild" (
+		from: ArgumentTypes.Id,
+		to: ArgumentTypes.Id,
+		childNft: [ArgumentTypes.AccountId, ArgumentTypes.Id],
+		__options ? : GasLimit,
+	){
+		return txSignAndSend( this.__apiPromise, this.__nativeContract, this.__keyringPair, "nesting::transferChild", (events: EventRecord) => {
+			return decodeEvents(events, this.__nativeContract, "rmrk_contract");
+		}, [from, to, childNft], __options);
 	}
 
 }
