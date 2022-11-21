@@ -22,6 +22,7 @@
 use crate::impls::rmrk::errors::RmrkError;
 use crate::impls::rmrk::types::*;
 pub use crate::traits::nesting::{Internal, Nesting, NestingEvents};
+use ink_env::CallFlags;
 use ink_prelude::collections::BTreeSet;
 use ink_prelude::vec::Vec;
 use openbrush::{
@@ -88,7 +89,7 @@ where
                 children.insert(child_nft.clone());
             })
             .or_insert_with(|| BTreeSet::from([child_nft.clone()]));
-        self._emit_child_accepted_event(caller, parent_token_id, child_nft.0, child_nft.1);
+        // self._emit_child_accepted_event(caller, parent_token_id, child_nft.0, child_nft.1);
     }
 
     /// Remove the child to the list of accepted children
@@ -180,7 +181,14 @@ where
         // let collection = self.get_collection(child_nft.0)
         //      .ok_or(RmrkError::ChildContractNotApproved)?;
         ink_env::debug_println!("####### calling transfer {:?}, {:?}", child_nft, to);
-        PSP34Ref::transfer(&child_nft.0, to, child_nft.1, Vec::new())?;
+        // PSP34Ref::transfer(&child_nft.0, to, child_nft.1, Vec::new())?;
+
+        PSP34Ref::transfer_builder(&child_nft.0, to, child_nft.1, Vec::new())
+            .call_flags(CallFlags::default().set_allow_reentry(true))
+            .fire()
+            .unwrap()?;
+        ink_env::debug_println!("####### transfer  executed!!!!");
+
         Ok(())
     }
 }
@@ -218,7 +226,7 @@ where
     ) -> Result<(), PSP34Error> {
         self.ensure_exists(to_parent_token_id.clone())?;
         let caller = Self::env().caller();
-        self.is_caller_parent_owner(caller, to_parent_token_id.clone())?;
+        // self.is_caller_parent_owner(caller, to_parent_token_id.clone())?;
         self.already_accepted(to_parent_token_id.clone(), child_nft.clone())?;
         self.already_pending(to_parent_token_id.clone(), child_nft.clone())?;
 
@@ -228,16 +236,20 @@ where
         let child_owner = caller; // TODO
 
         // Insert child nft and emit event
-        self._emit_added_child_event(
-            caller,
-            to_parent_token_id.clone(),
-            child_nft.0.clone(),
-            child_nft.1.clone(),
-        );
+        // self._emit_added_child_event(
+        //     caller,
+        //     to_parent_token_id.clone(),
+        //     child_nft.0.clone(),
+        //     child_nft.1.clone(),
+        // );
         if child_owner == caller {
+            ink_env::debug_println!("####### add_to_accepted  before");
             self.add_to_accepted(caller, to_parent_token_id.clone(), child_nft.clone());
+            ink_env::debug_println!("####### add_to_accepted  after");
         } else {
+            ink_env::debug_println!("####### add_to_pending  before");
             self.add_to_pending(to_parent_token_id.clone(), child_nft.clone());
+            ink_env::debug_println!("####### add_to_pending  after");
         }
 
         Ok(())
@@ -384,6 +396,16 @@ where
         }
 
         Ok(())
+    }
+
+    /// Check the number of children on the parent token
+    fn children_balance(&self) -> Result<(u64, u64), PSP34Error>{
+        let parents_with_accepted_children = self.data::<NestingData>()
+        .accepted_children.len() as u64;
+        let parents_with_pending_children = self.data::<NestingData>()
+        .pending_children.len() as u64;
+
+        Ok((parents_with_accepted_children, parents_with_pending_children))
     }
 }
 

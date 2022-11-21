@@ -16,6 +16,8 @@ pub trait Nesting {
     fn reject_child(&mut self, parent_token_is: Id, child_nft: ChildNft) -> Result<(), PSP34Error>;
     #[ink(message)]
     fn transfer_child(&mut self, from: Id, to: Id, child_nft: ChildNft) -> Result<(), PSP34Error>;
+    #[ink(message)]
+    fn children_balance(&self) -> Result<(u64, u64), PSP34Error>;
 }
 
 #[openbrush::trait_definition]
