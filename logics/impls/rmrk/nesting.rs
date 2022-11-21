@@ -19,11 +19,11 @@
 // OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-use ink_prelude::collections::BTreeSet;
-
 use crate::impls::rmrk::errors::RmrkError;
 use crate::impls::rmrk::types::*;
 pub use crate::traits::nesting::{Internal, Nesting, NestingEvents};
+use ink_prelude::collections::BTreeSet;
+use ink_prelude::vec::Vec;
 use openbrush::{
     contracts::psp34::extensions::enumerable::*,
     traits::{AccountId, Storage, String},
@@ -179,7 +179,7 @@ where
         // TODO check child collection is approved by this (parent) collection
         // let collection = self.get_collection(child_nft.0)
         //      .ok_or(RmrkError::ChildContractNotApproved)?;
-
+        ink_env::debug_println!("####### calling transfer {:?}, {:?}", child_nft, to);
         PSP34Ref::transfer(&child_nft.0, to, child_nft.1, Vec::new())?;
         Ok(())
     }
