@@ -190,25 +190,6 @@ where
             .ok_or(PSP34Error::TokenNotExists)?;
         Ok(())
     }
-
-    // /// Emit Transfer event
-    // default fn _emit_transfer_event(
-    //     &self,
-    //     _from: Option<AccountId>,
-    //     _to: Option<AccountId>,
-    //     _id: Id,
-    // ) {
-    // }
-
-    // /// Emit Approval event
-    // default fn _emit_approval_event(
-    //     &self,
-    //     _from: AccountId,
-    //     _to: AccountId,
-    //     _id: Option<Id>,
-    //     _approved: bool,
-    // ) {
-    // }
 }
 
 //---------------------- T E S T ---------------------------------------------

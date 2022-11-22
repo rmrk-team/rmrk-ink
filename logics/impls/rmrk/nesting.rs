@@ -103,6 +103,10 @@ where
                     RmrkError::ChildNotFound.as_str(),
                 )));
             }
+        } else {
+            return Err(PSP34Error::Custom(String::from(
+                RmrkError::ChildNotFound.as_str(),
+            )));
         }
         Ok(())
     }
@@ -127,14 +131,19 @@ where
         if let Some(children) = self
             .data::<NestingData>()
             .pending_children
-            .get_mut(&parent_token_id.clone())
+            .get_mut(&parent_token_id)
         {
             if !children.remove(&child_nft) {
                 return Err(PSP34Error::Custom(String::from(
                     RmrkError::ChildNotFound.as_str(),
                 )));
             }
+        } else {
+            return Err(PSP34Error::Custom(String::from(
+                RmrkError::ChildNotFound.as_str(),
+            )));
         }
+
         Ok(())
     }
 
@@ -175,8 +184,6 @@ where
         // TODO check child collection is approved by this (parent) collection
         // let collection = self.get_collection(child_nft.0)
         //      .ok_or(RmrkError::ChildContractNotApproved)?;
-        ink_env::debug_println!("####### calling transfer {:?}, {:?}", child_nft, to);
-        // PSP34Ref::transfer(&child_nft.0, to, child_nft.1, Vec::new())?;
 
         PSP34Ref::transfer_builder(&child_nft.0, to, child_nft.1, Vec::new())
             .call_flags(CallFlags::default().set_allow_reentry(true))
@@ -219,16 +226,14 @@ where
         to_parent_token_id: ItemId,
         child_nft: ChildNft,
     ) -> Result<(), PSP34Error> {
-        self.ensure_exists(to_parent_token_id.clone())?;
+        let parent_owner = self.ensure_exists(to_parent_token_id.clone())?;
         let caller = Self::env().caller();
-        // self.is_caller_parent_owner(caller, to_parent_token_id.clone())?;
         self.already_accepted(to_parent_token_id.clone(), child_nft.clone())?;
         self.already_pending(to_parent_token_id.clone(), child_nft.clone())?;
 
         // Transfer child ownership to this contract.
         // This transfer call will fail if caller is not child owner
         self.transfer_child_ownership(Self::env().account_id(), child_nft.clone())?;
-        let child_owner = caller; // TODO
 
         // Insert child nft and emit event
         self._emit_added_child_event(
@@ -236,14 +241,10 @@ where
             child_nft.0.clone(),
             child_nft.1.clone(),
         );
-        if child_owner == caller {
-            ink_env::debug_println!("####### add_to_accepted  before");
+        if caller == parent_owner {
             self.add_to_accepted(to_parent_token_id.clone(), child_nft.clone());
-            ink_env::debug_println!("####### add_to_accepted  after");
         } else {
-            ink_env::debug_println!("####### add_to_pending  before");
             self.add_to_pending(to_parent_token_id.clone(), child_nft.clone());
-            ink_env::debug_println!("####### add_to_pending  after");
         }
 
         Ok(())
@@ -388,11 +389,25 @@ where
     }
 
     /// Check the number of children on the parent token
-    fn children_balance(&self) -> Result<(u64, u64), PSP34Error> {
-        let parents_with_accepted_children =
-            self.data::<NestingData>().accepted_children.len() as u64;
-        let parents_with_pending_children =
-            self.data::<NestingData>().pending_children.len() as u64;
+    fn children_balance(&self, parent_token_id: Id) -> Result<(u64, u64), PSP34Error> {
+        self.ensure_exists(parent_token_id.clone())?;
+        let parents_with_accepted_children = match self
+            .data::<NestingData>()
+            .accepted_children
+            .get(&parent_token_id)
+        {
+            Some(children) => children.len() as u64,
+            None => 0,
+        };
+
+        let parents_with_pending_children = match self
+            .data::<NestingData>()
+            .pending_children
+            .get(&parent_token_id)
+        {
+            Some(children) => children.len() as u64,
+            None => 0,
+        };
 
         Ok((
             parents_with_accepted_children,

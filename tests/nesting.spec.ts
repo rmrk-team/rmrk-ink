@@ -31,6 +31,7 @@ describe('RMRK Nesting tests', () => {
   let api: ApiPromise;
   let deployer: KeyringPair;
   let bob: KeyringPair;
+  let dave: KeyringPair;
   let parent: Rmrk;
   let child: Rmrk;
 
@@ -44,6 +45,7 @@ describe('RMRK Nesting tests', () => {
     api = await ApiPromise.create({ provider: wsProvider });
     deployer = keyring.addFromUri('//Alice');
     bob = keyring.addFromUri('//Bob');
+    dave = keyring.addFromUri('//Dave');
     parentFactory = new Rmrk_factory(api, deployer);
     parent = new Rmrk((await parentFactory.new(
       ["RmrkProject 1"],
@@ -85,7 +87,42 @@ describe('RMRK Nesting tests', () => {
     expect(parentCollectionId).to.not.be.equal(childCollectionId);
   })
 
-  it('Add child works', async () => {
+  it('Add child (different user), approval works', async () => {
+    await setup();
+
+    // bob mints parent
+    const mintGas = (await parent.withSigner(bob).query.mintNext()).gasRequired;
+    let parentMintResult = await parent.withSigner(bob).tx.mintNext({ value: PRICE_PER_MINT, gasLimit: mintGas * 2n });
+    emit(parentMintResult, 'Transfer', { from: null, to: bob.address, id: { u64: 1 }, });
+
+    // dave mints child
+    let childMintResult = await child.withSigner(dave).tx.mintNext({ value: PRICE_PER_MINT, gasLimit: mintGas * 2n });
+    expect((await child.query.totalSupply()).value.rawNumber.toNumber()).to.equal(1);
+    emit(childMintResult, 'Transfer', { from: null, to: dave.address, id: { u64: 1 }, });
+
+    // dave approves parentContract on child
+    const approveGas = (await child.withSigner(dave).query.approve(parent.address, { u64: 1 }, true)).gasRequired;
+    let approveResult = await child.withSigner(dave).tx.approve(parent.address, { u64: 1 }, true, { gasLimit: approveGas });
+    expect((await child.query.allowance(dave.address, parent.address, { u64: 1 })).value).to.equal(true);
+    emit(approveResult, 'Approval', { from: dave.address, to: parent.address, id: { u64: 1 }, approved: true, });
+
+    // // dave adds child nft to bob's parent nft
+    const addChildGas = (await parent.withSigner(dave).query.addChild({ u64: 1 }, [child.address, { u64: 1 }])).gasRequired;
+    const addChildResult = await parent.withSigner(dave).tx.addChild({ u64: 1 }, [child.address, { u64: 1 }], { gasLimit: addChildGas });
+    emit(addChildResult, 'AddedChild', { to: { u64: 1 }, collection: child.address, child: { u64: 1 }, });
+
+    // // since bob is owner of parent, dave can't accept child
+    const failResult = await parent.withSigner(dave).query.acceptChild({ u64: 1 }, [child.address, { u64: 1 }]);
+    expect(hex2a(failResult.value.err.custom)).to.be.equal('NotAuthorised');
+
+    // since bob is owner parent, the child acceptance needs to be approved (or rejected)
+    const acceptChildGas = (await parent.withSigner(bob).query.acceptChild({ u64: 1 }, [child.address, { u64: 1 }])).gasRequired;
+    const acceptChildResult = await parent.withSigner(bob).tx.acceptChild({ u64: 1 }, [child.address, { u64: 1 }], { gasLimit: acceptChildGas });
+    emit(acceptChildResult, 'ChildAccepted', { parent: { u64: 1 }, collection: child.address, child: { u64: 1 }, });
+    expect((await parent.query.childrenBalance({ u64: 1 }))?.value.ok.toString()).to.be.equal("1,0");
+  })
+
+  it('Add child (same user) works', async () => {
     await setup();
 
     // bob mints parent
@@ -108,7 +145,7 @@ describe('RMRK Nesting tests', () => {
     const addChildGas = (await parent.withSigner(bob).query.addChild({ u64: 1 }, [child.address, { u64: 1 }])).gasRequired;
     const result = await parent.withSigner(bob).query.addChild({ u64: 1 }, [child.address, { u64: 1 }]);
     const addChildResult = await parent.withSigner(bob).tx.addChild({ u64: 1 }, [child.address, { u64: 1 }], { gasLimit: addChildGas });
-    expect((await parent.query.childrenBalance())?.value.ok.toString()).to.be.equal("1,0");
+    expect((await parent.query.childrenBalance({ u64: 1 }))?.value.ok.toString()).to.be.equal("1,0");
     emit(addChildResult, 'AddedChild', { to: { u64: 1 }, collection: child.address, child: { u64: 1 }, });
 
     // since bob is owner of both parent and child it is automatically approved
