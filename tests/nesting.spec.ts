@@ -35,7 +35,6 @@ describe('RMRK Nesting tests', () => {
   let parent: Rmrk;
   let child: Rmrk;
 
-  const gasLimit = 18750000000;
   const ZERO_ADDRESS = encodeAddress(
     '0x0000000000000000000000000000000000000000000000000000000000000000',
   );
@@ -106,20 +105,75 @@ describe('RMRK Nesting tests', () => {
     expect((await child.query.allowance(dave.address, parent.address, { u64: 1 })).value).to.equal(true);
     emit(approveResult, 'Approval', { from: dave.address, to: parent.address, id: { u64: 1 }, approved: true, });
 
-    // // dave adds child nft to bob's parent nft
+    // dave adds child nft to bob's parent nft
     const addChildGas = (await parent.withSigner(dave).query.addChild({ u64: 1 }, [child.address, { u64: 1 }])).gasRequired;
     const addChildResult = await parent.withSigner(dave).tx.addChild({ u64: 1 }, [child.address, { u64: 1 }], { gasLimit: addChildGas });
     emit(addChildResult, 'AddedChild', { to: { u64: 1 }, collection: child.address, child: { u64: 1 }, });
+    expect((await parent.query.childrenBalance({ u64: 1 }))?.value.ok.toString()).to.be.equal("0,1");
 
-    // // since bob is owner of parent, dave can't accept child
+    // since bob is owner of parent, dave can't accept child
     const failResult = await parent.withSigner(dave).query.acceptChild({ u64: 1 }, [child.address, { u64: 1 }]);
     expect(hex2a(failResult.value.err.custom)).to.be.equal('NotAuthorised');
 
-    // since bob is owner parent, the child acceptance needs to be approved (or rejected)
+    // bob accepts child
     const acceptChildGas = (await parent.withSigner(bob).query.acceptChild({ u64: 1 }, [child.address, { u64: 1 }])).gasRequired;
     const acceptChildResult = await parent.withSigner(bob).tx.acceptChild({ u64: 1 }, [child.address, { u64: 1 }], { gasLimit: acceptChildGas });
-    emit(acceptChildResult, 'ChildAccepted', { parent: { u64: 1 }, collection: child.address, child: { u64: 1 }, });
+    emit(acceptChildResult, 'ChildAccepted', { parent: { u64: 1 }, collection: child.address, child: { u64: 1 } });
     expect((await parent.query.childrenBalance({ u64: 1 }))?.value.ok.toString()).to.be.equal("1,0");
+
+    // bob fails to accept already accepted child
+    const failAcceptResult = await parent.withSigner(bob).query.acceptChild({ u64: 1 }, [child.address, { u64: 1 }]);
+    expect(hex2a(failAcceptResult.value.err.custom)).to.be.equal('AlreadyAddedChild');
+
+    // dave fails to remove child (not owner)
+    const failRemoveChild = await parent.withSigner(dave).query.removeChild({ u64: 1 }, [child.address, { u64: 1 }]);
+    expect(hex2a(failRemoveChild.value.err.custom)).to.be.equal('NotAuthorised');
+
+    // bob removes child
+    const removeChildGas = (await parent.withSigner(bob).query.removeChild({ u64: 1 }, [child.address, { u64: 1 }])).gasRequired;
+    const removeChildResult = await parent.withSigner(bob).tx.removeChild({ u64: 1 }, [child.address, { u64: 1 }], { gasLimit: removeChildGas });
+    emit(removeChildResult, 'ChildRemoved', { parent: { u64: 1 }, childCollection: child.address, childTokenId: { u64: 1 }, });
+    expect((await parent.query.childrenBalance({ u64: 1 }))?.value.ok.toString()).to.be.equal("0,0");
+  })
+
+  it('Add child (different user), reject works', async () => {
+    await setup();
+
+    // bob mints parent
+    const mintGas = (await parent.withSigner(bob).query.mintNext()).gasRequired;
+    let parentMintResult = await parent.withSigner(bob).tx.mintNext({ value: PRICE_PER_MINT, gasLimit: mintGas * 2n });
+    emit(parentMintResult, 'Transfer', { from: null, to: bob.address, id: { u64: 1 }, });
+
+    // dave mints child
+    let childMintResult = await child.withSigner(dave).tx.mintNext({ value: PRICE_PER_MINT, gasLimit: mintGas * 2n });
+    expect((await child.query.totalSupply()).value.rawNumber.toNumber()).to.equal(1);
+    emit(childMintResult, 'Transfer', { from: null, to: dave.address, id: { u64: 1 }, });
+
+    // dave approves parentContract on child
+    const approveGas = (await child.withSigner(dave).query.approve(parent.address, { u64: 1 }, true)).gasRequired;
+    let approveResult = await child.withSigner(dave).tx.approve(parent.address, { u64: 1 }, true, { gasLimit: approveGas });
+    expect((await child.query.allowance(dave.address, parent.address, { u64: 1 })).value).to.equal(true);
+    emit(approveResult, 'Approval', { from: dave.address, to: parent.address, id: { u64: 1 }, approved: true, });
+
+    // dave adds child nft to bob's parent nft
+    const addChildGas = (await parent.withSigner(dave).query.addChild({ u64: 1 }, [child.address, { u64: 1 }])).gasRequired;
+    const addChildResult = await parent.withSigner(dave).tx.addChild({ u64: 1 }, [child.address, { u64: 1 }], { gasLimit: addChildGas });
+    emit(addChildResult, 'AddedChild', { to: { u64: 1 }, collection: child.address, child: { u64: 1 }, });
+    expect((await parent.query.childrenBalance({ u64: 1 }))?.value.ok.toString()).to.be.equal("0,1");
+
+    // since bob is owner of parent, dave can't accept child
+    const failAcceptResult = await parent.withSigner(dave).query.acceptChild({ u64: 1 }, [child.address, { u64: 1 }]);
+    expect(hex2a(failAcceptResult.value.err.custom)).to.be.equal('NotAuthorised');
+
+    // since bob is owner of parent, dave fails to reject child
+    const failRejectResult = await parent.withSigner(dave).query.rejectChild({ u64: 1 }, [child.address, { u64: 1 }]);
+    expect(hex2a(failRejectResult.value.err.custom)).to.be.equal('NotAuthorised');
+
+    // bob rejects child
+    const rejectChildGas = (await parent.withSigner(bob).query.rejectChild({ u64: 1 }, [child.address, { u64: 1 }])).gasRequired;
+    const acceptChildResult = await parent.withSigner(bob).tx.rejectChild({ u64: 1 }, [child.address, { u64: 1 }], { gasLimit: rejectChildGas });
+    emit(acceptChildResult, 'ChildRejected', { parent: { u64: 1 }, childCollection: child.address, childTokenId: { u64: 1 } });
+    expect((await parent.query.childrenBalance({ u64: 1 }))?.value.ok.toString()).to.be.equal("0,0");
   })
 
   it('Add child (same user) works', async () => {
