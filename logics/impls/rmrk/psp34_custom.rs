@@ -43,11 +43,8 @@ pub trait Internal {
     /// Check if token is minted
     fn _token_exists(&self, id: Id) -> Result<(), PSP34Error>;
 
-    /// Emit Transfer event
-    fn _emit_transfer_event(&self, from: Option<AccountId>, to: Option<AccountId>, id: Id);
-
-    /// Emit Approval event
-    fn _emit_approval_event(&self, from: AccountId, to: AccountId, id: Option<Id>, approved: bool);
+    // /// Emit Transfer event
+    // fn _emit_tra?event(&self, from: AccountId, to: AccountId, id: Option<Id>, approved: bool);
 }
 
 impl<T> Psp34Custom for T
@@ -57,7 +54,8 @@ where
         + Storage<reentrancy_guard::Data>
         + Storage<ownable::Data>
         + Storage<metadata::Data>
-        + psp34::extensions::metadata::PSP34Metadata,
+        + psp34::extensions::metadata::PSP34Metadata
+        + psp34::Internal,
 {
     /// Mint next available token for the caller
     default fn mint_next(&mut self) -> Result<(), PSP34Error> {
@@ -193,24 +191,24 @@ where
         Ok(())
     }
 
-    /// Emit Transfer event
-    default fn _emit_transfer_event(
-        &self,
-        _from: Option<AccountId>,
-        _to: Option<AccountId>,
-        _id: Id,
-    ) {
-    }
+    // /// Emit Transfer event
+    // default fn _emit_transfer_event(
+    //     &self,
+    //     _from: Option<AccountId>,
+    //     _to: Option<AccountId>,
+    //     _id: Id,
+    // ) {
+    // }
 
-    /// Emit Approval event
-    default fn _emit_approval_event(
-        &self,
-        _from: AccountId,
-        _to: AccountId,
-        _id: Option<Id>,
-        _approved: bool,
-    ) {
-    }
+    // /// Emit Approval event
+    // default fn _emit_approval_event(
+    //     &self,
+    //     _from: AccountId,
+    //     _to: AccountId,
+    //     _id: Option<Id>,
+    //     _approved: bool,
+    // ) {
+    // }
 }
 
 //---------------------- T E S T ---------------------------------------------

@@ -76,11 +76,7 @@ where
     }
 
     /// Add the child to the list of accepted children
-    default fn add_to_accepted(
-        &mut self,
-        parent_token_id: Id,
-        child_nft: ChildNft,
-    ) {
+    default fn add_to_accepted(&mut self, parent_token_id: Id, child_nft: ChildNft) {
         self.data::<NestingData>()
             .accepted_children
             .entry(parent_token_id.clone())
@@ -88,7 +84,7 @@ where
                 children.insert(child_nft.clone());
             })
             .or_insert_with(|| BTreeSet::from([child_nft.clone()]));
-        // self._emit_child_accepted_event(caller, parent_token_id, child_nft.0, child_nft.1);
+        self._emit_child_accepted_event(parent_token_id, child_nft.0, child_nft.1);
     }
 
     /// Remove the child to the list of accepted children
@@ -230,17 +226,16 @@ where
         self.already_pending(to_parent_token_id.clone(), child_nft.clone())?;
 
         // Transfer child ownership to this contract.
-        // This call will fail if caller is not parent owner
+        // This transfer call will fail if caller is not child owner
         self.transfer_child_ownership(Self::env().account_id(), child_nft.clone())?;
         let child_owner = caller; // TODO
 
         // Insert child nft and emit event
-        // self._emit_added_child_event(
-        //     caller,
-        //     to_parent_token_id.clone(),
-        //     child_nft.0.clone(),
-        //     child_nft.1.clone(),
-        // );
+        self._emit_added_child_event(
+            to_parent_token_id.clone(),
+            child_nft.0.clone(),
+            child_nft.1.clone(),
+        );
         if child_owner == caller {
             ink_env::debug_println!("####### add_to_accepted  before");
             self.add_to_accepted(to_parent_token_id.clone(), child_nft.clone());
@@ -382,12 +377,7 @@ where
         let new_parent_owner = self.ensure_exists(new_parent.clone())?;
         self.remove_accepted(current_parent.clone(), child_nft.clone())?;
 
-        self._emit_added_child_event(
-            current_parent_owner,
-            new_parent.clone(),
-            child_nft.0.clone(),
-            child_nft.1.clone(),
-        );
+        self._emit_added_child_event(new_parent.clone(), child_nft.0.clone(), child_nft.1.clone());
         if current_parent_owner == new_parent_owner {
             self.add_to_accepted(new_parent.clone(), child_nft.clone());
         } else {
@@ -398,13 +388,16 @@ where
     }
 
     /// Check the number of children on the parent token
-    fn children_balance(&self) -> Result<(u64, u64), PSP34Error>{
-        let parents_with_accepted_children = self.data::<NestingData>()
-        .accepted_children.len() as u64;
-        let parents_with_pending_children = self.data::<NestingData>()
-        .pending_children.len() as u64;
+    fn children_balance(&self) -> Result<(u64, u64), PSP34Error> {
+        let parents_with_accepted_children =
+            self.data::<NestingData>().accepted_children.len() as u64;
+        let parents_with_pending_children =
+            self.data::<NestingData>().pending_children.len() as u64;
 
-        Ok((parents_with_accepted_children, parents_with_pending_children))
+        Ok((
+            parents_with_accepted_children,
+            parents_with_pending_children,
+        ))
     }
 }
 
@@ -416,7 +409,6 @@ where
     /// Emit AddedChild event
     default fn _emit_added_child_event(
         &self,
-        _from: AccountId,
         _to: Id,
         _child_collection_address: AccountId,
         _child_token_id: Id,
@@ -425,7 +417,6 @@ where
     /// Emit ChildAccepted event
     default fn _emit_child_accepted_event(
         &self,
-        _approved_by: AccountId,
         _to: Id,
         _child_collection_address: AccountId,
         _child_token_id: Id,

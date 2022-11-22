@@ -48,26 +48,22 @@ pub mod rmrk_contract {
     #[ink(event)]
     pub struct AddedChild {
         #[ink(topic)]
-        from: AccountId,
-        #[ink(topic)]
         to: Id,
         #[ink(topic)]
-        child_collection: AccountId,
+        collection: AccountId,
         #[ink(topic)]
-        child_token_id: Id,
+        child: Id,
     }
 
     /// Child accepted.
     #[ink(event)]
     pub struct ChildAccepted {
         #[ink(topic)]
-        by: AccountId,
+        parent: Id,
         #[ink(topic)]
-        to: Id,
+        collection: AccountId,
         #[ink(topic)]
-        child_collection: AccountId,
-        #[ink(topic)]
-        child_token_id: Id,
+        child: Id,
     }
 
     /// Child removed.
@@ -152,7 +148,7 @@ pub mod rmrk_contract {
         }
     }
 
-    impl psp34_custom::Internal for Rmrk {
+    impl psp34::Internal for Rmrk {
         /// Emit Transfer event
         fn _emit_transfer_event(&self, from: Option<AccountId>, to: Option<AccountId>, id: Id) {
             self.env().emit_event(Transfer { from, to, id });
@@ -177,34 +173,20 @@ pub mod rmrk_contract {
 
     impl nesting::NestingEvents for Rmrk {
         /// Emit AddedChild event
-        fn _emit_added_child_event(
-            &self,
-            from: AccountId,
-            to: Id,
-            child_collection: AccountId,
-            child_token_id: Id,
-        ) {
+        fn _emit_added_child_event(&self, to: Id, collection: AccountId, child: Id) {
             self.env().emit_event(AddedChild {
-                from,
                 to,
-                child_collection,
-                child_token_id,
+                collection,
+                child,
             });
         }
 
         /// Emit ChildAccepted event
-        fn _emit_child_accepted_event(
-            &self,
-            by: AccountId,
-            to: Id,
-            child_collection: AccountId,
-            child_token_id: Id,
-        ) {
+        fn _emit_child_accepted_event(&self, parent: Id, collection: AccountId, child: Id) {
             self.env().emit_event(ChildAccepted {
-                by,
-                to,
-                child_collection,
-                child_token_id,
+                parent,
+                collection,
+                child,
             });
         }
 

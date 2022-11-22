@@ -8,7 +8,7 @@ import Rmrk from '../types/contracts/rmrk_contract';
 import { ApiPromise, WsProvider, Keyring } from '@polkadot/api';
 import { KeyringPair } from '@polkadot/keyring/types';
 // import { AccountId } from '../types/types-arguments/rmrk_contract';
-// import { ReturnNumber } from '@supercolony/typechain-types';
+import { ReturnNumber } from '@supercolony/typechain-types';
 
 use(chaiAsPromised);
 
@@ -90,22 +90,52 @@ describe('RMRK Nesting tests', () => {
 
     // bob mints parent
     const mintGas = (await parent.withSigner(bob).query.mintNext()).gasRequired;
-    await parent.withSigner(bob).tx.mintNext({ value: PRICE_PER_MINT, gasLimit: mintGas * 2n });
-    expect((await parent.query.totalSupply()).value.rawNumber.toNumber()).to.equal(1);
+    let parentMintResult = await parent.withSigner(bob).tx.mintNext({ value: PRICE_PER_MINT, gasLimit: mintGas * 2n });
+    emit(parentMintResult, 'Transfer', { from: null, to: bob.address, id: { u64: 1 }, });
 
     // bob mints child
-    await child.withSigner(bob).tx.mintNext({ value: PRICE_PER_MINT, gasLimit: mintGas * 2n });
+    let childMintResult = await child.withSigner(bob).tx.mintNext({ value: PRICE_PER_MINT, gasLimit: mintGas * 2n });
     expect((await child.query.totalSupply()).value.rawNumber.toNumber()).to.equal(1);
+    emit(childMintResult, 'Transfer', { from: null, to: bob.address, id: { u64: 1 }, });
 
     // bob approves parentContract on child
     const approveGas = (await child.withSigner(bob).query.approve(parent.address, { u64: 1 }, true)).gasRequired;
-    await child.withSigner(bob).tx.approve(parent.address, { u64: 1 }, true, { gasLimit: approveGas });
+    let approveResult = await child.withSigner(bob).tx.approve(parent.address, { u64: 1 }, true, { gasLimit: approveGas });
     expect((await child.query.allowance(bob.address, parent.address, { u64: 1 })).value).to.equal(true);
+    emit(approveResult, 'Approval', { from: bob.address, to: parent.address, id: { u64: 1 }, approved: true, });
 
     // bob adds child nft to parent
     const addChildGas = (await parent.withSigner(bob).query.addChild({ u64: 1 }, [child.address, { u64: 1 }])).gasRequired;
-    await parent.withSigner(bob).tx.addChild({ u64: 1 }, [child.address, { u64: 1 }], { gasLimit: addChildGas });
+    const result = await parent.withSigner(bob).query.addChild({ u64: 1 }, [child.address, { u64: 1 }]);
+    const addChildResult = await parent.withSigner(bob).tx.addChild({ u64: 1 }, [child.address, { u64: 1 }], { gasLimit: addChildGas });
     expect((await parent.query.childrenBalance())?.value.ok.toString()).to.be.equal("1,0");
+    emit(addChildResult, 'AddedChild', { to: { u64: 1 }, collection: child.address, child: { u64: 1 }, });
+
+    // since bob is owner of both parent and child it is automatically approved
+    emit(addChildResult, 'ChildAccepted', { parent: { u64: 1 }, collection: child.address, child: { u64: 1 }, });
   })
 
 })
+
+// Helper function to parse Events
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function emit(result: { events?: any }, name: string, args: any): void {
+  const event = result.events.find(
+    (event: { name: string }) => event.name === name,
+  );
+  for (const key of Object.keys(event.args)) {
+    if (event.args[key] instanceof ReturnNumber) {
+      event.args[key] = event.args[key].toNumber();
+    }
+  }
+  expect(event).eql({ name, args, });
+}
+
+// Helper function to convert error code to string
+function hex2a(psp34CustomError: any): string {
+  var hex = psp34CustomError.toString(); //force conversion
+  var str = '';
+  for (var i = 0; i < hex.length; i += 2)
+    str += String.fromCharCode(parseInt(hex.substr(i, 2), 16));
+  return str.substring(1);
+}

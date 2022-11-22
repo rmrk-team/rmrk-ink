@@ -15,17 +15,15 @@ export interface Approval {
 }
 
 export interface AddedChild {
-	from: ReturnTypes.AccountId;
 	to: ReturnTypes.Id;
-	childCollection: ReturnTypes.AccountId;
-	childTokenId: ReturnTypes.Id;
+	collection: ReturnTypes.AccountId;
+	child: ReturnTypes.Id;
 }
 
 export interface ChildAccepted {
-	by: ReturnTypes.AccountId;
-	to: ReturnTypes.Id;
-	childCollection: ReturnTypes.AccountId;
-	childTokenId: ReturnTypes.Id;
+	parent: ReturnTypes.Id;
+	collection: ReturnTypes.AccountId;
+	child: ReturnTypes.Id;
 }
 
 export interface ChildRemoved {
