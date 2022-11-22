@@ -19,6 +19,7 @@
 // OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+//! This module enables nesting of RMRK or any other NFT which inherits PSP34.
 use crate::impls::rmrk::errors::RmrkError;
 use crate::impls::rmrk::types::*;
 pub use crate::traits::nesting::{Internal, Nesting, NestingEvents};
@@ -211,7 +212,6 @@ where
     /// * `to_parent_token_id` must exist.
     /// * `child_token_id` must exist.
     /// * There cannot be two identical children.
-    /// **
     ///
     /// # Arguments:
     /// * `to_parent_token_id`: is the tokenId of the parent NFT. The receiver of child.
@@ -223,7 +223,7 @@ where
     /// On success emitts `RmrkEvent::ChildAccepted` - only if caller is already owner of child NFT
     default fn add_child(
         &mut self,
-        to_parent_token_id: ItemId,
+        to_parent_token_id: Id,
         child_nft: ChildNft,
     ) -> Result<(), PSP34Error> {
         let parent_owner = self.ensure_exists(to_parent_token_id.clone())?;
@@ -299,7 +299,6 @@ where
     ///
     /// # Requirements:
     /// * The status of the child is `Pending`
-    /// *
     ///
     /// # Arguments:
     /// * `parent_token_id`: is the tokenId of the parent NFT.
@@ -328,7 +327,6 @@ where
     ///
     /// # Requirements:
     /// * The status of the child is `Pending`
-    /// *
     ///
     /// # Arguments:
     /// * `parent_token_id`: is the tokenId of the parent NFT.
@@ -357,7 +355,6 @@ where
     ///
     /// # Requirements:
     /// * The status of the child is `Accepted`
-    /// *
     ///
     /// # Arguments:
     /// * `current_parent`: current parent tokenId which holds child nft
@@ -388,7 +385,12 @@ where
         Ok(())
     }
 
-    /// Check the number of children on the parent token
+    /// Read the number of children on the parent token
+    /// # Arguments:
+    /// * `parent_token_id`: parent tokenId to check
+    ///
+    /// # Result:
+    /// Returns the tupple of `(accepted_children, pending_children)` count
     fn children_balance(&self, parent_token_id: Id) -> Result<(u64, u64), PSP34Error> {
         self.ensure_exists(parent_token_id.clone())?;
         let parents_with_accepted_children = match self

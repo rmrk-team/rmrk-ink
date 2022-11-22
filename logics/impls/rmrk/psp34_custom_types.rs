@@ -1,3 +1,5 @@
+//! Type Definition for PSP34Custom module
+//! 
 use openbrush::traits::{Balance, String};
 pub const STORAGE_KEY: u32 = openbrush::storage_unique_key!(Data);
 

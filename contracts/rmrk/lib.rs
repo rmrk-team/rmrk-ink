@@ -44,7 +44,7 @@ pub mod rmrk_contract {
         approved: bool,
     }
 
-    /// New child added.
+    /// Event emitted when a new child is added.
     #[ink(event)]
     pub struct AddedChild {
         #[ink(topic)]
@@ -55,7 +55,7 @@ pub mod rmrk_contract {
         child: Id,
     }
 
-    /// Child accepted.
+    /// Event emitted when a child is accepted.
     #[ink(event)]
     pub struct ChildAccepted {
         #[ink(topic)]
@@ -66,7 +66,7 @@ pub mod rmrk_contract {
         child: Id,
     }
 
-    /// Child removed.
+    /// Event emitted when a child is removed.
     #[ink(event)]
     pub struct ChildRemoved {
         #[ink(topic)]
@@ -77,7 +77,7 @@ pub mod rmrk_contract {
         child_token_id: Id,
     }
 
-    /// Child rejected.
+    /// Event emitted when a child is rejected.
     #[ink(event)]
     pub struct ChildRejected {
         #[ink(topic)]
@@ -119,6 +119,7 @@ pub mod rmrk_contract {
     impl Nesting for Rmrk {}
 
     impl Rmrk {
+        /// Instantiate new RMRK contract
         #[ink(constructor)]
         pub fn new(
             name: String,

@@ -1,3 +1,6 @@
+//! Set of functions commonly used with PSP34 contract
+//!
+
 // Copyright (c) 2022 Astar Network
 //
 // Permission is hereby granted, free of charge, to any person obtaining
@@ -108,7 +111,7 @@ where
         Ok(())
     }
 
-    /// Get URI from token ID
+    /// Get URI for the token Id
     default fn token_uri(&self, token_id: u64) -> Result<PreludeString, PSP34Error> {
         self._token_exists(Id::U64(token_id))?;
         let value = self.get_attribute(
@@ -126,12 +129,12 @@ where
         self.data::<Data>().max_supply
     }
 
-    /// Get token price
+    /// Get token mint price
     default fn price(&self) -> Balance {
         self.data::<Data>().price_per_mint
     }
 
-    /// Get max supply of tokens
+    /// Withdraw contract's balance
     #[modifiers(only_owner)]
     default fn withdraw(&mut self) -> Result<(), PSP34Error> {
         let balance = Self::env().balance();
