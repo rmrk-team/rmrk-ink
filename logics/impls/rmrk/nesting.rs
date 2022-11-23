@@ -109,6 +109,7 @@ where
                 RmrkError::ChildNotFound.as_str(),
             )));
         }
+        self._emit_child_removed_event(parent_token_id, child_nft.0, child_nft.1);
         Ok(())
     }
 
@@ -273,24 +274,14 @@ where
         let caller = Self::env().caller();
         self.is_caller_parent_owner(caller, parent_token_id.clone())?;
 
-        // Remove child nft and emit event
-        if let Some(children) = self
-            .data::<NestingData>()
-            .accepted_children
-            .get_mut(&parent_token_id.clone())
-        {
-            if !children.remove(&child_nft) {
-                return Err(PSP34Error::Custom(String::from(
-                    RmrkError::ChildNotFound.as_str(),
-                )));
-            }
-        }
+        // Remove child nft
+        self.remove_accepted(parent_token_id.clone(), child_nft.clone())?;
+
 
         // Transfer child ownership from this contract to parent_token owner.
         // This call will fail if this contract is not child owner
         let token_owner = self.ensure_exists(parent_token_id.clone())?;
         self.transfer_child_ownership(token_owner, child_nft.clone())?;
-        self._emit_child_removed_event(parent_token_id, child_nft.0, child_nft.1);
 
         Ok(())
     }

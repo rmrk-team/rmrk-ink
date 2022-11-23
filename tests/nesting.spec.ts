@@ -206,6 +206,61 @@ describe('RMRK Nesting tests', () => {
     emit(addChildResult, 'ChildAccepted', { parent: { u64: 1 }, collection: child.address, child: { u64: 1 }, });
   })
 
+  it('Add two parents, move/transfer child works', async () => {
+    await setup();
+
+    // bob mints parent-1
+    const mintGas = (await parent.withSigner(bob).query.mintNext()).gasRequired;
+    let parentMintResult = await parent.withSigner(bob).tx.mintNext({ value: PRICE_PER_MINT, gasLimit: mintGas * 2n });
+    emit(parentMintResult, 'Transfer', { from: null, to: bob.address, id: { u64: 1 }, });
+
+    // dave mints parent-2
+    let parentMintResult2 = await parent.withSigner(dave).tx.mintNext({ value: PRICE_PER_MINT, gasLimit: mintGas * 2n });
+    expect((await parent.query.totalSupply()).value.rawNumber.toNumber()).to.equal(2);
+    emit(parentMintResult2, 'Transfer', { from: null, to: dave.address, id: { u64: 2 }, });
+
+    // dave mints a child and approves parentContract on child
+    let childMintResult = await child.withSigner(dave).tx.mintNext({ value: PRICE_PER_MINT, gasLimit: mintGas * 2n });
+    expect((await child.query.totalSupply()).value.rawNumber.toNumber()).to.equal(1);
+    emit(childMintResult, 'Transfer', { from: null, to: dave.address, id: { u64: 1 }, });
+    const approveGas = (await child.withSigner(dave).query.approve(parent.address, { u64: 1 }, true)).gasRequired;
+    let approveResult = await child.withSigner(dave).tx.approve(parent.address, { u64: 1 }, true, { gasLimit: approveGas });
+    expect((await child.query.allowance(dave.address, parent.address, { u64: 1 })).value).to.equal(true);
+    emit(approveResult, 'Approval', { from: dave.address, to: parent.address, id: { u64: 1 }, approved: true, });
+
+    // dave adds child nft to his parent-2 nft
+    const addChildGas = (await parent.withSigner(dave).query.addChild({ u64: 2 }, [child.address, { u64: 1 }])).gasRequired;
+    const addChildResult = await parent.withSigner(dave).tx.addChild({ u64: 2 }, [child.address, { u64: 1 }], { gasLimit: addChildGas });
+    emit(addChildResult, 'AddedChild', { to: { u64: 2 }, collection: child.address, child: { u64: 1 }, });
+    expect((await parent.query.childrenBalance({ u64: 2 }))?.value.ok.toString()).to.be.equal("1,0");
+
+
+    // dave transfers his child-1 from parent-2 to bob's parent-1, bob accepts the child
+    const transferChildGas = (await parent.withSigner(dave).query.transferChild({ u64: 2 }, { u64: 1 }, [child.address, { u64: 1 }])).gasRequired;
+    const transferChildResult = await parent.withSigner(dave).tx.transferChild({ u64: 2 }, { u64: 1 }, [child.address, { u64: 1 }], { gasLimit: transferChildGas });
+    emit(transferChildResult, 'ChildRemoved', { parent: { u64: 2 }, childCollection: child.address, childTokenId: { u64: 1 }, });
+    expect((await parent.query.childrenBalance({ u64: 2 }))?.value.ok.toString()).to.be.equal("0,0");
+    expect((await parent.query.childrenBalance({ u64: 1 }))?.value.ok.toString()).to.be.equal("0,1");
+
+    // bob accepts new child
+    const acceptChildGas = (await parent.withSigner(bob).query.acceptChild({ u64: 1 }, [child.address, { u64: 1 }])).gasRequired;
+    const acceptChildResult = await parent.withSigner(bob).tx.acceptChild({ u64: 1 }, [child.address, { u64: 1 }], { gasLimit: acceptChildGas });
+    emit(acceptChildResult, 'ChildAccepted', { parent: { u64: 1 }, collection: child.address, child: { u64: 1 } });
+    expect((await parent.query.childrenBalance({ u64: 1 }))?.value.ok.toString()).to.be.equal("1,0");
+
+    // parent contract owns child token (in child contract)
+    expect((await child.query.ownerOf({ u64: 1 })).value).to.equal(parent.address);
+
+    // bob removes child
+    const removeChildGas = (await parent.withSigner(bob).query.removeChild({ u64: 1 }, [child.address, { u64: 1 }])).gasRequired;
+    const removeChildResult = await parent.withSigner(bob).tx.removeChild({ u64: 1 }, [child.address, { u64: 1 }], { gasLimit: removeChildGas });
+    emit(removeChildResult, 'ChildRemoved', { parent: { u64: 1 }, childCollection: child.address, childTokenId: { u64: 1 }, });
+    expect((await parent.query.childrenBalance({ u64: 1 }))?.value.ok.toString()).to.be.equal("0,0");
+
+    // bob owns child token (in child contract)
+    expect((await child.query.ownerOf({ u64: 1 })).value).to.equal(bob.address);
+  })
+
 })
 
 // Helper function to parse Events
