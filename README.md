@@ -27,4 +27,10 @@ cargo +nightly-2022-08-15 contract build
 cargo test
 ```
 
-4. Integration test is broken for now
+4. Integration test
+```sh
+yarn
+yarn compile
+yarn test:typechain
+````
+
