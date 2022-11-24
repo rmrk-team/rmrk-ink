@@ -4,20 +4,34 @@
 #[openbrush::contract]
 pub mod rmrk_contract {
     use ink_env;
-    use ink_lang::codegen::{EmitEvent, Env};
+    use ink_lang::codegen::{
+        EmitEvent,
+        Env,
+    };
     use ink_storage::traits::SpreadAllocate;
     use openbrush::{
         contracts::{
             ownable::*,
-            psp34::extensions::{enumerable::*, metadata::*},
+            psp34::extensions::{
+                enumerable::*,
+                metadata::*,
+            },
             reentrancy_guard::*,
         },
-        traits::{Storage, String},
+        traits::{
+            Storage,
+            String,
+        },
     };
     use rmrk::{
-        impls::rmrk::{types, *},
-        traits::nesting::*,
-        traits::psp34_custom::*,
+        impls::rmrk::{
+            types,
+            *,
+        },
+        traits::{
+            nesting::*,
+            psp34_custom::*,
+        },
     };
 
     // Event definitions
@@ -224,10 +238,16 @@ pub mod rmrk_contract {
     mod tests {
         use super::*;
         use crate::rmrk_contract::PSP34Error::*;
-        use ink_env::{pay_with_call, test};
+        use ink_env::{
+            pay_with_call,
+            test,
+        };
         use ink_lang as ink;
         use ink_prelude::string::String as PreludeString;
-        use rmrk::impls::rmrk::{errors::RmrkError, psp34_custom::CustomInternal};
+        use rmrk::impls::rmrk::{
+            errors::RmrkError,
+            psp34_custom::CustomInternal,
+        };
         const PRICE: Balance = 100_000_000_000_000_000;
         const BASE_URI: &str = "ipfs://myIpfsUri/";
         const MAX_SUPPLY: u64 = 10;

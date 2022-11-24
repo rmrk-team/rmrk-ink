@@ -1,16 +1,21 @@
 //! Types definition for RMRK contract
-//!
-use ink_prelude::collections::{BTreeMap, BTreeSet};
-use openbrush::traits::Balance;
-use openbrush::{contracts::psp34::Id, traits::AccountId};
+use ink_prelude::vec::Vec;
+use ink_storage::Mapping;
+use openbrush::{
+    contracts::psp34::Id,
+    traits::{
+        AccountId,
+        Balance,
+    },
+};
 
 pub const STORAGE_NESTING_KEY: u32 = openbrush::storage_unique_key!(NestingData);
 
 #[derive(Default, Debug)]
 #[openbrush::upgradeable_storage(STORAGE_NESTING_KEY)]
 pub struct NestingData {
-    pub pending_children: BTreeMap<Id, BTreeSet<ChildNft>>,
-    pub accepted_children: BTreeMap<Id, BTreeSet<ChildNft>>,
+    pub pending_children: Mapping<Id, Vec<ChildNft>>,
+    pub accepted_children: Mapping<Id, Vec<ChildNft>>,
 }
 
 #[derive(Debug, PartialEq, Eq, scale::Encode, scale::Decode)]

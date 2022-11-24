@@ -1,6 +1,12 @@
 //! Trait definitions for Nesting module
 use crate::impls::rmrk::types::*;
-use openbrush::{contracts::psp34::Id, contracts::psp34::PSP34Error, traits::AccountId};
+use openbrush::{
+    contracts::psp34::{
+        Id,
+        PSP34Error,
+    },
+    traits::AccountId,
+};
 
 #[openbrush::wrapper]
 pub type NestingRef = dyn Nesting;
