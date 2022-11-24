@@ -46,7 +46,7 @@ pub mod rmrk_contract {
 
     /// Event emitted when a new child is added.
     #[ink(event)]
-    pub struct AddedChild {
+    pub struct ChildAdded {
         #[ink(topic)]
         to: Id,
         #[ink(topic)]
@@ -101,7 +101,7 @@ pub mod rmrk_contract {
         #[storage_field]
         metadata: metadata::Data,
         #[storage_field]
-        psp34_custom: psp34_custom_types::Data,
+        psp34_custom: types::Psp34CustomData,
         #[storage_field]
         nesting: types::NestingData,
     }
@@ -173,49 +173,49 @@ pub mod rmrk_contract {
     }
 
     impl nesting::NestingEvents for Rmrk {
-        /// Emit AddedChild event
-        fn _emit_added_child_event(&self, to: Id, collection: AccountId, child: Id) {
-            self.env().emit_event(AddedChild {
-                to,
-                collection,
-                child,
+        /// Emit ChildAdded event
+        fn _emit_added_child_event(&self, to: &Id, collection: &AccountId, child: &Id) {
+            self.env().emit_event(ChildAdded {
+                to: to.clone(),
+                collection: collection.clone(),
+                child: child.clone(),
             });
         }
 
         /// Emit ChildAccepted event
-        fn _emit_child_accepted_event(&self, parent: Id, collection: AccountId, child: Id) {
+        fn _emit_child_accepted_event(&self, parent: &Id, collection: &AccountId, child: &Id) {
             self.env().emit_event(ChildAccepted {
-                parent,
-                collection,
-                child,
+                parent: parent.clone(),
+                collection: collection.clone(),
+                child: child.clone(),
             });
         }
 
         /// Emit ChildRemoved event
         fn _emit_child_removed_event(
             &self,
-            parent: Id,
-            child_collection: AccountId,
-            child_token_id: Id,
+            parent: &Id,
+            child_collection: &AccountId,
+            child_token_id: &Id,
         ) {
             self.env().emit_event(ChildRemoved {
-                parent,
-                child_collection,
-                child_token_id,
+                parent: parent.clone(),
+                child_collection: child_collection.clone(),
+                child_token_id: child_token_id.clone(),
             });
         }
 
         /// Emit ChildRejected event
         fn _emit_child_rejected_event(
             &self,
-            parent: Id,
-            child_collection: AccountId,
-            child_token_id: Id,
+            parent: &Id,
+            child_collection: &AccountId,
+            child_token_id: &Id,
         ) {
             self.env().emit_event(ChildRejected {
-                parent,
-                child_collection,
-                child_token_id,
+                parent: parent.clone(),
+                child_collection: child_collection.clone(),
+                child_token_id: child_token_id.clone(),
             });
         }
     }
@@ -227,7 +227,7 @@ pub mod rmrk_contract {
         use ink_env::{pay_with_call, test};
         use ink_lang as ink;
         use ink_prelude::string::String as PreludeString;
-        use rmrk::impls::rmrk::{errors::RmrkError, psp34_custom::Internal};
+        use rmrk::impls::rmrk::{errors::RmrkError, psp34_custom::CustomInternal};
         const PRICE: Balance = 100_000_000_000_000_000;
         const BASE_URI: &str = "ipfs://myIpfsUri/";
         const MAX_SUPPLY: u64 = 10;
