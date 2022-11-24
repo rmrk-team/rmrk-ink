@@ -1,16 +1,6 @@
 //! Error definition for RMRK contract
 //!
-use openbrush::traits::{Balance, String};
-pub const STORAGE_KEY: u32 = openbrush::storage_unique_key!(Data);
-
-#[derive(Default, Debug)]
-#[openbrush::upgradeable_storage(STORAGE_KEY)]
-pub struct Data {
-    pub last_token_id: u64,
-    pub collection_id: u32,
-    pub max_supply: u64,
-    pub price_per_mint: Balance,
-}
+use openbrush::traits::String;
 
 #[derive(Debug, PartialEq, Eq, scale::Encode, scale::Decode)]
 #[cfg_attr(feature = "std", derive(scale_info::TypeInfo))]
