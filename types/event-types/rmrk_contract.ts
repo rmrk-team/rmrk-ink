@@ -14,7 +14,7 @@ export interface Approval {
 	approved: boolean;
 }
 
-export interface AddedChild {
+export interface ChildAdded {
 	to: ReturnTypes.Id;
 	collection: ReturnTypes.AccountId;
 	child: ReturnTypes.Id;

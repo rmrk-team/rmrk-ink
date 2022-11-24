@@ -1,5 +1,5 @@
 //! Error definition for RMRK contract
-//! 
+//!
 use openbrush::traits::{Balance, String};
 pub const STORAGE_KEY: u32 = openbrush::storage_unique_key!(Data);
 

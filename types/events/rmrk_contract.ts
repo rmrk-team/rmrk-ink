@@ -44,7 +44,7 @@ export default class EventsClass {
 		return this.__subscribeOnEvent(callbackWrapper, (eventName : string) => eventName == 'Approval');
 	}
 
-	public subscribeOnAddedChildEvent(callback : (event : EventTypes.AddedChild) => void) {
+	public subscribeOnChildAddedEvent(callback : (event : EventTypes.ChildAdded) => void) {
 		const callbackWrapper = (args: any[], event: any) => {
 			let _event: Record < string, any > = {};
 
@@ -52,10 +52,10 @@ export default class EventsClass {
 				_event[event.args[i]!.name] = args[i]!.toJSON();
 			}
 
-			callback(handleEventReturn(_event, getEventTypeDescription('AddedChild', 'rmrk_contract')) as EventTypes.AddedChild);
+			callback(handleEventReturn(_event, getEventTypeDescription('ChildAdded', 'rmrk_contract')) as EventTypes.ChildAdded);
 		};
 
-		return this.__subscribeOnEvent(callbackWrapper, (eventName : string) => eventName == 'AddedChild');
+		return this.__subscribeOnEvent(callbackWrapper, (eventName : string) => eventName == 'ChildAdded');
 	}
 
 	public subscribeOnChildAcceptedEvent(callback : (event : EventTypes.ChildAccepted) => void) {

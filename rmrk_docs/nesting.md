@@ -1,12 +1,12 @@
 # Nesting NFT
 Please refer to [RMRK abstract spec](https://github.com/rmrk-team/rmrk-spec/tree/master/standards/abstract) for details on RMRK standard.
-> Note! Nesting module is not depenant on other RMRK modules and can be used as a stand alone module on top of PSP34
+> Note! Nesting module is not dependent on other RMRK modules and can be used as a stand alone module on top of PSP34
 
 Nesting NFTs is a capability of an NFT to be the owner of one or more NFTs. The token which owns other tokens is called a parent token and the tokens nested under the parent are called children tokens. 
-In this ink! implementation of RMRK contract, the child contract can be other RMRK contract or any token which implements PSP34 standard.
+In this ink! implementation of RMRK contract, the child contract can be another RMRK contract or any token which implements PSP34 standard.
 The parent contract can only be RMRK contract.
 
-Some of the solutions for nesting inplementations are therefore different than EVM implementation, however the desired functionality will be the same.
+Some of the solutions for nesting implementations are therefore different than EVM implementation, however the desired functionality will be the same.
 
 ### SEND interaction (RMRK Specification requirement)
 1. Send/add any RMRK based NFT to another RMRK NFT

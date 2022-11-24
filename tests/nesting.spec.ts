@@ -108,7 +108,7 @@ describe('RMRK Nesting tests', () => {
     // dave adds child nft to bob's parent nft
     const addChildGas = (await parent.withSigner(dave).query.addChild({ u64: 1 }, [child.address, { u64: 1 }])).gasRequired;
     const addChildResult = await parent.withSigner(dave).tx.addChild({ u64: 1 }, [child.address, { u64: 1 }], { gasLimit: addChildGas });
-    emit(addChildResult, 'AddedChild', { to: { u64: 1 }, collection: child.address, child: { u64: 1 }, });
+    emit(addChildResult, 'ChildAdded', { to: { u64: 1 }, collection: child.address, child: { u64: 1 }, });
     expect((await parent.query.childrenBalance({ u64: 1 }))?.value.ok.toString()).to.be.equal("0,1");
 
     // since bob is owner of parent, dave can't accept child
@@ -158,7 +158,7 @@ describe('RMRK Nesting tests', () => {
     // dave adds child nft to bob's parent nft
     const addChildGas = (await parent.withSigner(dave).query.addChild({ u64: 1 }, [child.address, { u64: 1 }])).gasRequired;
     const addChildResult = await parent.withSigner(dave).tx.addChild({ u64: 1 }, [child.address, { u64: 1 }], { gasLimit: addChildGas });
-    emit(addChildResult, 'AddedChild', { to: { u64: 1 }, collection: child.address, child: { u64: 1 }, });
+    emit(addChildResult, 'ChildAdded', { to: { u64: 1 }, collection: child.address, child: { u64: 1 }, });
     expect((await parent.query.childrenBalance({ u64: 1 }))?.value.ok.toString()).to.be.equal("0,1");
 
     // since bob is owner of parent, dave can't accept child
@@ -200,7 +200,7 @@ describe('RMRK Nesting tests', () => {
     const result = await parent.withSigner(bob).query.addChild({ u64: 1 }, [child.address, { u64: 1 }]);
     const addChildResult = await parent.withSigner(bob).tx.addChild({ u64: 1 }, [child.address, { u64: 1 }], { gasLimit: addChildGas });
     expect((await parent.query.childrenBalance({ u64: 1 }))?.value.ok.toString()).to.be.equal("1,0");
-    emit(addChildResult, 'AddedChild', { to: { u64: 1 }, collection: child.address, child: { u64: 1 }, });
+    emit(addChildResult, 'ChildAdded', { to: { u64: 1 }, collection: child.address, child: { u64: 1 }, });
 
     // since bob is owner of both parent and child it is automatically approved
     emit(addChildResult, 'ChildAccepted', { parent: { u64: 1 }, collection: child.address, child: { u64: 1 }, });
@@ -231,7 +231,7 @@ describe('RMRK Nesting tests', () => {
     // dave adds child nft to his parent-2 nft
     const addChildGas = (await parent.withSigner(dave).query.addChild({ u64: 2 }, [child.address, { u64: 1 }])).gasRequired;
     const addChildResult = await parent.withSigner(dave).tx.addChild({ u64: 2 }, [child.address, { u64: 1 }], { gasLimit: addChildGas });
-    emit(addChildResult, 'AddedChild', { to: { u64: 2 }, collection: child.address, child: { u64: 1 }, });
+    emit(addChildResult, 'ChildAdded', { to: { u64: 2 }, collection: child.address, child: { u64: 1 }, });
     expect((await parent.query.childrenBalance({ u64: 2 }))?.value.ok.toString()).to.be.equal("1,0");
 
 

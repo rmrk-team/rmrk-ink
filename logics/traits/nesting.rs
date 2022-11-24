@@ -8,9 +8,9 @@ pub type NestingRef = dyn Nesting;
 /// Trait definitions for Nesting ink! messages
 #[openbrush::trait_definition]
 pub trait Nesting {
-    /// Add a child NFT (from different collection) to the NFT to NFT in this collection.
-    /// The status of added child is `Pending` if caller is not owner of child NFT
-    /// The status of added child is `Accepted` if caller is is owner of child NFT
+    /// Add a child NFT (from different collection) to the NFT in this collection.
+    /// The status of the added child is `Pending` if caller is not owner of child NFT
+    /// The status of the added child is `Accepted` if caller is is owner of child NFT
     /// The caller needs not to be the owner of the to_parent_token_id, but
     /// Caller must be owner of the child NFT,
     /// in order to perform transfer() ownership of the child nft to to_parent_token_id.
@@ -27,7 +27,7 @@ pub trait Nesting {
     ///
     /// # Result:
     /// Ownership of child NFT will be transferred to this contract (cross contract call)
-    /// On success emitts `RmrkEvent::AddedChild`
+    /// On success emitts `RmrkEvent::ChildAdded`
     /// On success emitts `RmrkEvent::ChildAccepted` - only if caller is already owner of child NFT
     #[ink(message)]
     fn add_child(&mut self, parent_token_id: Id, child_nft: ChildNft) -> Result<(), PSP34Error>;
@@ -91,7 +91,7 @@ pub trait Nesting {
     ///
     /// # Result:
     /// Ownership of child NFT will be transferred to this contract (cross contract call)
-    /// On success emitts `RmrkEvent::AddedChild`
+    /// On success emitts `RmrkEvent::ChildAdded`
     /// On success emitts `RmrkEvent::ChildAccepted` - only if caller is already owner of child NFT
     #[ink(message)]
     fn transfer_child(&mut self, from: Id, to: Id, child_nft: ChildNft) -> Result<(), PSP34Error>;
@@ -109,41 +109,41 @@ pub trait Nesting {
 /// Trait definitions for Nesting ink events
 #[openbrush::trait_definition]
 pub trait NestingEvents {
-    /// Emit AddedChild event.
-    fn _emit_added_child_event(&self, to: Id, collection: AccountId, child: Id);
+    /// Emit ChildAdded event.
+    fn _emit_added_child_event(&self, to: &Id, collection: &AccountId, child: &Id);
 
     /// Emit ChildAccepted event.
     fn _emit_child_accepted_event(
         &self,
-        to: Id,
-        child_collection_address: AccountId,
-        child_token_id: Id,
+        to: &Id,
+        child_collection_address: &AccountId,
+        child_token_id: &Id,
     );
 
     /// Emit ChildAccepted event.
     fn _emit_child_removed_event(
         &self,
-        parent: Id,
-        child_collection_address: AccountId,
-        child_token_id: Id,
+        parent: &Id,
+        child_collection_address: &AccountId,
+        child_token_id: &Id,
     );
 
     /// Emit ChildRejected event.
     fn _emit_child_rejected_event(
         &self,
-        parent: Id,
-        child_collection_address: AccountId,
-        child_token_id: Id,
+        parent: &Id,
+        child_collection_address: &AccountId,
+        child_token_id: &Id,
     );
 }
 
 /// Trait implementation for Internal Nesting functions.
 pub trait Internal {
     /// Check if child is already accepted.
-    fn already_accepted(&self, parent_token_id: Id, child_nft: ChildNft) -> Result<(), PSP34Error>;
+    fn accepted(&self, parent_token_id: &Id, child_nft: &ChildNft) -> Result<(), PSP34Error>;
 
     /// Check if child is already pending.
-    fn already_pending(&self, parent_token_id: Id, child_nft: ChildNft) -> Result<(), PSP34Error>;
+    fn pending(&self, parent_token_id: &Id, child_nft: &ChildNft) -> Result<(), PSP34Error>;
 
     /// Add the child to the list of accepted children.
     fn add_to_accepted(&mut self, parent_token_id: Id, child_nft: ChildNft);
@@ -151,8 +151,8 @@ pub trait Internal {
     /// Remove the child to the list of accepted children.
     fn remove_accepted(
         &mut self,
-        parent_token_id: Id,
-        child_nft: ChildNft,
+        parent_token_id: &Id,
+        child_nft: &ChildNft,
     ) -> Result<(), PSP34Error>;
 
     /// Add the child to the list of pending children.
@@ -161,18 +161,18 @@ pub trait Internal {
     /// Remove the child to the list of pending children.
     fn remove_from_pending(
         &mut self,
-        parent_token_id: Id,
-        child_nft: ChildNft,
+        parent_token_id: &Id,
+        child_nft: &ChildNft,
     ) -> Result<(), PSP34Error>;
 
     /// Check if token is minted. Return the owner.
-    fn ensure_exists(&self, id: Id) -> Result<AccountId, PSP34Error>;
+    fn ensure_exists(&self, id: &Id) -> Result<AccountId, PSP34Error>;
 
     /// Check if caller is the owner of this parent token.
     fn is_caller_parent_owner(
         &self,
         caller: AccountId,
-        parent_token_id: Id,
+        parent_token_id: &Id,
     ) -> Result<(), PSP34Error>;
 
     /// Cross contract call to transfer child nft ownership.

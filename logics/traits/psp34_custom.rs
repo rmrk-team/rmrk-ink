@@ -11,7 +11,7 @@ use openbrush::{
 pub type Psp34CustomRef = dyn Psp34Custom;
 
 /// Trait definitions for Psp34Custom internal functions.
-pub trait Internal {
+pub trait CustomInternal {
     /// Check if the transferred mint values is as expected.
     fn _check_value(&self, transfered_value: u128, mint_amount: u64) -> Result<(), PSP34Error>;
 

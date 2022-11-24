@@ -24,8 +24,9 @@
 
 use ink_prelude::string::{String as PreludeString, ToString};
 
-use crate::impls::rmrk::psp34_custom_types::{Data, RmrkError};
-pub use crate::traits::psp34_custom::Psp34Custom;
+use crate::impls::rmrk::errors::RmrkError;
+use crate::impls::rmrk::types::Psp34CustomData;
+pub use crate::traits::psp34_custom::{CustomInternal, Psp34Custom};
 use openbrush::{
     contracts::{
         ownable::*,
@@ -36,23 +37,9 @@ use openbrush::{
     traits::{AccountId, Balance, Storage, String},
 };
 
-pub trait Internal {
-    /// Check if the transferred mint values is as expected
-    fn _check_value(&self, transfered_value: u128, mint_amount: u64) -> Result<(), PSP34Error>;
-
-    /// Check amount of tokens to be minted
-    fn _check_amount(&self, mint_amount: u64) -> Result<(), PSP34Error>;
-
-    /// Check if token is minted
-    fn _token_exists(&self, id: Id) -> Result<(), PSP34Error>;
-
-    // /// Emit Transfer event
-    // fn _emit_tra?event(&self, from: AccountId, to: AccountId, id: Option<Id>, approved: bool);
-}
-
 impl<T> Psp34Custom for T
 where
-    T: Storage<Data>
+    T: Storage<Psp34CustomData>
         + Storage<psp34::Data<enumerable::Balances>>
         + Storage<reentrancy_guard::Data>
         + Storage<ownable::Data>
@@ -64,16 +51,16 @@ where
     default fn mint_next(&mut self) -> Result<(), PSP34Error> {
         self._check_value(Self::env().transferred_value(), 1)?;
         let caller = Self::env().caller();
-        let token_id =
-            self.data::<Data>()
-                .last_token_id
-                .checked_add(1)
-                .ok_or(PSP34Error::Custom(String::from(
-                    RmrkError::CollectionIsFull.as_str(),
-                )))?;
+        let token_id = self
+            .data::<Psp34CustomData>()
+            .last_token_id
+            .checked_add(1)
+            .ok_or(PSP34Error::Custom(String::from(
+                RmrkError::CollectionIsFull.as_str(),
+            )))?;
         self.data::<psp34::Data<enumerable::Balances>>()
             ._mint_to(caller, Id::U64(token_id))?;
-        self.data::<Data>().last_token_id += 1;
+        self.data::<Psp34CustomData>().last_token_id += 1;
 
         self._emit_transfer_event(None, Some(caller), Id::U64(token_id));
         return Ok(());
@@ -85,7 +72,7 @@ where
         self._check_value(Self::env().transferred_value(), mint_amount)?;
         self._check_amount(mint_amount)?;
 
-        let next_to_mint = self.data::<Data>().last_token_id + 1; // first mint id is 1
+        let next_to_mint = self.data::<Psp34CustomData>().last_token_id + 1; // first mint id is 1
         let mint_offset = next_to_mint + mint_amount;
 
         for mint_id in next_to_mint..mint_offset {
@@ -93,7 +80,7 @@ where
                 .data::<psp34::Data<enumerable::Balances>>()
                 ._mint_to(to, Id::U64(mint_id))
                 .is_ok());
-            self.data::<Data>().last_token_id += 1;
+            self.data::<Psp34CustomData>().last_token_id += 1;
             self._emit_transfer_event(None, Some(to), Id::U64(mint_id));
         }
 
@@ -126,12 +113,12 @@ where
 
     /// Get max supply of tokens
     default fn max_supply(&self) -> u64 {
-        self.data::<Data>().max_supply
+        self.data::<Psp34CustomData>().max_supply
     }
 
     /// Get token mint price
     default fn price(&self) -> Balance {
-        self.data::<Data>().price_per_mint
+        self.data::<Psp34CustomData>().price_per_mint
     }
 
     /// Withdraw contract's balance
@@ -149,9 +136,9 @@ where
 }
 
 /// Helper trait for Psp34Custom
-impl<T> Internal for T
+impl<T> CustomInternal for T
 where
-    T: Storage<Data> + Storage<psp34::Data<enumerable::Balances>>,
+    T: Storage<Psp34CustomData> + Storage<psp34::Data<enumerable::Balances>>,
 {
     /// Check if the transferred mint values is as expected
     default fn _check_value(
@@ -159,7 +146,9 @@ where
         transfered_value: u128,
         mint_amount: u64,
     ) -> Result<(), PSP34Error> {
-        if let Some(value) = (mint_amount as u128).checked_mul(self.data::<Data>().price_per_mint) {
+        if let Some(value) =
+            (mint_amount as u128).checked_mul(self.data::<Psp34CustomData>().price_per_mint)
+        {
             if transfered_value == value {
                 return Ok(());
             }
@@ -176,8 +165,12 @@ where
                 RmrkError::CannotMintZeroTokens.as_str(),
             )));
         }
-        if let Some(amount) = self.data::<Data>().last_token_id.checked_add(mint_amount) {
-            if amount <= self.data::<Data>().max_supply {
+        if let Some(amount) = self
+            .data::<Psp34CustomData>()
+            .last_token_id
+            .checked_add(mint_amount)
+        {
+            if amount <= self.data::<Psp34CustomData>().max_supply {
                 return Ok(());
             }
         }
