@@ -1,10 +1,15 @@
 //! Set of functions commonly used with PSP34 contract
-//!
 use ink_prelude::string::String as PreludeString;
 
 use openbrush::{
-    contracts::psp34::{Id, PSP34Error},
-    traits::{AccountId, Balance},
+    contracts::psp34::{
+        Id,
+        PSP34Error,
+    },
+    traits::{
+        AccountId,
+        Balance,
+    },
 };
 
 #[openbrush::wrapper]

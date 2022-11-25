@@ -1,5 +1,4 @@
 //! Set of functions commonly used with PSP34 contract
-//!
 
 // Copyright (c) 2022 Astar Network
 //
@@ -22,19 +21,35 @@
 // OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-use ink_prelude::string::{String as PreludeString, ToString};
+use ink_prelude::string::{
+    String as PreludeString,
+    ToString,
+};
 
-use crate::impls::rmrk::errors::RmrkError;
-use crate::impls::rmrk::types::Psp34CustomData;
-pub use crate::traits::psp34_custom::{CustomInternal, Psp34Custom};
+use crate::impls::rmrk::{
+    errors::RmrkError,
+    types::Psp34CustomData,
+};
+pub use crate::traits::psp34_custom::{
+    CustomInternal,
+    Psp34Custom,
+};
 use openbrush::{
     contracts::{
         ownable::*,
-        psp34::extensions::{enumerable::*, metadata::*},
+        psp34::extensions::{
+            enumerable::*,
+            metadata::*,
+        },
         reentrancy_guard::*,
     },
     modifiers,
-    traits::{AccountId, Balance, Storage, String},
+    traits::{
+        AccountId,
+        Balance,
+        Storage,
+        String,
+    },
 };
 
 impl<T> Psp34Custom for T
@@ -63,7 +78,7 @@ where
         self.data::<Psp34CustomData>().last_token_id += 1;
 
         self._emit_transfer_event(None, Some(caller), Id::U64(token_id));
-        return Ok(());
+        return Ok(())
     }
 
     /// Mint one or more tokens
@@ -150,12 +165,12 @@ where
             (mint_amount as u128).checked_mul(self.data::<Psp34CustomData>().price_per_mint)
         {
             if transfered_value == value {
-                return Ok(());
+                return Ok(())
             }
         }
         return Err(PSP34Error::Custom(String::from(
             RmrkError::BadMintValue.as_str(),
-        )));
+        )))
     }
 
     /// Check amount of tokens to be minted
@@ -163,7 +178,7 @@ where
         if mint_amount == 0 {
             return Err(PSP34Error::Custom(String::from(
                 RmrkError::CannotMintZeroTokens.as_str(),
-            )));
+            )))
         }
         if let Some(amount) = self
             .data::<Psp34CustomData>()
@@ -171,12 +186,12 @@ where
             .checked_add(mint_amount)
         {
             if amount <= self.data::<Psp34CustomData>().max_supply {
-                return Ok(());
+                return Ok(())
             }
         }
         return Err(PSP34Error::Custom(String::from(
             RmrkError::CollectionIsFull.as_str(),
-        )));
+        )))
     }
 
     /// Check if token is minted
