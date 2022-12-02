@@ -6,6 +6,7 @@ use openbrush::{
     traits::{
         AccountId,
         Balance,
+        String,
     },
 };
 
@@ -40,4 +41,5 @@ pub struct Psp34CustomData {
     pub collection_id: u32,
     pub max_supply: u64,
     pub price_per_mint: Balance,
+    pub nft_metadata: Mapping<Id, String>,
 }

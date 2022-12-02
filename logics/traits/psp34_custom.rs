@@ -34,6 +34,10 @@ pub trait Psp34Custom {
     #[ink(message, payable)]
     fn mint_next(&mut self) -> Result<(), PSP34Error>;
 
+    /// Mint next available token with specific metadata
+    #[ink(message)]
+    fn mint_rmrk(&mut self, metadata: PreludeString, to: AccountId) -> Result<(), PSP34Error>;
+
     /// Mint one or more tokens.
     #[ink(message, payable)]
     fn mint_for(&mut self, to: AccountId, mint_amount: u64) -> Result<(), PSP34Error>;

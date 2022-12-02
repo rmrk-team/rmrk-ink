@@ -81,6 +81,31 @@ where
         return Ok(())
     }
 
+    /// Mint next available token with specific metadata
+    #[modifiers(only_owner)]
+    default fn mint_rmrk(
+        &mut self,
+        metadata: PreludeString,
+        to: AccountId,
+    ) -> Result<(), PSP34Error> {
+        let token_id = self
+            .data::<Psp34CustomData>()
+            .last_token_id
+            .checked_add(1)
+            .ok_or(PSP34Error::Custom(String::from(
+                RmrkError::CollectionIsFull.as_str(),
+            )))?;
+        self.data::<psp34::Data<enumerable::Balances>>()
+            ._mint_to(to, Id::U64(token_id))?;
+        self.data::<Psp34CustomData>()
+            .nft_metadata
+            .insert(Id::U64(token_id), &String::from(metadata));
+        self.data::<Psp34CustomData>().last_token_id += 1;
+
+        self._emit_transfer_event(None, Some(to), Id::U64(token_id));
+        return Ok(())
+    }
+
     /// Mint one or more tokens
     #[modifiers(non_reentrant)]
     default fn mint_for(&mut self, to: AccountId, mint_amount: u64) -> Result<(), PSP34Error> {
@@ -116,14 +141,23 @@ where
     /// Get URI for the token Id
     default fn token_uri(&self, token_id: u64) -> Result<PreludeString, PSP34Error> {
         self._token_exists(Id::U64(token_id))?;
-        let value = self.get_attribute(
-            self.data::<psp34::Data<enumerable::Balances>>()
-                .collection_id(),
-            String::from("baseUri"),
-        );
-        let mut token_uri = PreludeString::from_utf8(value.unwrap()).unwrap();
-        token_uri = token_uri + &token_id.to_string() + &PreludeString::from(".json");
-        Ok(token_uri)
+        let uri: PreludeString;
+        if let Some(token_uri) = self
+            .data::<Psp34CustomData>()
+            .nft_metadata
+            .get(Id::U64(token_id))
+        {
+            uri = PreludeString::from_utf8(token_uri).unwrap();
+        } else {
+            let value = self.get_attribute(
+                self.data::<psp34::Data<enumerable::Balances>>()
+                    .collection_id(),
+                String::from("baseUri"),
+            );
+            let token_uri = PreludeString::from_utf8(value.unwrap()).unwrap();
+            uri = token_uri + &token_id.to_string() + &PreludeString::from(".json");
+        }
+        Ok(uri)
     }
 
     /// Get max supply of tokens
