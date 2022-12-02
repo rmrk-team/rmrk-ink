@@ -316,21 +316,18 @@ pub mod rmrk_contract {
             // only owner is allowed to mint
             set_sender(accounts.bob);
             assert_eq!(
-                rmrk.mint_rmrk(RMRK_METADATA.into()),
+                rmrk.mint_rmrk(RMRK_METADATA.into(), accounts.bob),
                 Err(PSP34Error::Custom(String::from("O::CallerIsNotOwner")))
             );
 
             // owner mints
             set_sender(accounts.alice);
             assert_eq!(rmrk.total_supply(), 0);
-            assert!(rmrk.mint_rmrk(RMRK_METADATA.into()).is_ok());
+            assert!(rmrk.mint_rmrk(RMRK_METADATA.into(), accounts.bob).is_ok());
             assert_eq!(rmrk.total_supply(), 1);
-            assert_eq!(rmrk.owner_of(Id::U64(1)), Some(accounts.alice));
-            assert_eq!(rmrk.balance_of(accounts.alice), 1);
-            assert_eq!(
-                rmrk.owners_token_by_index(accounts.alice, 0),
-                Ok(Id::U64(1))
-            );
+            assert_eq!(rmrk.owner_of(Id::U64(1)), Some(accounts.bob));
+            assert_eq!(rmrk.balance_of(accounts.bob), 1);
+            assert_eq!(rmrk.owners_token_by_index(accounts.bob, 0), Ok(Id::U64(1)));
             assert_eq!(1, ink_env::test::recorded_events().count());
 
             // token_uri for rmrk mint works
