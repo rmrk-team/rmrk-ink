@@ -306,6 +306,50 @@ pub mod rmrk_contract {
         }
 
         #[ink::test]
+        fn mint_rmrk_works() {
+            const RMRK_METADATA: &str = "ipfs://rmrkIpfsUri/";
+
+            let mut rmrk = init();
+            let accounts = default_accounts();
+            assert_eq!(rmrk.owner(), accounts.alice);
+
+            // only owner is allowed to mint
+            set_sender(accounts.bob);
+            assert_eq!(
+                rmrk.mint_rmrk(RMRK_METADATA.into()),
+                Err(PSP34Error::Custom(String::from("O::CallerIsNotOwner")))
+            );
+
+            // owner mints
+            set_sender(accounts.alice);
+            assert_eq!(rmrk.total_supply(), 0);
+            assert!(rmrk.mint_rmrk(RMRK_METADATA.into()).is_ok());
+            assert_eq!(rmrk.total_supply(), 1);
+            assert_eq!(rmrk.owner_of(Id::U64(1)), Some(accounts.alice));
+            assert_eq!(rmrk.balance_of(accounts.alice), 1);
+            assert_eq!(
+                rmrk.owners_token_by_index(accounts.alice, 0),
+                Ok(Id::U64(1))
+            );
+            assert_eq!(1, ink_env::test::recorded_events().count());
+
+            // token_uri for rmrk mint works
+            assert_eq!(
+                rmrk.token_uri(1),
+                Ok(PreludeString::from(RMRK_METADATA.to_owned()))
+            );
+
+            // token_uri for mint_next work
+            set_sender(accounts.bob);
+            test::set_value_transferred::<ink_env::DefaultEnvironment>(PRICE);
+            assert!(rmrk.mint_next().is_ok());
+            assert_eq!(
+                rmrk.token_uri(2),
+                Ok(PreludeString::from(BASE_URI.to_owned() + "2.json"))
+            );
+        }
+
+        #[ink::test]
         fn mint_multiple_works() {
             let mut rmrk = init();
             let accounts = default_accounts();
@@ -405,13 +449,11 @@ pub mod rmrk_contract {
             assert!(rmrk.mint_next().is_ok());
             // return error if request is for not yet minted token
             assert_eq!(rmrk.token_uri(42), Err(TokenNotExists));
+
             assert_eq!(
                 rmrk.token_uri(1),
                 Ok(PreludeString::from(BASE_URI.to_owned() + "1.json"))
             );
-
-            // return error if request is for not yet minted token
-            assert_eq!(rmrk.token_uri(42), Err(TokenNotExists));
 
             // verify token_uri when baseUri is empty
             set_sender(accounts.alice);
