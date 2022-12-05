@@ -29,6 +29,7 @@ pub mod rmrk_contract {
             *,
         },
         traits::{
+            multiasset::*,
             nesting::*,
             psp34_custom::*,
         },
@@ -118,6 +119,8 @@ pub mod rmrk_contract {
         psp34_custom: types::Psp34CustomData,
         #[storage_field]
         nesting: types::NestingData,
+        #[storage_field]
+        multiasset: types::MultiAssetData,
     }
 
     impl PSP34 for Rmrk {}

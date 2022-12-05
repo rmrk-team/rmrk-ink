@@ -18,18 +18,16 @@ pub struct NestingData {
     pub accepted_children: Mapping<Id, Vec<ChildNft>>,
 }
 
-#[derive(Debug, PartialEq, Eq, scale::Encode, scale::Decode)]
-#[cfg_attr(feature = "std", derive(scale_info::TypeInfo))]
-pub enum ChildStatus {
-    Pending,
-    Accepted,
-}
-
 // Collection id is the address of child contract
 pub type CollectionId = AccountId;
 
 // Nft is a tuple of collection and TokenId and refers to the Child nft
 pub type ChildNft = (CollectionId, Id);
+
+pub type BaseId = u32;
+pub type SlotId = u32;
+pub type PartId = u32;
+pub type AssetId = u32;
 
 pub const STORAGE_PSP34_KEY: u32 = openbrush::storage_unique_key!(Psp34CustomData);
 
@@ -40,4 +38,19 @@ pub struct Psp34CustomData {
     pub collection_id: u32,
     pub max_supply: u64,
     pub price_per_mint: Balance,
+}
+
+pub const STORAGE_MUSLTIASSET_KEY: u32 = openbrush::storage_unique_key!(MultiAssetData);
+
+#[derive(Default, Debug)]
+#[openbrush::upgradeable_storage(STORAGE_MUSLTIASSET_KEY)]
+pub struct MultiAssetData {
+    /// List of available asset entries for this collection
+    pub collection_asset_entries: Vec<AssetId>,
+
+    /// Mapping of tokenId to an array of active assets
+    pub accepted_assets: Mapping<Id, Vec<AssetId>>,
+
+    /// Mapping of tokenId to an array of pending assets
+    pub pending_assets: Mapping<Id, Vec<AssetId>>,
 }
