@@ -97,12 +97,15 @@ pub trait MultiAsset {
     ///  * u64 The total number of assets
     #[ink(message)]
     fn total_assets(&self) -> u32;
+
+    /// Used to retrieve asset's uri
+    fn get_asset_uri(&self, asset_id: AssetId) -> Option<String>;
 }
 
 /// Trait definitions for Resource helper functions
 #[openbrush::trait_definition]
 pub trait Internal {
-    fn resource_add(&mut self, parent_token_id: Id, child_nft: ChildNft) -> Result<(), PSP34Error>;
+    fn asset_id_exists(&self, asset_id: AssetId) -> Option<String>;
 }
 
 /// Trait definitions for Resource ink events

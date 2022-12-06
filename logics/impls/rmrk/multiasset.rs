@@ -30,12 +30,19 @@ impl<T> Internal for T
 where
     T: Storage<MultiAssetData> + Storage<psp34::Data<enumerable::Balances>>,
 {
-    fn resource_add(
-        &mut self,
-        _parent_token_id: Id,
-        _child_nft: ChildNft,
-    ) -> Result<(), PSP34Error> {
-        todo!()
+    fn asset_id_exists(&self, asset_id: AssetId) -> Option<String> {
+        if let Some(index) = self
+            .data::<MultiAssetData>()
+            .collection_asset_entries
+            .iter()
+            .position(|a| a.asset_id == asset_id)
+        {
+            let asset_uri =
+                &self.data::<MultiAssetData>().collection_asset_entries[index].asset_uri;
+            return Some(asset_uri.clone())
+        }
+
+        None
     }
 }
 
@@ -49,15 +56,26 @@ where
     #[modifiers(only_owner)]
     fn add_asset_entry(
         &mut self,
-        id: AssetId,
+        asset_id: AssetId,
         equippable_group_id: EquippableGroupId,
         base_id: BaseId,
         asset_uri: String,
         part_ids: Vec<PartId>,
     ) -> Result<(), PSP34Error> {
+        if self.asset_id_exists(asset_id).is_some() {
+            return Err(PSP34Error::Custom(String::from(
+                RmrkError::AssetIdAlreadyExists.as_str(),
+            )))
+        };
         self.data::<MultiAssetData>()
             .collection_asset_entries
-            .push([id, equippable_group_id, base_id, asset_uri, part_ids]);
+            .push(Asset {
+                asset_id,
+                equippable_group_id,
+                base_id,
+                asset_uri,
+                part_ids,
+            });
         Ok(())
     }
 
@@ -90,5 +108,10 @@ where
     /// Used to retrieve the total number of assets.
     fn total_assets(&self) -> u32 {
         self.data::<MultiAssetData>().collection_asset_entries.len() as u32
+    }
+
+    /// Used to retrieve asset's uri
+    fn get_asset_uri(&self, asset_id: AssetId) -> Option<String> {
+        self.asset_id_exists(asset_id)
     }
 }

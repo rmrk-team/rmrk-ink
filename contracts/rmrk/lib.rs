@@ -250,6 +250,7 @@ pub mod rmrk_contract {
         use rmrk::impls::rmrk::{
             errors::RmrkError,
             psp34_custom::CustomInternal,
+            types::*,
         };
         const PRICE: Balance = 100_000_000_000_000_000;
         const BASE_URI: &str = "ipfs://myIpfsUri/";
@@ -506,12 +507,21 @@ pub mod rmrk_contract {
 
         #[ink::test]
         fn add_asset_entry_works() {
-            let accounts = default_accounts();
             const ASSET_URI: &str = "asset_uri/";
+            const ASSET_ID: AssetId = 1;
             let mut rmrk = init();
-
-            assert!(rmrk.add_asset_entry(String::from(ASSET_URI)).is_ok());
+            assert!(rmrk
+                .add_asset_entry(ASSET_ID, 1, 1, String::from(ASSET_URI), vec![1, 2, 3],)
+                .is_ok());
             assert_eq!(rmrk.total_assets(), 1);
+            assert_eq!(rmrk.get_asset_uri(ASSET_ID), Some(String::from(ASSET_URI)));
+            assert_eq!(rmrk.get_asset_uri(42), None);
+
+            // reject adding asset with same asset_id
+            assert_eq!(
+                rmrk.add_asset_entry(ASSET_ID, 1, 1, String::from(ASSET_URI), vec![1, 2, 3],),
+                Err(PSP34Error::Custom(RmrkError::AssetIdAlreadyExists.as_str()))
+            );
         }
 
         fn default_accounts() -> test::DefaultAccounts<ink_env::DefaultEnvironment> {

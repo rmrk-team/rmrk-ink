@@ -1,6 +1,19 @@
 //! Types definition for RMRK contract
 use ink_prelude::vec::Vec;
-use ink_storage::Mapping;
+use ink_primitives::{
+    Key,
+    KeyPtr,
+};
+use ink_storage::{
+    traits::{
+        ExtKeyPtr,
+        PackedAllocate,
+        PackedLayout,
+        SpreadAllocate,
+        SpreadLayout,
+    },
+    Mapping,
+};
 use openbrush::{
     contracts::psp34::Id,
     traits::{
@@ -57,13 +70,28 @@ pub struct MultiAssetData {
     pub pending_assets: Mapping<Id, Vec<AssetId>>,
 }
 
-pub const STORAGE_ASSET_KEY: u32 = openbrush::storage_unique_key!(Asset);
-#[derive(Default, Debug)]
-#[openbrush::upgradeable_storage(STORAGE_ASSET_KEY)]
+#[derive(scale::Encode, scale::Decode, SpreadLayout, PackedLayout, Default, Debug)]
+#[cfg_attr(
+    feature = "std",
+    derive(scale_info::TypeInfo, ink_storage::traits::StorageLayout)
+)]
 pub struct Asset {
-    id: AssetId,
-    equippable_group_id: EquippableGroupId,
-    base_id: BaseId,
-    asset_uri: String,
-    part_ids: Vec<PartId>,
+    pub asset_id: AssetId,
+    pub equippable_group_id: EquippableGroupId,
+    pub base_id: BaseId,
+    pub asset_uri: String,
+    pub part_ids: Vec<PartId>,
+}
+
+impl ink_storage::traits::PackedAllocate for Asset {
+    fn allocate_packed(&mut self, at: &Key) {
+        PackedAllocate::allocate_packed(&mut *self, at)
+    }
+}
+
+impl SpreadAllocate for Asset {
+    fn allocate_spread(ptr: &mut KeyPtr) -> Self {
+        ptr.next_for::<Asset>();
+        Asset::default()
+    }
 }

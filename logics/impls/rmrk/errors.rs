@@ -13,6 +13,8 @@ pub enum RmrkError {
     InvalidParentId,
     ChildNotFound,
     NotAuthorised,
+    AssetIdAlreadyExists,
+    AssetIdNotFound,
 }
 
 impl RmrkError {
@@ -27,6 +29,8 @@ impl RmrkError {
             RmrkError::InvalidParentId => String::from("InvalidParentId"),
             RmrkError::ChildNotFound => String::from("ChildNotFound"),
             RmrkError::NotAuthorised => String::from("NotAuthorised"),
+            RmrkError::AssetIdAlreadyExists => String::from("AssetIdAlreadyExists"),
+            RmrkError::AssetIdNotFound => String::from("AssetIdNotFound"),
         }
     }
 }
