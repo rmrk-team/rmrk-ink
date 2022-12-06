@@ -504,6 +504,16 @@ pub mod rmrk_contract {
             );
         }
 
+        #[ink::test]
+        fn add_asset_entry_works() {
+            let accounts = default_accounts();
+            const ASSET_URI: &str = "asset_uri/";
+            let mut rmrk = init();
+
+            assert!(rmrk.add_asset_entry(String::from(ASSET_URI)).is_ok());
+            assert_eq!(rmrk.total_assets(), 1);
+        }
+
         fn default_accounts() -> test::DefaultAccounts<ink_env::DefaultEnvironment> {
             test::default_accounts::<Environment>()
         }

@@ -5,7 +5,10 @@ use openbrush::{
         Id,
         PSP34Error,
     },
-    traits::AccountId,
+    traits::{
+        AccountId,
+        String,
+    },
 };
 
 #[openbrush::wrapper]
@@ -17,11 +20,10 @@ pub trait MultiAsset {
     /// Used to add a asset entry.
     /// The ID of the asset is automatically assigned to be the next available asset ID.
     /// # Arguments
-    ///  * metadata_uri Uri for the new asset
+    ///  * `asset_uri` Uri for the new asset
     /// Emits an {AssetSet} event.
-
     #[ink(message)]
-    fn add_asset_entry(&mut self, metadata_uri: String) -> Result<(), PSP34Error>;
+    fn add_asset_entry(&mut self, asset_uri: String) -> Result<(), PSP34Error>;
 
     /// Used to add an asset to a token.
     /// If the given asset is already added to the token, the execution will be reverted.
@@ -44,7 +46,7 @@ pub trait MultiAsset {
         replaces_asset_with_id: Id,
     ) -> Result<(), PSP34Error>;
 
-    /// @notice Accepts an asset at from the pending array of given token.
+    /// Accepts an asset at from the pending array of given token.
     /// Migrates the asset from the token's pending asset array to the token's active asset array.
     /// Active assets cannot be removed by anyone, but can be replaced by a new asset.
     /// # Requirements:
@@ -87,7 +89,7 @@ pub trait MultiAsset {
     /// # Returns
     ///  * u64 The total number of assets
     #[ink(message)]
-    fn total_assets(&self) -> Result<(), PSP34Error>;
+    fn total_assets(&self) -> u32;
 }
 
 /// Trait definitions for Resource helper functions

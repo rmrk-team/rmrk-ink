@@ -6,6 +6,7 @@ use openbrush::{
     traits::{
         AccountId,
         Balance,
+        String,
     },
 };
 
@@ -46,7 +47,7 @@ pub const STORAGE_MUSLTIASSET_KEY: u32 = openbrush::storage_unique_key!(MultiAss
 #[openbrush::upgradeable_storage(STORAGE_MUSLTIASSET_KEY)]
 pub struct MultiAssetData {
     /// List of available asset entries for this collection
-    pub collection_asset_entries: Vec<AssetId>,
+    pub collection_asset_entries: Vec<String>,
 
     /// Mapping of tokenId to an array of active assets
     pub accepted_assets: Mapping<Id, Vec<AssetId>>,
