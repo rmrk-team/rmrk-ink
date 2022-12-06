@@ -430,7 +430,7 @@ where
     }
 }
 
-/// Helper trait for Psp34Custom
+/// Event trait for Nesting
 impl<T> NestingEvents for T
 where
     T: Storage<NestingData> + Storage<psp34::Data<enumerable::Balances>>,

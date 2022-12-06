@@ -50,7 +50,7 @@ pub trait MultiAsset {
         &mut self,
         token_id: Id,
         asset_id: AssetId,
-        replaces_asset_with_id: Id,
+        replaces_asset_with_id: Option<Id>,
     ) -> Result<(), PSP34Error>;
 
     /// Accepts an asset at from the pending array of given token.
@@ -99,13 +99,30 @@ pub trait MultiAsset {
     fn total_assets(&self) -> u32;
 
     /// Used to retrieve asset's uri
+    #[ink(message)]
     fn get_asset_uri(&self, asset_id: AssetId) -> Option<String>;
+
+    /// Used to retrieve the total number of assets per token
+    #[ink(message)]
+    fn total_token_assets(&self, token_id: Id) -> Result<(u64, u64), PSP34Error>;
 }
 
 /// Trait definitions for Resource helper functions
 #[openbrush::trait_definition]
 pub trait Internal {
+    /// Check if asset is already added.
     fn asset_id_exists(&self, asset_id: AssetId) -> Option<String>;
+
+    // TODO duplicated. find common module for this method
+    fn ensure_exists(&self, id: &Id) -> Result<AccountId, PSP34Error>;
+
+    /// Check if asset is already accepted.
+    fn is_accepted(&self, token_id: &Id, asset_id: &AssetId) -> Result<(), PSP34Error>;
+
+    /// Check if asset is already pending.
+    fn is_pending(&self, token_id: &Id, asset_id: &AssetId) -> Result<(), PSP34Error>;
+
+    fn add_to_accepted_assets(&mut self, token_id: &Id, asset_id: &AssetId);
 }
 
 /// Trait definitions for Resource ink events
@@ -114,7 +131,7 @@ pub trait MultiAssetEvents {
     /// Used to notify listeners that an asset object is initialized at `assetId`.
     /// # Arguments:
     /// * assetId ID of the asset that was initialized
-    fn _emit_asset_set_event(&self, asset_id: &Id);
+    fn _emit_asset_set_event(&self, asset_id: &AssetId);
 
     /// Used to notify listeners that an asset object at `assetId` is added to token's pending asset
     /// array.
@@ -122,7 +139,12 @@ pub trait MultiAssetEvents {
     /// * tokenId ID of the token that received a new pending asset
     /// * assetId ID of the asset that has been added to the token's pending assets array
     /// * replacesId ID of the asset that would be replaced
-    fn _emit_asset_added_to_token_event(&self, token_id: &Id, asset_id: &Id, replaces_id: &Id);
+    fn _emit_asset_added_to_token_event(
+        &self,
+        token_id: &Id,
+        asset_id: &AssetId,
+        replaces_id: Option<Id>,
+    );
 
     /// Used to notify listeners that an asset object at `assetId` is accepted by the token and migrated
     /// from token's pending assets array to active assets array of the token.

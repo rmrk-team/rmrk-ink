@@ -524,6 +524,32 @@ pub mod rmrk_contract {
             );
         }
 
+        #[ink::test]
+        fn add_asset_to_token_works() {
+            let accounts = default_accounts();
+            const ASSET_URI: &str = "asset_uri/";
+            const ASSET_ID: AssetId = 1;
+            const TOKEN_ID: Id = Id::U64(1);
+            let num_of_mints: u64 = 2;
+
+            let mut rmrk = init();
+            assert!(rmrk
+                .add_asset_entry(ASSET_ID, 1, 1, String::from(ASSET_URI), vec![1, 2, 3],)
+                .is_ok());
+            assert_eq!(rmrk.total_assets(), 1);
+            test::set_value_transferred::<ink_env::DefaultEnvironment>(
+                PRICE * num_of_mints as u128,
+            );
+            assert!(rmrk.mint_for(accounts.bob, num_of_mints).is_ok());
+            assert!(rmrk.add_asset_to_token(TOKEN_ID, ASSET_ID, None).is_ok());
+            assert!(rmrk.add_asset_to_token(Id::U64(2), ASSET_ID, None).is_ok());
+            assert_eq!(
+                rmrk.add_asset_to_token(Id::U64(3), ASSET_ID, None),
+                Err(TokenNotExists)
+            );
+            assert_eq!(rmrk.total_token_assets(TOKEN_ID), Ok((1, 0)));
+        }
+
         fn default_accounts() -> test::DefaultAccounts<ink_env::DefaultEnvironment> {
             test::default_accounts::<Environment>()
         }

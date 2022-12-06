@@ -15,6 +15,8 @@ pub enum RmrkError {
     NotAuthorised,
     AssetIdAlreadyExists,
     AssetIdNotFound,
+    AlreadyAddedAsset,
+    AddingPendingAsset,
 }
 
 impl RmrkError {
@@ -31,6 +33,8 @@ impl RmrkError {
             RmrkError::NotAuthorised => String::from("NotAuthorised"),
             RmrkError::AssetIdAlreadyExists => String::from("AssetIdAlreadyExists"),
             RmrkError::AssetIdNotFound => String::from("AssetIdNotFound"),
+            RmrkError::AlreadyAddedAsset => String::from("AlreadyAddedAsset"),
+            RmrkError::AddingPendingAsset => String::from("AddingPendingAsset"),
         }
     }
 }
