@@ -29,6 +29,7 @@ pub type BaseId = u32;
 pub type SlotId = u32;
 pub type PartId = u32;
 pub type AssetId = u32;
+pub type EquippableGroupId = u32;
 
 pub const STORAGE_PSP34_KEY: u32 = openbrush::storage_unique_key!(Psp34CustomData);
 
@@ -47,11 +48,22 @@ pub const STORAGE_MUSLTIASSET_KEY: u32 = openbrush::storage_unique_key!(MultiAss
 #[openbrush::upgradeable_storage(STORAGE_MUSLTIASSET_KEY)]
 pub struct MultiAssetData {
     /// List of available asset entries for this collection
-    pub collection_asset_entries: Vec<String>,
+    pub collection_asset_entries: Vec<Asset>,
 
     /// Mapping of tokenId to an array of active assets
     pub accepted_assets: Mapping<Id, Vec<AssetId>>,
 
     /// Mapping of tokenId to an array of pending assets
     pub pending_assets: Mapping<Id, Vec<AssetId>>,
+}
+
+pub const STORAGE_ASSET_KEY: u32 = openbrush::storage_unique_key!(Asset);
+#[derive(Default, Debug)]
+#[openbrush::upgradeable_storage(STORAGE_ASSET_KEY)]
+pub struct Asset {
+    id: AssetId,
+    equippable_group_id: EquippableGroupId,
+    base_id: BaseId,
+    asset_uri: String,
+    part_ids: Vec<PartId>,
 }

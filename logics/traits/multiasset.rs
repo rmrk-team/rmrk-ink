@@ -23,7 +23,14 @@ pub trait MultiAsset {
     ///  * `asset_uri` Uri for the new asset
     /// Emits an {AssetSet} event.
     #[ink(message)]
-    fn add_asset_entry(&mut self, asset_uri: String) -> Result<(), PSP34Error>;
+    fn add_asset_entry(
+        &mut self,
+        id: AssetId,
+        equippable_group_id: EquippableGroupId,
+        base_id: BaseId,
+        asset_uri: String,
+        part_ids: Vec<PartId>,
+    ) -> Result<(), PSP34Error>;
 
     /// Used to add an asset to a token.
     /// If the given asset is already added to the token, the execution will be reverted.

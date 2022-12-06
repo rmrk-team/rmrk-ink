@@ -47,10 +47,17 @@ where
 {
     /// Used to add a asset entry.
     #[modifiers(only_owner)]
-    fn add_asset_entry(&mut self, asset_uri: String) -> Result<(), PSP34Error> {
+    fn add_asset_entry(
+        &mut self,
+        id: AssetId,
+        equippable_group_id: EquippableGroupId,
+        base_id: BaseId,
+        asset_uri: String,
+        part_ids: Vec<PartId>,
+    ) -> Result<(), PSP34Error> {
         self.data::<MultiAssetData>()
             .collection_asset_entries
-            .push(asset_uri);
+            .push([id, equippable_group_id, base_id, asset_uri, part_ids]);
         Ok(())
     }
 
