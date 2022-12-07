@@ -44,7 +44,15 @@ export class IdBuilder {
 
 export type AccountId = string | number[]
 
-export type BTreeSet = Array<[AccountId, Id]>;
+export type Key = string | number[]
+
+export type Asset = {
+	assetId: (number | string | BN),
+	equippableGroupId: (number | string | BN),
+	baseId: (number | string | BN),
+	assetUri: Array<(number | string | BN)>,
+	partIds: Array<(number | string | BN)>
+}
 
 export interface PSP34Error {
 	custom ? : Array<(number | string | BN)>,

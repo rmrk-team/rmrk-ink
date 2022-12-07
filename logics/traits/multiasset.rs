@@ -10,6 +10,7 @@ use openbrush::{
         String,
     },
 };
+use ink_prelude::vec::Vec;
 
 #[openbrush::wrapper]
 pub type MultiAssetRef = dyn MultiAsset;
@@ -122,7 +123,11 @@ pub trait Internal {
     /// Check if asset is already pending.
     fn is_pending(&self, token_id: &Id, asset_id: &AssetId) -> Result<(), PSP34Error>;
 
+    /// Add the asset to the list of accepted assets
     fn add_to_accepted_assets(&mut self, token_id: &Id, asset_id: &AssetId);
+
+    /// Add the asset to the list of pending assets
+    fn add_to_pending_assets(&mut self, token_id: &Id, asset_id: &AssetId);
 }
 
 /// Trait definitions for Resource ink events

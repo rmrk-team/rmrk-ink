@@ -254,7 +254,6 @@ where
         child_nft: ChildNft,
     ) -> Result<(), PSP34Error> {
         let parent_owner = self.ensure_exists(&to_parent_token_id)?;
-        let caller = Self::env().caller();
         self.accepted(&to_parent_token_id, &child_nft)?;
         self.pending(&to_parent_token_id, &child_nft)?;
 
@@ -264,6 +263,7 @@ where
 
         // Insert child nft and emit event
         self._emit_added_child_event(&to_parent_token_id, &child_nft.0, &child_nft.1);
+        let caller = Self::env().caller();
         if caller == parent_owner {
             self.add_to_accepted(to_parent_token_id, child_nft);
         } else {

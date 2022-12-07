@@ -79,7 +79,7 @@ where
         Ok(())
     }
 
-    /// Add the child to the list of accepted children
+    /// Add the asset to the list of accepted assets
     default fn add_to_accepted_assets(&mut self, token_id: &Id, asset_id: &AssetId) {
         let mut assets = self
             .data::<MultiAssetData>()
@@ -90,6 +90,21 @@ where
             assets.push(asset_id.clone());
             self.data::<MultiAssetData>()
                 .accepted_assets
+                .insert(&token_id, &assets);
+        }
+    }
+
+    /// Add the asset to the list of pending assets
+    default fn add_to_pending_assets(&mut self, token_id: &Id, asset_id: &AssetId) {
+        let mut assets = self
+            .data::<MultiAssetData>()
+            .pending_assets
+            .get(&token_id)
+            .unwrap_or(Vec::new());
+        if !assets.contains(&asset_id) {
+            assets.push(asset_id.clone());
+            self.data::<MultiAssetData>()
+                .pending_assets
                 .insert(&token_id, &assets);
         }
     }
@@ -136,16 +151,22 @@ where
         asset_id: AssetId,
         _replaces_asset_with_id: Option<Id>,
     ) -> Result<(), PSP34Error> {
-        _ = self
-            .asset_id_exists(asset_id)
+        self.asset_id_exists(asset_id)
             .ok_or(PSP34Error::Custom(String::from(
                 RmrkError::AssetIdNotFound.as_str(),
-            )));
-        self.ensure_exists(&token_id)?;
+            )))?;
+        let token_owner = self.ensure_exists(&token_id)?;
         self.is_accepted(&token_id, &asset_id)?;
         self.is_pending(&token_id, &asset_id)?;
-        self.add_to_accepted_assets(&token_id, &asset_id);
+
         self._emit_asset_added_to_token_event(&token_id, &asset_id, None);
+        let caller = Self::env().caller();
+
+        if caller == token_owner {
+            self.add_to_accepted_assets(&token_id, &asset_id);
+        } else {
+            self.add_to_pending_assets(&token_id, &asset_id);
+        }
 
         Ok(())
     }
