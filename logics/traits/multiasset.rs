@@ -110,6 +110,10 @@ pub trait MultiAsset {
     /// Fetch all accepted assets for the token_id
     #[ink(message)]
     fn get_accepted_token_assets(&self, token_id: Id) -> Result<Option<Vec<AssetId>>, PSP34Error>;
+
+    /// Remove the assets for the list of token assets
+    #[ink(message)]
+    fn remove_asset(&mut self, token_id: Id, asset_id: AssetId) -> Result<(), PSP34Error>;
 }
 
 /// Trait definitions for Resource helper functions
@@ -133,6 +137,9 @@ pub trait Internal {
     /// Check if asset is already pending. Return OK if it is
     fn is_pending(&self, token_id: &Id, asset_id: &AssetId) -> Result<(), PSP34Error>;
 
+    /// Check if asset is already accepted
+    fn is_accepted(&self, token_id: &Id, asset_id: &AssetId) -> Result<(), PSP34Error>;
+
     /// Add the asset to the list of accepted assets
     fn add_to_accepted_assets(&mut self, token_id: &Id, asset_id: &AssetId);
 
@@ -141,6 +148,13 @@ pub trait Internal {
 
     /// Remove the asset to the list of pending assets
     fn remove_from_pending_assets(
+        &mut self,
+        token_id: &Id,
+        asset_id: &AssetId,
+    ) -> Result<(), PSP34Error>;
+
+    /// Remove the asset to the list of accepted assets
+    fn remove_from_accepted_assets(
         &mut self,
         token_id: &Id,
         asset_id: &AssetId,
@@ -174,17 +188,23 @@ pub trait MultiAssetEvents {
     /// * tokenId ID of the token that had a new asset accepted
     /// * assetId ID of the asset that was accepted
     /// * replacesId ID of the asset that was replaced
-    fn _emit_asset_accepted_event(&self, token_id: &Id, asset_id: &Id, replaces_id: &Id);
+    fn _emit_asset_accepted_event(&self, token_id: &Id, asset_id: &AssetId);
 
     /// Used to notify listeners that an asset object at `assetId` is rejected from token and is dropped
     /// from the pending assets array of the token.
     /// # Arguments
     /// * tokenId ID of the token that had an asset rejected
     /// * assetId ID of the asset that was rejected
-    fn _emit_asset_rejected_event(&self, token_id: &Id, asset_id: &Id);
+    fn _emit_asset_rejected_event(&self, token_id: &Id, asset_id: &AssetId);
+
+    /// Used to notify listeners that an asset object at `assetId` is removed from token
+    /// # Arguments
+    /// * tokenId ID of the token that had an asset rejected
+    /// * assetId ID of the asset that was rejected
+    fn _emit_asset_removed_event(&self, token_id: &Id, asset_id: &AssetId);
 
     /// Used to notify listeners that token's prioritiy array is reordered.
     /// # Arguments
     /// * tokenId ID of the token that had the asset priority array updated
-    fn _emit_asset_priority_set_event(&self, token_id: &Id);
+    fn _emit_asset_priority_set_event(&self, token_id: &Id, priorities: Vec<AssetId>);
 }

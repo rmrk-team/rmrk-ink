@@ -99,6 +99,18 @@ where
         Ok(())
     }
 
+    /// Check if asset is already accepted
+    default fn is_accepted(&self, token_id: &Id, asset_id: &AssetId) -> Result<(), PSP34Error> {
+        if let Some(assets) = self.data::<MultiAssetData>().accepted_assets.get(token_id) {
+            if !assets.contains(asset_id) {
+                return Err(PSP34Error::Custom(String::from(
+                    RmrkError::AssetIdNotFound.as_str(),
+                )))
+            }
+        }
+        Ok(())
+    }
+
     /// Add the asset to the list of accepted assets
     default fn add_to_accepted_assets(&mut self, token_id: &Id, asset_id: &AssetId) {
         let mut assets = self
@@ -112,6 +124,7 @@ where
                 .accepted_assets
                 .insert(&token_id, &assets);
         }
+        self._emit_asset_accepted_event(token_id, asset_id);
     }
 
     /// Add the asset to the list of pending assets
@@ -157,6 +170,35 @@ where
 
         Ok(())
     }
+
+    /// Remove the asset from the list of accepted assets
+    default fn remove_from_accepted_assets(
+        &mut self,
+        token_id: &Id,
+        asset_id: &AssetId,
+    ) -> Result<(), PSP34Error> {
+        let mut assets = self
+            .data::<MultiAssetData>()
+            .accepted_assets
+            .get(&token_id)
+            .ok_or(PSP34Error::Custom(String::from(
+                RmrkError::InvalidAssetId.as_str(),
+            )))?;
+
+        let index = assets
+            .iter()
+            .position(|a| a == asset_id)
+            .ok_or(PSP34Error::Custom(String::from(
+                RmrkError::InvalidTokenId.as_str(),
+            )))?;
+        assets.remove(index);
+
+        self.data::<MultiAssetData>()
+            .accepted_assets
+            .insert(&token_id, &assets);
+
+        Ok(())
+    }
 }
 
 impl<T> MultiAsset for T
@@ -189,6 +231,8 @@ where
                 asset_uri,
                 part_ids,
             });
+        self._emit_asset_set_event(&asset_id);
+
         Ok(())
     }
 
@@ -197,7 +241,7 @@ where
         &mut self,
         token_id: Id,
         asset_id: AssetId,
-        _replaces_asset_with_id: Option<Id>,
+        _replaces_asset_with_id: Option<Id>, // TODO implement replacement
     ) -> Result<(), PSP34Error> {
         self.asset_id_exists(asset_id)
             .ok_or(PSP34Error::Custom(String::from(
@@ -240,6 +284,18 @@ where
         let token_owner = self.ensure_exists(&token_id)?;
         self.ensure_token_owner(token_owner)?;
         self.remove_from_pending_assets(&token_id, &asset_id)?;
+        self._emit_asset_rejected_event(&token_id, &asset_id);
+
+        Ok(())
+    }
+
+    /// Rejects an asset from the pending array of given token.
+    fn remove_asset(&mut self, token_id: Id, asset_id: AssetId) -> Result<(), PSP34Error> {
+        self.is_accepted(&token_id, &asset_id)?;
+        let token_owner = self.ensure_exists(&token_id)?;
+        self.ensure_token_owner(token_owner)?;
+        self.remove_from_accepted_assets(&token_id, &asset_id)?;
+        self._emit_asset_removed_event(&token_id, &asset_id);
 
         Ok(())
     }
@@ -270,7 +326,7 @@ where
         self.data::<MultiAssetData>()
             .accepted_assets
             .insert(&token_id, &priorities);
-
+        self._emit_asset_priority_set_event(&token_id, priorities);
         Ok(())
     }
 
@@ -316,10 +372,10 @@ where
     T: Storage<MultiAssetData>,
 {
     /// Used to notify listeners that an asset object is initialized at `assetId`.
-    fn _emit_asset_set_event(&self, _asset_id: &AssetId) {}
+    default fn _emit_asset_set_event(&self, _asset_id: &AssetId) {}
 
     /// Used to notify listeners that an asset object at `assetId` is added to token's pending asset array.
-    fn _emit_asset_added_to_token_event(
+    default fn _emit_asset_added_to_token_event(
         &self,
         _token_id: &Id,
         _asset_id: &AssetId,
@@ -328,11 +384,14 @@ where
     }
 
     /// Used to notify listeners that an asset object at `assetId` is accepted by the token and migrated
-    fn _emit_asset_accepted_event(&self, _token_id: &Id, _asset_id: &Id, _replaces_id: &Id) {}
+    default fn _emit_asset_accepted_event(&self, _token_id: &Id, _asset_id: &AssetId) {}
 
     /// Used to notify listeners that an asset object at `assetId` is rejected from token and is dropped from the pending assets array of the token.
-    fn _emit_asset_rejected_event(&self, _token_id: &Id, _asset_id: &Id) {}
+    default fn _emit_asset_rejected_event(&self, _token_id: &Id, _asset_id: &AssetId) {}
+
+    /// Used to notify listeners that an asset object at `assetId` is removed from token
+    default fn _emit_asset_removed_event(&self, _token_id: &Id, _asset_id: &AssetId) {}
 
     /// Used to notify listeners that token's prioritiy array is reordered.
-    fn _emit_asset_priority_set_event(&self, _token_id: &Id) {}
+    default fn _emit_asset_priority_set_event(&self, _token_id: &Id, _priorities: Vec<AssetId>) {}
 }
