@@ -1,5 +1,6 @@
 //! Trait definitions for MultiAsset module
 use crate::impls::rmrk::types::*;
+use ink_prelude::vec::Vec;
 use openbrush::{
     contracts::psp34::{
         Id,
@@ -10,7 +11,6 @@ use openbrush::{
         String,
     },
 };
-use ink_prelude::vec::Vec;
 
 #[openbrush::wrapper]
 pub type MultiAssetRef = dyn MultiAsset;
@@ -118,9 +118,12 @@ pub trait Internal {
     fn ensure_exists(&self, id: &Id) -> Result<AccountId, PSP34Error>;
 
     /// Check if asset is already accepted.
-    fn is_accepted(&self, token_id: &Id, asset_id: &AssetId) -> Result<(), PSP34Error>;
+    fn in_accepted(&self, token_id: &Id, asset_id: &AssetId) -> Result<(), PSP34Error>;
 
-    /// Check if asset is already pending.
+    /// Check if asset is already pending. Return error if it is
+    fn in_pending(&self, token_id: &Id, asset_id: &AssetId) -> Result<(), PSP34Error>;
+
+    /// Check if asset is already pending. Return OK if it is
     fn is_pending(&self, token_id: &Id, asset_id: &AssetId) -> Result<(), PSP34Error>;
 
     /// Add the asset to the list of accepted assets
@@ -128,6 +131,12 @@ pub trait Internal {
 
     /// Add the asset to the list of pending assets
     fn add_to_pending_assets(&mut self, token_id: &Id, asset_id: &AssetId);
+
+    fn remove_from_pending_assets(
+        &mut self,
+        token_id: &Id,
+        asset_id: &AssetId,
+    ) -> Result<(), PSP34Error>;
 }
 
 /// Trait definitions for Resource ink events

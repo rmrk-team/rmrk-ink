@@ -12,10 +12,7 @@ use ink_prelude::vec::Vec;
 use openbrush::{
     contracts::{
         ownable::*,
-        psp34::extensions::{
-            enumerable::*,
-            metadata::*,
-        },
+        psp34::extensions::enumerable::*,
     },
     modifiers,
     traits::{
@@ -56,7 +53,7 @@ where
     }
 
     /// Check if asset is already accepted
-    default fn is_accepted(&self, token_id: &Id, asset_id: &AssetId) -> Result<(), PSP34Error> {
+    default fn in_accepted(&self, token_id: &Id, asset_id: &AssetId) -> Result<(), PSP34Error> {
         if let Some(children) = self.data::<MultiAssetData>().accepted_assets.get(token_id) {
             if children.contains(asset_id) {
                 return Err(PSP34Error::Custom(String::from(
@@ -68,11 +65,23 @@ where
     }
 
     /// Check if asset is already pending
-    default fn is_pending(&self, token_id: &Id, asset_id: &AssetId) -> Result<(), PSP34Error> {
+    default fn in_pending(&self, token_id: &Id, asset_id: &AssetId) -> Result<(), PSP34Error> {
         if let Some(assets) = self.data::<MultiAssetData>().pending_assets.get(token_id) {
             if assets.contains(asset_id) {
                 return Err(PSP34Error::Custom(String::from(
                     RmrkError::AddingPendingAsset.as_str(),
+                )))
+            }
+        }
+        Ok(())
+    }
+
+    /// Check if asset is already pending
+    default fn is_pending(&self, token_id: &Id, asset_id: &AssetId) -> Result<(), PSP34Error> {
+        if let Some(assets) = self.data::<MultiAssetData>().pending_assets.get(token_id) {
+            if !assets.contains(asset_id) {
+                return Err(PSP34Error::Custom(String::from(
+                    RmrkError::AssetIdNotFound.as_str(),
                 )))
             }
         }
@@ -107,6 +116,34 @@ where
                 .pending_assets
                 .insert(&token_id, &assets);
         }
+    }
+    /// remove the asset from the list of pending assets
+    default fn remove_from_pending_assets(
+        &mut self,
+        token_id: &Id,
+        asset_id: &AssetId,
+    ) -> Result<(), PSP34Error> {
+        let mut assets = self
+            .data::<MultiAssetData>()
+            .pending_assets
+            .get(&token_id)
+            .ok_or(PSP34Error::Custom(String::from(
+                RmrkError::InvalidAssetId.as_str(),
+            )))?;
+
+        let index = assets
+            .iter()
+            .position(|a| a == asset_id)
+            .ok_or(PSP34Error::Custom(String::from(
+                RmrkError::InvalidTokenId.as_str(),
+            )))?;
+        assets.remove(index);
+
+        self.data::<MultiAssetData>()
+            .pending_assets
+            .insert(&token_id, &assets);
+
+        Ok(())
     }
 }
 
@@ -144,7 +181,6 @@ where
     }
 
     /// Used to add an asset to a token.
-    #[modifiers(only_owner)]
     fn add_asset_to_token(
         &mut self,
         token_id: Id,
@@ -156,12 +192,11 @@ where
                 RmrkError::AssetIdNotFound.as_str(),
             )))?;
         let token_owner = self.ensure_exists(&token_id)?;
-        self.is_accepted(&token_id, &asset_id)?;
-        self.is_pending(&token_id, &asset_id)?;
+        self.in_accepted(&token_id, &asset_id)?;
+        self.in_pending(&token_id, &asset_id)?;
 
         self._emit_asset_added_to_token_event(&token_id, &asset_id, None);
         let caller = Self::env().caller();
-
         if caller == token_owner {
             self.add_to_accepted_assets(&token_id, &asset_id);
         } else {
@@ -171,14 +206,35 @@ where
         Ok(())
     }
 
-    /// Accepts an asset at from the pending array of given token.
-    fn accept_asset(&mut self, _token_id: Id, _asset_id: AssetId) -> Result<(), PSP34Error> {
-        todo!()
+    /// Accepts an asset from the pending array of given token.
+    fn accept_asset(&mut self, token_id: Id, asset_id: AssetId) -> Result<(), PSP34Error> {
+        self.is_pending(&token_id, &asset_id)?;
+        let token_owner = self.ensure_exists(&token_id)?;
+        let caller = Self::env().caller();
+        if caller == token_owner {
+            self.remove_from_pending_assets(&token_id, &asset_id)?;
+            self.add_to_accepted_assets(&token_id, &asset_id);
+        } else {
+            return Err(PSP34Error::Custom(String::from(
+                RmrkError::NotAuthorised.as_str(),
+            )))
+        }
+        Ok(())
     }
 
     /// Rejects an asset from the pending array of given token.
-    fn reject_asset(&mut self, _token_id: Id, _asset_id: AssetId) -> Result<(), PSP34Error> {
-        todo!()
+    fn reject_asset(&mut self, token_id: Id, asset_id: AssetId) -> Result<(), PSP34Error> {
+        self.is_pending(&token_id, &asset_id)?;
+        let token_owner = self.ensure_exists(&token_id)?;
+        let caller = Self::env().caller();
+        if caller == token_owner {
+            self.remove_from_pending_assets(&token_id, &asset_id)?;
+        } else {
+            return Err(PSP34Error::Custom(String::from(
+                RmrkError::NotAuthorised.as_str(),
+            )))
+        }
+        Ok(())
     }
 
     /// Used to specify the priorities for a given token's active assets.
@@ -221,23 +277,23 @@ where
     T: Storage<MultiAssetData>,
 {
     /// Used to notify listeners that an asset object is initialized at `assetId`.
-    fn _emit_asset_set_event(&self, asset_id: &AssetId) {}
+    fn _emit_asset_set_event(&self, _asset_id: &AssetId) {}
 
     /// Used to notify listeners that an asset object at `assetId` is added to token's pending asset array.
     fn _emit_asset_added_to_token_event(
         &self,
-        token_id: &Id,
-        asset_id: &AssetId,
-        replaces_id: Option<Id>,
+        _token_id: &Id,
+        _asset_id: &AssetId,
+        _replaces_id: Option<Id>,
     ) {
     }
 
     /// Used to notify listeners that an asset object at `assetId` is accepted by the token and migrated
-    fn _emit_asset_accepted_event(&self, token_id: &Id, asset_id: &Id, replaces_id: &Id) {}
+    fn _emit_asset_accepted_event(&self, _token_id: &Id, _asset_id: &Id, _replaces_id: &Id) {}
 
     /// Used to notify listeners that an asset object at `assetId` is rejected from token and is dropped from the pending assets array of the token.
-    fn _emit_asset_rejected_event(&self, token_id: &Id, asset_id: &Id) {}
+    fn _emit_asset_rejected_event(&self, _token_id: &Id, _asset_id: &Id) {}
 
     /// Used to notify listeners that token's prioritiy array is reordered.
-    fn _emit_asset_priority_set_event(&self, token_id: &Id) {}
+    fn _emit_asset_priority_set_event(&self, _token_id: &Id) {}
 }

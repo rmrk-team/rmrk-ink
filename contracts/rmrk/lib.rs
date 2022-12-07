@@ -555,15 +555,30 @@ pub mod rmrk_contract {
                 Err(PSP34Error::Custom(RmrkError::AssetIdNotFound.as_str()))
             );
 
-            // mint second token and add asset. Should be in pending, needs approval
+            // mint second token to non owner (Bob)
             test::set_value_transferred::<ink_env::DefaultEnvironment>(PRICE as u128);
             assert!(rmrk.mint_for(accounts.bob, 1).is_ok());
+
+            // Add asset by alice and reject asset by Bob to test asset_reject
             assert!(rmrk.add_asset_to_token(TOKEN_ID2, ASSET_ID, None).is_ok());
+            assert_eq!(rmrk.total_token_assets(TOKEN_ID2), Ok((0, 1)));
+            set_sender(accounts.bob);
+            assert!(rmrk.reject_asset(TOKEN_ID2, ASSET_ID).is_ok());
+            assert_eq!(rmrk.total_token_assets(TOKEN_ID2), Ok((0, 0)));
+
+            // Add asset by alice and accept asset by Bob to test accept_asset
+            set_sender(accounts.alice);
+            assert!(rmrk.add_asset_to_token(TOKEN_ID2, ASSET_ID, None).is_ok());
+            assert_eq!(rmrk.total_token_assets(TOKEN_ID2), Ok((0, 1)));
+            set_sender(accounts.bob);
+            assert!(rmrk.accept_asset(TOKEN_ID2, ASSET_ID).is_ok());
+            assert_eq!(rmrk.total_token_assets(TOKEN_ID2), Ok((1, 0)));
+
+            // Try adding asset to not minted token
             assert_eq!(
                 rmrk.add_asset_to_token(Id::U64(3), ASSET_ID, None),
                 Err(TokenNotExists)
             );
-            assert_eq!(rmrk.total_token_assets(TOKEN_ID2), Ok((0, 1)));
         }
 
         fn default_accounts() -> test::DefaultAccounts<ink_env::DefaultEnvironment> {
