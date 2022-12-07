@@ -52,6 +52,17 @@ where
         Ok(token_owner)
     }
 
+    /// Ensure that the caller is the token owner
+    fn ensure_token_owner(&self, token_owner: AccountId) -> Result<(), PSP34Error> {
+        let caller = Self::env().caller();
+        if caller != token_owner {
+            return Err(PSP34Error::Custom(String::from(
+                RmrkError::NotAuthorised.as_str(),
+            )))
+        }
+        Ok(())
+    }
+
     /// Check if asset is already accepted
     default fn in_accepted(&self, token_id: &Id, asset_id: &AssetId) -> Result<(), PSP34Error> {
         if let Some(children) = self.data::<MultiAssetData>().accepted_assets.get(token_id) {
@@ -117,6 +128,7 @@ where
                 .insert(&token_id, &assets);
         }
     }
+
     /// remove the asset from the list of pending assets
     default fn remove_from_pending_assets(
         &mut self,
@@ -226,20 +238,40 @@ where
     fn reject_asset(&mut self, token_id: Id, asset_id: AssetId) -> Result<(), PSP34Error> {
         self.is_pending(&token_id, &asset_id)?;
         let token_owner = self.ensure_exists(&token_id)?;
-        let caller = Self::env().caller();
-        if caller == token_owner {
-            self.remove_from_pending_assets(&token_id, &asset_id)?;
-        } else {
-            return Err(PSP34Error::Custom(String::from(
-                RmrkError::NotAuthorised.as_str(),
-            )))
-        }
+        self.ensure_token_owner(token_owner)?;
+        self.remove_from_pending_assets(&token_id, &asset_id)?;
+
         Ok(())
     }
 
     /// Used to specify the priorities for a given token's active assets.
     fn set_priority(&mut self, token_id: Id, priorities: Vec<AssetId>) -> Result<(), PSP34Error> {
-        todo!()
+        let token_owner = self.ensure_exists(&token_id)?;
+        self.ensure_token_owner(token_owner)?;
+        if let Some(accepted_assets) = self
+            .data::<MultiAssetData>()
+            .accepted_assets
+            .get(token_id.clone())
+        {
+            if accepted_assets.len() != priorities.len() {
+                return Err(PSP34Error::Custom(String::from(
+                    RmrkError::BadPriorityLength.as_str(),
+                )))
+            }
+            for asset in priorities.clone() {
+                if !accepted_assets.contains(&asset) {
+                    return Err(PSP34Error::Custom(String::from(
+                        RmrkError::AssetIdNotFound.as_str(),
+                    )))
+                }
+            }
+        }
+
+        self.data::<MultiAssetData>()
+            .accepted_assets
+            .insert(&token_id, &priorities);
+
+        Ok(())
     }
 
     /// Used to retrieve the total number of asset entries
@@ -250,6 +282,7 @@ where
     /// Used to retrieve the total number of assets per token
     fn total_token_assets(&self, token_id: Id) -> Result<(u64, u64), PSP34Error> {
         self.ensure_exists(&token_id)?;
+
         let accepted_assets_on_token =
             match self.data::<MultiAssetData>().accepted_assets.get(&token_id) {
                 Some(assets) => assets.len() as u64,
@@ -268,6 +301,12 @@ where
     /// Used to retrieve asset's uri
     fn get_asset_uri(&self, asset_id: AssetId) -> Option<String> {
         self.asset_id_exists(asset_id)
+    }
+
+    /// Fetch all accepted assets for the token_id
+    fn get_accepted_token_assets(&self, token_id: Id) -> Result<Option<Vec<AssetId>>, PSP34Error> {
+        self.ensure_exists(&token_id)?;
+        Ok(self.data::<MultiAssetData>().accepted_assets.get(&token_id))
     }
 }
 

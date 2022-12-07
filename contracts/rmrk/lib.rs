@@ -573,11 +573,58 @@ pub mod rmrk_contract {
             set_sender(accounts.bob);
             assert!(rmrk.accept_asset(TOKEN_ID2, ASSET_ID).is_ok());
             assert_eq!(rmrk.total_token_assets(TOKEN_ID2), Ok((1, 0)));
+            assert_eq!(rmrk.get_accepted_token_assets(TOKEN_ID2), Ok(Some(vec![1])));
 
             // Try adding asset to not minted token
             assert_eq!(
                 rmrk.add_asset_to_token(Id::U64(3), ASSET_ID, None),
                 Err(TokenNotExists)
+            );
+        }
+        #[ink::test]
+        fn set_asset_priority_works() {
+            let accounts = default_accounts();
+            const ASSET_URI: &str = "asset_uri/";
+            const ASSET_ID1: AssetId = 1;
+            const ASSET_ID2: AssetId = 100;
+            const TOKEN_ID1: Id = Id::U64(1);
+
+            let mut rmrk = init();
+            // Add new asset entry
+            assert!(rmrk
+                .add_asset_entry(ASSET_ID1, 1, 1, String::from(ASSET_URI), vec![1, 2, 3],)
+                .is_ok());
+            assert!(rmrk
+                .add_asset_entry(ASSET_ID2, 1, 1, String::from(ASSET_URI), vec![1, 2, 3],)
+                .is_ok());
+            assert_eq!(rmrk.total_assets(), 2);
+
+            // mint token and add two assets to it. Should be accepted without approval
+            test::set_value_transferred::<ink_env::DefaultEnvironment>(PRICE * 2 as u128);
+            assert!(rmrk.mint_for(accounts.alice, 2).is_ok());
+            assert!(rmrk.add_asset_to_token(TOKEN_ID1, ASSET_ID1, None).is_ok());
+            assert!(rmrk.add_asset_to_token(TOKEN_ID1, ASSET_ID2, None).is_ok());
+            assert_eq!(rmrk.total_token_assets(TOKEN_ID1), Ok((2, 0)));
+            assert_eq!(
+                rmrk.get_accepted_token_assets(TOKEN_ID1),
+                Ok(Some(vec![ASSET_ID1, ASSET_ID2]))
+            );
+            assert!(rmrk
+                .set_priority(TOKEN_ID1, vec![ASSET_ID2, ASSET_ID1])
+                .is_ok());
+            assert_eq!(
+                rmrk.get_accepted_token_assets(TOKEN_ID1),
+                Ok(Some(vec![ASSET_ID2, ASSET_ID1]))
+            );
+
+            // error cases
+            assert_eq!(
+                rmrk.set_priority(TOKEN_ID1, vec![ASSET_ID2]),
+                Err(PSP34Error::Custom(RmrkError::BadPriorityLength.as_str()))
+            );
+            assert_eq!(
+                rmrk.set_priority(TOKEN_ID1, vec![ASSET_ID2, 42]),
+                Err(PSP34Error::Custom(RmrkError::AssetIdNotFound.as_str()))
             );
         }
 

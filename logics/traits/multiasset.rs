@@ -106,6 +106,10 @@ pub trait MultiAsset {
     /// Used to retrieve the total number of assets per token
     #[ink(message)]
     fn total_token_assets(&self, token_id: Id) -> Result<(u64, u64), PSP34Error>;
+
+    /// Fetch all accepted assets for the token_id
+    #[ink(message)]
+    fn get_accepted_token_assets(&self, token_id: Id) -> Result<Option<Vec<AssetId>>, PSP34Error>;
 }
 
 /// Trait definitions for Resource helper functions
@@ -114,8 +118,11 @@ pub trait Internal {
     /// Check if asset is already added.
     fn asset_id_exists(&self, asset_id: AssetId) -> Option<String>;
 
-    // TODO duplicated. find common module for this method
+    /// TODO duplicated. find common module for this method
     fn ensure_exists(&self, id: &Id) -> Result<AccountId, PSP34Error>;
+
+    /// Ensure that the caller is the token owner
+    fn ensure_token_owner(&self, token_owner: AccountId) -> Result<(), PSP34Error>;
 
     /// Check if asset is already accepted.
     fn in_accepted(&self, token_id: &Id, asset_id: &AssetId) -> Result<(), PSP34Error>;
@@ -132,6 +139,7 @@ pub trait Internal {
     /// Add the asset to the list of pending assets
     fn add_to_pending_assets(&mut self, token_id: &Id, asset_id: &AssetId);
 
+    /// Remove the asset to the list of pending assets
     fn remove_from_pending_assets(
         &mut self,
         token_id: &Id,

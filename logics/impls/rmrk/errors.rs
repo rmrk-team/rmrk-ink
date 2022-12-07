@@ -19,6 +19,7 @@ pub enum RmrkError {
     AssetIdNotFound,
     AlreadyAddedAsset,
     AddingPendingAsset,
+    BadPriorityLength,
 }
 
 impl RmrkError {
@@ -39,6 +40,7 @@ impl RmrkError {
             RmrkError::AssetIdNotFound => String::from("AssetIdNotFound"),
             RmrkError::AlreadyAddedAsset => String::from("AlreadyAddedAsset"),
             RmrkError::AddingPendingAsset => String::from("AddingPendingAsset"),
+            RmrkError::BadPriorityLength => String::from("BadPriorityLength"),
         }
     }
 }
