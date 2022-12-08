@@ -1,4 +1,5 @@
 //! Types definition for RMRK contract
+
 use ink_prelude::vec::Vec;
 use ink_primitives::{
     Key,

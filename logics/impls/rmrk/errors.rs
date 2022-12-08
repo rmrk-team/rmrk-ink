@@ -1,4 +1,5 @@
 //! Error definition for RMRK contract
+
 use openbrush::traits::String;
 
 #[derive(Debug, PartialEq, Eq, scale::Encode, scale::Decode)]

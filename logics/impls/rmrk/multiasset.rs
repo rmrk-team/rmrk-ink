@@ -1,4 +1,5 @@
 //! This module enables multiasset capability of RMRK
+
 use crate::impls::rmrk::{
     errors::RmrkError,
     types::*,
