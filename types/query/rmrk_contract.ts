@@ -24,6 +24,40 @@ export default class Methods {
 	}
 
 	/**
+	* transfer
+	*
+	* @param { ArgumentTypes.AccountId } to,
+	* @param { ArgumentTypes.Id } id,
+	* @param { Array<(number | string | BN)> } data,
+	* @returns { Result<null, ReturnTypes.PSP34Error> }
+	*/
+	"transfer" (
+		to: ArgumentTypes.AccountId,
+		id: ArgumentTypes.Id,
+		data: Array<(number | string | BN)>,
+		__options ? : GasLimit,
+	): Promise< QueryReturnType< Result<null, ReturnTypes.PSP34Error> > >{
+		return queryOkJSON( this.__nativeContract, this.__callerAddress, "psp34::transfer", [to, id, data], __options , (result) => { return handleReturnType(result, getTypeDescription(34, 'rmrk_contract')); });
+	}
+
+	/**
+	* allowance
+	*
+	* @param { ArgumentTypes.AccountId } owner,
+	* @param { ArgumentTypes.AccountId } operator,
+	* @param { ArgumentTypes.Id | null } id,
+	* @returns { boolean }
+	*/
+	"allowance" (
+		owner: ArgumentTypes.AccountId,
+		operator: ArgumentTypes.AccountId,
+		id: ArgumentTypes.Id | null,
+		__options ? : GasLimit,
+	): Promise< QueryReturnType< boolean > >{
+		return queryJSON( this.__nativeContract, this.__callerAddress, "psp34::allowance", [owner, operator, id], __options );
+	}
+
+	/**
 	* totalSupply
 	*
 	* @returns { ReturnNumber }
@@ -48,54 +82,18 @@ export default class Methods {
 		approved: boolean,
 		__options ? : GasLimit,
 	): Promise< QueryReturnType< Result<null, ReturnTypes.PSP34Error> > >{
-		return queryOkJSON( this.__nativeContract, this.__callerAddress, "psp34::approve", [operator, id, approved], __options , (result) => { return handleReturnType(result, getTypeDescription(35, 'rmrk_contract')); });
+		return queryOkJSON( this.__nativeContract, this.__callerAddress, "psp34::approve", [operator, id, approved], __options , (result) => { return handleReturnType(result, getTypeDescription(34, 'rmrk_contract')); });
 	}
 
 	/**
-	* transfer
+	* collectionId
 	*
-	* @param { ArgumentTypes.AccountId } to,
-	* @param { ArgumentTypes.Id } id,
-	* @param { Array<(number | string | BN)> } data,
-	* @returns { Result<null, ReturnTypes.PSP34Error> }
+	* @returns { ReturnTypes.Id }
 	*/
-	"transfer" (
-		to: ArgumentTypes.AccountId,
-		id: ArgumentTypes.Id,
-		data: Array<(number | string | BN)>,
+	"collectionId" (
 		__options ? : GasLimit,
-	): Promise< QueryReturnType< Result<null, ReturnTypes.PSP34Error> > >{
-		return queryOkJSON( this.__nativeContract, this.__callerAddress, "psp34::transfer", [to, id, data], __options , (result) => { return handleReturnType(result, getTypeDescription(35, 'rmrk_contract')); });
-	}
-
-	/**
-	* balanceOf
-	*
-	* @param { ArgumentTypes.AccountId } owner,
-	* @returns { number }
-	*/
-	"balanceOf" (
-		owner: ArgumentTypes.AccountId,
-		__options ? : GasLimit,
-	): Promise< QueryReturnType< number > >{
-		return queryJSON( this.__nativeContract, this.__callerAddress, "psp34::balanceOf", [owner], __options );
-	}
-
-	/**
-	* allowance
-	*
-	* @param { ArgumentTypes.AccountId } owner,
-	* @param { ArgumentTypes.AccountId } operator,
-	* @param { ArgumentTypes.Id | null } id,
-	* @returns { boolean }
-	*/
-	"allowance" (
-		owner: ArgumentTypes.AccountId,
-		operator: ArgumentTypes.AccountId,
-		id: ArgumentTypes.Id | null,
-		__options ? : GasLimit,
-	): Promise< QueryReturnType< boolean > >{
-		return queryJSON( this.__nativeContract, this.__callerAddress, "psp34::allowance", [owner, operator, id], __options );
+	): Promise< QueryReturnType< ReturnTypes.Id > >{
+		return queryJSON( this.__nativeContract, this.__callerAddress, "psp34::collectionId", [], __options , (result) => { return handleReturnType(result, getTypeDescription(1, 'rmrk_contract')); });
 	}
 
 	/**
@@ -112,14 +110,16 @@ export default class Methods {
 	}
 
 	/**
-	* collectionId
+	* balanceOf
 	*
-	* @returns { ReturnTypes.Id }
+	* @param { ArgumentTypes.AccountId } owner,
+	* @returns { number }
 	*/
-	"collectionId" (
+	"balanceOf" (
+		owner: ArgumentTypes.AccountId,
 		__options ? : GasLimit,
-	): Promise< QueryReturnType< ReturnTypes.Id > >{
-		return queryJSON( this.__nativeContract, this.__callerAddress, "psp34::collectionId", [], __options , (result) => { return handleReturnType(result, getTypeDescription(1, 'rmrk_contract')); });
+	): Promise< QueryReturnType< number > >{
+		return queryJSON( this.__nativeContract, this.__callerAddress, "psp34::balanceOf", [owner], __options );
 	}
 
 	/**
@@ -136,17 +136,6 @@ export default class Methods {
 	}
 
 	/**
-	* renounceOwnership
-	*
-	* @returns { Result<null, ReturnTypes.OwnableError> }
-	*/
-	"renounceOwnership" (
-		__options ? : GasLimit,
-	): Promise< QueryReturnType< Result<null, ReturnTypes.OwnableError> > >{
-		return queryOkJSON( this.__nativeContract, this.__callerAddress, "ownable::renounceOwnership", [], __options , (result) => { return handleReturnType(result, getTypeDescription(37, 'rmrk_contract')); });
-	}
-
-	/**
 	* owner
 	*
 	* @returns { ReturnTypes.AccountId }
@@ -155,6 +144,17 @@ export default class Methods {
 		__options ? : GasLimit,
 	): Promise< QueryReturnType< ReturnTypes.AccountId > >{
 		return queryJSON( this.__nativeContract, this.__callerAddress, "ownable::owner", [], __options , (result) => { return handleReturnType(result, getTypeDescription(8, 'rmrk_contract')); });
+	}
+
+	/**
+	* renounceOwnership
+	*
+	* @returns { Result<null, ReturnTypes.OwnableError> }
+	*/
+	"renounceOwnership" (
+		__options ? : GasLimit,
+	): Promise< QueryReturnType< Result<null, ReturnTypes.OwnableError> > >{
+		return queryOkJSON( this.__nativeContract, this.__callerAddress, "ownable::renounceOwnership", [], __options , (result) => { return handleReturnType(result, getTypeDescription(37, 'rmrk_contract')); });
 	}
 
 	/**
@@ -201,6 +201,28 @@ export default class Methods {
 	}
 
 	/**
+	* maxSupply
+	*
+	* @returns { number }
+	*/
+	"maxSupply" (
+		__options ? : GasLimit,
+	): Promise< QueryReturnType< number > >{
+		return queryJSON( this.__nativeContract, this.__callerAddress, "utils::maxSupply", [], __options );
+	}
+
+	/**
+	* withdraw
+	*
+	* @returns { Result<null, ReturnTypes.PSP34Error> }
+	*/
+	"withdraw" (
+		__options ? : GasLimit,
+	): Promise< QueryReturnType< Result<null, ReturnTypes.PSP34Error> > >{
+		return queryOkJSON( this.__nativeContract, this.__callerAddress, "utils::withdraw", [], __options , (result) => { return handleReturnType(result, getTypeDescription(34, 'rmrk_contract')); });
+	}
+
+	/**
 	* tokenUri
 	*
 	* @param { (number | string | BN) } tokenId,
@@ -214,17 +236,6 @@ export default class Methods {
 	}
 
 	/**
-	* maxSupply
-	*
-	* @returns { number }
-	*/
-	"maxSupply" (
-		__options ? : GasLimit,
-	): Promise< QueryReturnType< number > >{
-		return queryJSON( this.__nativeContract, this.__callerAddress, "utils::maxSupply", [], __options );
-	}
-
-	/**
 	* setBaseUri
 	*
 	* @param { string } uri,
@@ -234,7 +245,7 @@ export default class Methods {
 		uri: string,
 		__options ? : GasLimit,
 	): Promise< QueryReturnType< Result<null, ReturnTypes.PSP34Error> > >{
-		return queryOkJSON( this.__nativeContract, this.__callerAddress, "utils::setBaseUri", [uri], __options , (result) => { return handleReturnType(result, getTypeDescription(35, 'rmrk_contract')); });
+		return queryOkJSON( this.__nativeContract, this.__callerAddress, "utils::setBaseUri", [uri], __options , (result) => { return handleReturnType(result, getTypeDescription(34, 'rmrk_contract')); });
 	}
 
 	/**
@@ -249,14 +260,14 @@ export default class Methods {
 	}
 
 	/**
-	* withdraw
+	* mintNext
 	*
 	* @returns { Result<null, ReturnTypes.PSP34Error> }
 	*/
-	"withdraw" (
-		__options ? : GasLimit,
+	"mintNext" (
+		__options ? : GasLimitAndRequiredValue,
 	): Promise< QueryReturnType< Result<null, ReturnTypes.PSP34Error> > >{
-		return queryOkJSON( this.__nativeContract, this.__callerAddress, "utils::withdraw", [], __options , (result) => { return handleReturnType(result, getTypeDescription(35, 'rmrk_contract')); });
+		return queryOkJSON( this.__nativeContract, this.__callerAddress, "minting::mintNext", [], __options , (result) => { return handleReturnType(result, getTypeDescription(34, 'rmrk_contract')); });
 	}
 
 	/**
@@ -271,48 +282,7 @@ export default class Methods {
 		mintAmount: (number | string | BN),
 		__options ? : GasLimitAndRequiredValue,
 	): Promise< QueryReturnType< Result<null, ReturnTypes.PSP34Error> > >{
-		return queryOkJSON( this.__nativeContract, this.__callerAddress, "minting::mint", [to, mintAmount], __options , (result) => { return handleReturnType(result, getTypeDescription(35, 'rmrk_contract')); });
-	}
-
-	/**
-	* mintNext
-	*
-	* @returns { Result<null, ReturnTypes.PSP34Error> }
-	*/
-	"mintNext" (
-		__options ? : GasLimitAndRequiredValue,
-	): Promise< QueryReturnType< Result<null, ReturnTypes.PSP34Error> > >{
-		return queryOkJSON( this.__nativeContract, this.__callerAddress, "minting::mintNext", [], __options , (result) => { return handleReturnType(result, getTypeDescription(35, 'rmrk_contract')); });
-	}
-
-	/**
-	* removeChild
-	*
-	* @param { ArgumentTypes.Id } parentTokenId,
-	* @param { [ArgumentTypes.AccountId, ArgumentTypes.Id] } childNft,
-	* @returns { Result<null, ReturnTypes.PSP34Error> }
-	*/
-	"removeChild" (
-		parentTokenId: ArgumentTypes.Id,
-		childNft: [ArgumentTypes.AccountId, ArgumentTypes.Id],
-		__options ? : GasLimit,
-	): Promise< QueryReturnType< Result<null, ReturnTypes.PSP34Error> > >{
-		return queryOkJSON( this.__nativeContract, this.__callerAddress, "nesting::removeChild", [parentTokenId, childNft], __options , (result) => { return handleReturnType(result, getTypeDescription(35, 'rmrk_contract')); });
-	}
-
-	/**
-	* rejectChild
-	*
-	* @param { ArgumentTypes.Id } parentTokenId,
-	* @param { [ArgumentTypes.AccountId, ArgumentTypes.Id] } childNft,
-	* @returns { Result<null, ReturnTypes.PSP34Error> }
-	*/
-	"rejectChild" (
-		parentTokenId: ArgumentTypes.Id,
-		childNft: [ArgumentTypes.AccountId, ArgumentTypes.Id],
-		__options ? : GasLimit,
-	): Promise< QueryReturnType< Result<null, ReturnTypes.PSP34Error> > >{
-		return queryOkJSON( this.__nativeContract, this.__callerAddress, "nesting::rejectChild", [parentTokenId, childNft], __options , (result) => { return handleReturnType(result, getTypeDescription(35, 'rmrk_contract')); });
+		return queryOkJSON( this.__nativeContract, this.__callerAddress, "minting::mint", [to, mintAmount], __options , (result) => { return handleReturnType(result, getTypeDescription(34, 'rmrk_contract')); });
 	}
 
 	/**
@@ -327,24 +297,52 @@ export default class Methods {
 		childNft: [ArgumentTypes.AccountId, ArgumentTypes.Id],
 		__options ? : GasLimit,
 	): Promise< QueryReturnType< Result<null, ReturnTypes.PSP34Error> > >{
-		return queryOkJSON( this.__nativeContract, this.__callerAddress, "nesting::addChild", [parentTokenId, childNft], __options , (result) => { return handleReturnType(result, getTypeDescription(35, 'rmrk_contract')); });
+		return queryOkJSON( this.__nativeContract, this.__callerAddress, "nesting::addChild", [parentTokenId, childNft], __options , (result) => { return handleReturnType(result, getTypeDescription(34, 'rmrk_contract')); });
 	}
 
 	/**
-	* transferChild
+	* removeChild
 	*
-	* @param { ArgumentTypes.Id } from,
-	* @param { ArgumentTypes.Id } to,
+	* @param { ArgumentTypes.Id } parentTokenId,
 	* @param { [ArgumentTypes.AccountId, ArgumentTypes.Id] } childNft,
 	* @returns { Result<null, ReturnTypes.PSP34Error> }
 	*/
-	"transferChild" (
-		from: ArgumentTypes.Id,
-		to: ArgumentTypes.Id,
+	"removeChild" (
+		parentTokenId: ArgumentTypes.Id,
 		childNft: [ArgumentTypes.AccountId, ArgumentTypes.Id],
 		__options ? : GasLimit,
 	): Promise< QueryReturnType< Result<null, ReturnTypes.PSP34Error> > >{
-		return queryOkJSON( this.__nativeContract, this.__callerAddress, "nesting::transferChild", [from, to, childNft], __options , (result) => { return handleReturnType(result, getTypeDescription(35, 'rmrk_contract')); });
+		return queryOkJSON( this.__nativeContract, this.__callerAddress, "nesting::removeChild", [parentTokenId, childNft], __options , (result) => { return handleReturnType(result, getTypeDescription(34, 'rmrk_contract')); });
+	}
+
+	/**
+	* rejectChild
+	*
+	* @param { ArgumentTypes.Id } parentTokenId,
+	* @param { [ArgumentTypes.AccountId, ArgumentTypes.Id] } childNft,
+	* @returns { Result<null, ReturnTypes.PSP34Error> }
+	*/
+	"rejectChild" (
+		parentTokenId: ArgumentTypes.Id,
+		childNft: [ArgumentTypes.AccountId, ArgumentTypes.Id],
+		__options ? : GasLimit,
+	): Promise< QueryReturnType< Result<null, ReturnTypes.PSP34Error> > >{
+		return queryOkJSON( this.__nativeContract, this.__callerAddress, "nesting::rejectChild", [parentTokenId, childNft], __options , (result) => { return handleReturnType(result, getTypeDescription(34, 'rmrk_contract')); });
+	}
+
+	/**
+	* acceptChild
+	*
+	* @param { ArgumentTypes.Id } parentTokenId,
+	* @param { [ArgumentTypes.AccountId, ArgumentTypes.Id] } childNft,
+	* @returns { Result<null, ReturnTypes.PSP34Error> }
+	*/
+	"acceptChild" (
+		parentTokenId: ArgumentTypes.Id,
+		childNft: [ArgumentTypes.AccountId, ArgumentTypes.Id],
+		__options ? : GasLimit,
+	): Promise< QueryReturnType< Result<null, ReturnTypes.PSP34Error> > >{
+		return queryOkJSON( this.__nativeContract, this.__callerAddress, "nesting::acceptChild", [parentTokenId, childNft], __options , (result) => { return handleReturnType(result, getTypeDescription(34, 'rmrk_contract')); });
 	}
 
 	/**
@@ -361,18 +359,33 @@ export default class Methods {
 	}
 
 	/**
-	* acceptChild
+	* transferChild
 	*
-	* @param { ArgumentTypes.Id } parentTokenId,
+	* @param { ArgumentTypes.Id } from,
+	* @param { ArgumentTypes.Id } to,
 	* @param { [ArgumentTypes.AccountId, ArgumentTypes.Id] } childNft,
 	* @returns { Result<null, ReturnTypes.PSP34Error> }
 	*/
-	"acceptChild" (
-		parentTokenId: ArgumentTypes.Id,
+	"transferChild" (
+		from: ArgumentTypes.Id,
+		to: ArgumentTypes.Id,
 		childNft: [ArgumentTypes.AccountId, ArgumentTypes.Id],
 		__options ? : GasLimit,
 	): Promise< QueryReturnType< Result<null, ReturnTypes.PSP34Error> > >{
-		return queryOkJSON( this.__nativeContract, this.__callerAddress, "nesting::acceptChild", [parentTokenId, childNft], __options , (result) => { return handleReturnType(result, getTypeDescription(35, 'rmrk_contract')); });
+		return queryOkJSON( this.__nativeContract, this.__callerAddress, "nesting::transferChild", [from, to, childNft], __options , (result) => { return handleReturnType(result, getTypeDescription(34, 'rmrk_contract')); });
+	}
+
+	/**
+	* getAssetUri
+	*
+	* @param { (number | string | BN) } assetId,
+	* @returns { Array<number> | null }
+	*/
+	"getAssetUri" (
+		assetId: (number | string | BN),
+		__options ? : GasLimit,
+	): Promise< QueryReturnType< Array<number> | null > >{
+		return queryJSON( this.__nativeContract, this.__callerAddress, "multiAsset::getAssetUri", [assetId], __options , (result) => { return handleReturnType(result, getTypeDescription(39, 'rmrk_contract')); });
 	}
 
 	/**
@@ -393,7 +406,22 @@ export default class Methods {
 		partIds: Array<(number | string | BN)>,
 		__options ? : GasLimit,
 	): Promise< QueryReturnType< Result<null, ReturnTypes.PSP34Error> > >{
-		return queryOkJSON( this.__nativeContract, this.__callerAddress, "multiAsset::addAssetEntry", [id, equippableGroupId, baseId, assetUri, partIds], __options , (result) => { return handleReturnType(result, getTypeDescription(35, 'rmrk_contract')); });
+		return queryOkJSON( this.__nativeContract, this.__callerAddress, "multiAsset::addAssetEntry", [id, equippableGroupId, baseId, assetUri, partIds], __options , (result) => { return handleReturnType(result, getTypeDescription(34, 'rmrk_contract')); });
+	}
+
+	/**
+	* rejectAsset
+	*
+	* @param { ArgumentTypes.Id } tokenId,
+	* @param { (number | string | BN) } assetId,
+	* @returns { Result<null, ReturnTypes.PSP34Error> }
+	*/
+	"rejectAsset" (
+		tokenId: ArgumentTypes.Id,
+		assetId: (number | string | BN),
+		__options ? : GasLimit,
+	): Promise< QueryReturnType< Result<null, ReturnTypes.PSP34Error> > >{
+		return queryOkJSON( this.__nativeContract, this.__callerAddress, "multiAsset::rejectAsset", [tokenId, assetId], __options , (result) => { return handleReturnType(result, getTypeDescription(34, 'rmrk_contract')); });
 	}
 
 	/**
@@ -408,7 +436,33 @@ export default class Methods {
 		priorities: Array<(number | string | BN)>,
 		__options ? : GasLimit,
 	): Promise< QueryReturnType< Result<null, ReturnTypes.PSP34Error> > >{
-		return queryOkJSON( this.__nativeContract, this.__callerAddress, "multiAsset::setPriority", [tokenId, priorities], __options , (result) => { return handleReturnType(result, getTypeDescription(35, 'rmrk_contract')); });
+		return queryOkJSON( this.__nativeContract, this.__callerAddress, "multiAsset::setPriority", [tokenId, priorities], __options , (result) => { return handleReturnType(result, getTypeDescription(34, 'rmrk_contract')); });
+	}
+
+	/**
+	* totalAssets
+	*
+	* @returns { number }
+	*/
+	"totalAssets" (
+		__options ? : GasLimit,
+	): Promise< QueryReturnType< number > >{
+		return queryJSON( this.__nativeContract, this.__callerAddress, "multiAsset::totalAssets", [], __options );
+	}
+
+	/**
+	* removeAsset
+	*
+	* @param { ArgumentTypes.Id } tokenId,
+	* @param { (number | string | BN) } assetId,
+	* @returns { Result<null, ReturnTypes.PSP34Error> }
+	*/
+	"removeAsset" (
+		tokenId: ArgumentTypes.Id,
+		assetId: (number | string | BN),
+		__options ? : GasLimit,
+	): Promise< QueryReturnType< Result<null, ReturnTypes.PSP34Error> > >{
+		return queryOkJSON( this.__nativeContract, this.__callerAddress, "multiAsset::removeAsset", [tokenId, assetId], __options , (result) => { return handleReturnType(result, getTypeDescription(34, 'rmrk_contract')); });
 	}
 
 	/**
@@ -425,37 +479,7 @@ export default class Methods {
 		replacesAssetWithId: ArgumentTypes.Id | null,
 		__options ? : GasLimit,
 	): Promise< QueryReturnType< Result<null, ReturnTypes.PSP34Error> > >{
-		return queryOkJSON( this.__nativeContract, this.__callerAddress, "multiAsset::addAssetToToken", [tokenId, assetId, replacesAssetWithId], __options , (result) => { return handleReturnType(result, getTypeDescription(35, 'rmrk_contract')); });
-	}
-
-	/**
-	* acceptAsset
-	*
-	* @param { ArgumentTypes.Id } tokenId,
-	* @param { (number | string | BN) } assetId,
-	* @returns { Result<null, ReturnTypes.PSP34Error> }
-	*/
-	"acceptAsset" (
-		tokenId: ArgumentTypes.Id,
-		assetId: (number | string | BN),
-		__options ? : GasLimit,
-	): Promise< QueryReturnType< Result<null, ReturnTypes.PSP34Error> > >{
-		return queryOkJSON( this.__nativeContract, this.__callerAddress, "multiAsset::acceptAsset", [tokenId, assetId], __options , (result) => { return handleReturnType(result, getTypeDescription(35, 'rmrk_contract')); });
-	}
-
-	/**
-	* removeAsset
-	*
-	* @param { ArgumentTypes.Id } tokenId,
-	* @param { (number | string | BN) } assetId,
-	* @returns { Result<null, ReturnTypes.PSP34Error> }
-	*/
-	"removeAsset" (
-		tokenId: ArgumentTypes.Id,
-		assetId: (number | string | BN),
-		__options ? : GasLimit,
-	): Promise< QueryReturnType< Result<null, ReturnTypes.PSP34Error> > >{
-		return queryOkJSON( this.__nativeContract, this.__callerAddress, "multiAsset::removeAsset", [tokenId, assetId], __options , (result) => { return handleReturnType(result, getTypeDescription(35, 'rmrk_contract')); });
+		return queryOkJSON( this.__nativeContract, this.__callerAddress, "multiAsset::addAssetToToken", [tokenId, assetId, replacesAssetWithId], __options , (result) => { return handleReturnType(result, getTypeDescription(34, 'rmrk_contract')); });
 	}
 
 	/**
@@ -472,45 +496,6 @@ export default class Methods {
 	}
 
 	/**
-	* getAssetUri
-	*
-	* @param { (number | string | BN) } assetId,
-	* @returns { Array<number> | null }
-	*/
-	"getAssetUri" (
-		assetId: (number | string | BN),
-		__options ? : GasLimit,
-	): Promise< QueryReturnType< Array<number> | null > >{
-		return queryJSON( this.__nativeContract, this.__callerAddress, "multiAsset::getAssetUri", [assetId], __options , (result) => { return handleReturnType(result, getTypeDescription(39, 'rmrk_contract')); });
-	}
-
-	/**
-	* totalAssets
-	*
-	* @returns { number }
-	*/
-	"totalAssets" (
-		__options ? : GasLimit,
-	): Promise< QueryReturnType< number > >{
-		return queryJSON( this.__nativeContract, this.__callerAddress, "multiAsset::totalAssets", [], __options );
-	}
-
-	/**
-	* rejectAsset
-	*
-	* @param { ArgumentTypes.Id } tokenId,
-	* @param { (number | string | BN) } assetId,
-	* @returns { Result<null, ReturnTypes.PSP34Error> }
-	*/
-	"rejectAsset" (
-		tokenId: ArgumentTypes.Id,
-		assetId: (number | string | BN),
-		__options ? : GasLimit,
-	): Promise< QueryReturnType< Result<null, ReturnTypes.PSP34Error> > >{
-		return queryOkJSON( this.__nativeContract, this.__callerAddress, "multiAsset::rejectAsset", [tokenId, assetId], __options , (result) => { return handleReturnType(result, getTypeDescription(35, 'rmrk_contract')); });
-	}
-
-	/**
 	* getAcceptedTokenAssets
 	*
 	* @param { ArgumentTypes.Id } tokenId,
@@ -521,6 +506,21 @@ export default class Methods {
 		__options ? : GasLimit,
 	): Promise< QueryReturnType< Result<Array<number> | null, ReturnTypes.PSP34Error> > >{
 		return queryOkJSON( this.__nativeContract, this.__callerAddress, "multiAsset::getAcceptedTokenAssets", [tokenId], __options , (result) => { return handleReturnType(result, getTypeDescription(45, 'rmrk_contract')); });
+	}
+
+	/**
+	* acceptAsset
+	*
+	* @param { ArgumentTypes.Id } tokenId,
+	* @param { (number | string | BN) } assetId,
+	* @returns { Result<null, ReturnTypes.PSP34Error> }
+	*/
+	"acceptAsset" (
+		tokenId: ArgumentTypes.Id,
+		assetId: (number | string | BN),
+		__options ? : GasLimit,
+	): Promise< QueryReturnType< Result<null, ReturnTypes.PSP34Error> > >{
+		return queryOkJSON( this.__nativeContract, this.__callerAddress, "multiAsset::acceptAsset", [tokenId, assetId], __options , (result) => { return handleReturnType(result, getTypeDescription(34, 'rmrk_contract')); });
 	}
 
 }
