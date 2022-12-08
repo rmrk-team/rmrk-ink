@@ -44,13 +44,19 @@ pub type PartId = u32;
 pub type AssetId = u32;
 pub type EquippableGroupId = u32;
 
-pub const STORAGE_PSP34_KEY: u32 = openbrush::storage_unique_key!(Psp34CustomData);
+pub const STORAGE_PSP34_KEY: u32 = openbrush::storage_unique_key!(UtilsData);
 
 #[derive(Default, Debug)]
 #[openbrush::upgradeable_storage(STORAGE_PSP34_KEY)]
-pub struct Psp34CustomData {
-    pub last_token_id: u64,
+pub struct UtilsData {
     pub collection_id: u32,
+}
+
+pub const STORAGE_MINTING_KEY: u32 = openbrush::storage_unique_key!(MintingData);
+#[derive(Default, Debug)]
+#[openbrush::upgradeable_storage(STORAGE_MINTING_KEY)]
+pub struct MintingData {
+    pub last_token_id: u64,
     pub max_supply: u64,
     pub price_per_mint: Balance,
 }

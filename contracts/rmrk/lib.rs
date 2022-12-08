@@ -8,6 +8,7 @@ pub mod rmrk_contract {
         EmitEvent,
         Env,
     };
+    use ink_prelude::vec::Vec;
     use ink_storage::traits::SpreadAllocate;
     use openbrush::{
         contracts::{
@@ -29,9 +30,10 @@ pub mod rmrk_contract {
             *,
         },
         traits::{
+            minting::*,
             multiasset::*,
             nesting::*,
-            psp34_custom::*,
+            utils::*,
         },
     };
 
@@ -169,11 +171,13 @@ pub mod rmrk_contract {
         #[storage_field]
         metadata: metadata::Data,
         #[storage_field]
-        psp34_custom: types::Psp34CustomData,
+        utils: types::UtilsData,
         #[storage_field]
         nesting: types::NestingData,
         #[storage_field]
         multiasset: types::MultiAssetData,
+        #[storage_field]
+        minting: types::MintingData,
     }
 
     impl PSP34 for Rmrk {}
@@ -184,7 +188,9 @@ pub mod rmrk_contract {
 
     impl PSP34Enumerable for Rmrk {}
 
-    impl Psp34Custom for Rmrk {}
+    impl Utils for Rmrk {}
+
+    impl Minting for Rmrk {}
 
     impl Nesting for Rmrk {}
 
@@ -215,8 +221,8 @@ pub mod rmrk_contract {
                     String::from("collection_metadata"),
                     collection_metadata,
                 );
-                instance.psp34_custom.max_supply = max_supply;
-                instance.psp34_custom.price_per_mint = price_per_mint;
+                instance.minting.max_supply = max_supply;
+                instance.minting.price_per_mint = price_per_mint;
             })
         }
     }
@@ -357,9 +363,9 @@ pub mod rmrk_contract {
         use ink_prelude::string::String as PreludeString;
         use rmrk::impls::rmrk::{
             errors::RmrkError,
-            psp34_custom::CustomInternal,
-            types::*,
+            minting::Internal,
         };
+
         const PRICE: Balance = 100_000_000_000_000_000;
         const BASE_URI: &str = "ipfs://myIpfsUri/";
         const MAX_SUPPLY: u64 = 10;
@@ -413,7 +419,7 @@ pub mod rmrk_contract {
             assert_eq!(rmrk.balance_of(accounts.bob), 1);
 
             assert_eq!(rmrk.owners_token_by_index(accounts.bob, 0), Ok(Id::U64(1)));
-            assert_eq!(rmrk.psp34_custom.last_token_id, 1);
+            assert_eq!(rmrk.minting.last_token_id, 1);
             assert_eq!(1, ink_env::test::recorded_events().count());
         }
 
@@ -428,7 +434,7 @@ pub mod rmrk_contract {
             test::set_value_transferred::<ink_env::DefaultEnvironment>(
                 PRICE * num_of_mints as u128,
             );
-            assert!(rmrk.mint_for(accounts.bob, num_of_mints).is_ok());
+            assert!(rmrk.mint(accounts.bob, num_of_mints).is_ok());
             assert_eq!(rmrk.total_supply(), num_of_mints as u128);
             assert_eq!(rmrk.balance_of(accounts.bob), 5);
             assert_eq!(rmrk.owners_token_by_index(accounts.bob, 0), Ok(Id::U64(1)));
@@ -455,7 +461,7 @@ pub mod rmrk_contract {
                 PRICE * num_of_mints as u128,
             );
             assert_eq!(
-                rmrk.mint_for(accounts.bob, num_of_mints),
+                rmrk.mint(accounts.bob, num_of_mints),
                 Err(PSP34Error::Custom(RmrkError::CollectionIsFull.as_str()))
             );
         }
@@ -472,7 +478,7 @@ pub mod rmrk_contract {
                 PRICE * num_of_mints as u128 - 1,
             );
             assert_eq!(
-                rmrk.mint_for(accounts.bob, num_of_mints),
+                rmrk.mint(accounts.bob, num_of_mints),
                 Err(PSP34Error::Custom(RmrkError::BadMintValue.as_str()))
             );
             test::set_value_transferred::<ink_env::DefaultEnvironment>(
@@ -575,7 +581,7 @@ pub mod rmrk_contract {
                 accounts.eve,
                 0,
             );
-            rmrk.psp34_custom.last_token_id = max_supply - 1;
+            rmrk.minting.last_token_id = max_supply - 1;
 
             // check case when last_token_id.add(mint_amount) if more than u64::MAX
             assert_eq!(
@@ -650,7 +656,7 @@ pub mod rmrk_contract {
 
             // mint token and add asset to it. Should be accepted without approval
             test::set_value_transferred::<ink_env::DefaultEnvironment>(PRICE as u128);
-            assert!(rmrk.mint_for(accounts.alice, 1).is_ok());
+            assert!(rmrk.mint(accounts.alice, 1).is_ok());
             assert_eq!(2, ink_env::test::recorded_events().count());
             assert!(rmrk.add_asset_to_token(TOKEN_ID1, ASSET_ID, None).is_ok());
             assert_eq!(4, ink_env::test::recorded_events().count());
@@ -668,7 +674,7 @@ pub mod rmrk_contract {
 
             // mint second token to non owner (Bob)
             test::set_value_transferred::<ink_env::DefaultEnvironment>(PRICE as u128);
-            assert!(rmrk.mint_for(accounts.bob, 1).is_ok());
+            assert!(rmrk.mint(accounts.bob, 1).is_ok());
             assert_eq!(5, ink_env::test::recorded_events().count());
 
             // Add asset by alice and reject asset by Bob to test asset_reject
@@ -732,7 +738,7 @@ pub mod rmrk_contract {
 
             // mint token and add two assets to it. Should be accepted without approval
             test::set_value_transferred::<ink_env::DefaultEnvironment>(PRICE * 2 as u128);
-            assert!(rmrk.mint_for(accounts.alice, 2).is_ok());
+            assert!(rmrk.mint(accounts.alice, 2).is_ok());
             assert!(rmrk.add_asset_to_token(TOKEN_ID1, ASSET_ID1, None).is_ok());
             assert!(rmrk.add_asset_to_token(TOKEN_ID1, ASSET_ID2, None).is_ok());
             assert_eq!(rmrk.total_token_assets(TOKEN_ID1), Ok((2, 0)));

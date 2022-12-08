@@ -38,3 +38,33 @@ export interface ChildRejected {
 	childTokenId: ReturnTypes.Id;
 }
 
+export interface AssetSet {
+	asset: number;
+}
+
+export interface AssetAddedToToken {
+	token: ReturnTypes.Id;
+	asset: number;
+	replaces: ReturnTypes.Id | null;
+}
+
+export interface AssetAccepted {
+	token: ReturnTypes.Id;
+	asset: number;
+}
+
+export interface AssetRejected {
+	token: ReturnTypes.Id;
+	asset: number;
+}
+
+export interface AssetRemoved {
+	token: ReturnTypes.Id;
+	asset: number;
+}
+
+export interface AssetPrioritySet {
+	token: ReturnTypes.Id;
+	priorities: Array<number>;
+}
+
