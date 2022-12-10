@@ -1,4 +1,5 @@
 //! Error definition for RMRK contract
+
 use openbrush::traits::String;
 
 #[derive(Debug, PartialEq, Eq, scale::Encode, scale::Decode)]
@@ -6,6 +7,7 @@ use openbrush::traits::String;
 pub enum RmrkError {
     CannotMintZeroTokens,
     CollectionIsFull,
+    InvalidTokenId,
     BadMintValue,
     WithdrawalFailed,
     AlreadyAddedChild,
@@ -13,6 +15,12 @@ pub enum RmrkError {
     InvalidParentId,
     ChildNotFound,
     NotAuthorised,
+    InvalidAssetId,
+    AssetIdAlreadyExists,
+    AssetIdNotFound,
+    AlreadyAddedAsset,
+    AddingPendingAsset,
+    BadPriorityLength,
 }
 
 impl RmrkError {
@@ -20,6 +28,7 @@ impl RmrkError {
         match self {
             RmrkError::CannotMintZeroTokens => String::from("CannotMintZeroTokens"),
             RmrkError::CollectionIsFull => String::from("CollectionIsFull"),
+            RmrkError::InvalidTokenId => String::from("InvalidTokenId"),
             RmrkError::BadMintValue => String::from("BadMintValue"),
             RmrkError::WithdrawalFailed => String::from("WithdrawalFailed"),
             RmrkError::AlreadyAddedChild => String::from("AlreadyAddedChild"),
@@ -27,6 +36,12 @@ impl RmrkError {
             RmrkError::InvalidParentId => String::from("InvalidParentId"),
             RmrkError::ChildNotFound => String::from("ChildNotFound"),
             RmrkError::NotAuthorised => String::from("NotAuthorised"),
+            RmrkError::InvalidAssetId => String::from("InvalidAssetId"),
+            RmrkError::AssetIdAlreadyExists => String::from("AssetIdAlreadyExists"),
+            RmrkError::AssetIdNotFound => String::from("AssetIdNotFound"),
+            RmrkError::AlreadyAddedAsset => String::from("AlreadyAddedAsset"),
+            RmrkError::AddingPendingAsset => String::from("AddingPendingAsset"),
+            RmrkError::BadPriorityLength => String::from("BadPriorityLength"),
         }
     }
 }

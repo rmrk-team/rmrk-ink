@@ -226,8 +226,10 @@ Cargo.lock
 /lib
 /package-lock.json
 /tmp
+types
 node_modules
 oclif.manifest.json
 artifacts/
 old_package.json
 yarn.lock
+

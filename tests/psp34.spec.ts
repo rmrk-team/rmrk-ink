@@ -95,7 +95,7 @@ describe('Minting rmrk as psp34 tests', () => {
     expect((await contract.query.totalSupply()).value.rawNumber.toNumber()).to.equal(0);
 
     const { gasRequired } = await contract.withSigner(bob).query.mintNext();
-    await contract.withSigner(bob).tx.mintFor(bob.address, 5, { value: PRICE_PER_MINT.muln(5), gasLimit: gasRequired * 2n });
+    await contract.withSigner(bob).tx.mint(bob.address, 5, { value: PRICE_PER_MINT.muln(5), gasLimit: gasRequired * 2n });
 
     expect((await contract.query.totalSupply()).value.rawNumber.toNumber()).to.equal(5);
     expect((await contract.query.ownerOf({ u64: 5 })).value).to.equal(bob.address);

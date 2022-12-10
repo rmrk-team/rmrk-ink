@@ -8,6 +8,7 @@ pub mod rmrk_contract {
         EmitEvent,
         Env,
     };
+    use ink_prelude::vec::Vec;
     use ink_storage::traits::SpreadAllocate;
     use openbrush::{
         contracts::{
@@ -25,12 +26,14 @@ pub mod rmrk_contract {
     };
     use rmrk::{
         impls::rmrk::{
-            types,
+            types::*,
             *,
         },
         traits::{
+            minting::*,
+            multiasset::*,
             nesting::*,
-            psp34_custom::*,
+            utils::*,
         },
     };
 
@@ -102,6 +105,59 @@ pub mod rmrk_contract {
         child_token_id: Id,
     }
 
+    /// Event emitted when new asset is set for the collection.
+    #[ink(event)]
+    pub struct AssetSet {
+        #[ink(topic)]
+        asset: AssetId,
+    }
+    /// Event emitted when the asset is added to the token.
+    #[ink(event)]
+    pub struct AssetAddedToToken {
+        #[ink(topic)]
+        token: Id,
+        #[ink(topic)]
+        asset: AssetId,
+        #[ink(topic)]
+        replaces: Option<Id>,
+    }
+
+    /// Event emitted when the asset is accepted.
+    #[ink(event)]
+    pub struct AssetAccepted {
+        #[ink(topic)]
+        token: Id,
+        #[ink(topic)]
+        asset: AssetId,
+    }
+
+    /// Event emitted when the asset is rejected.
+    #[ink(event)]
+    pub struct AssetRejected {
+        #[ink(topic)]
+        token: Id,
+        #[ink(topic)]
+        asset: AssetId,
+    }
+
+    /// Event emitted when the asset is removed.
+    #[ink(event)]
+    pub struct AssetRemoved {
+        #[ink(topic)]
+        token: Id,
+        #[ink(topic)]
+        asset: AssetId,
+    }
+
+    /// Event emitted when the asset is removed.
+    #[ink(event)]
+    pub struct AssetPrioritySet {
+        #[ink(topic)]
+        token: Id,
+        #[ink(topic)]
+        priorities: Vec<AssetId>,
+    }
+
     // Rmrk contract storage
     #[ink(storage)]
     #[derive(Default, SpreadAllocate, Storage)]
@@ -115,9 +171,13 @@ pub mod rmrk_contract {
         #[storage_field]
         metadata: metadata::Data,
         #[storage_field]
-        psp34_custom: types::Psp34CustomData,
+        utils: types::UtilsData,
         #[storage_field]
         nesting: types::NestingData,
+        #[storage_field]
+        multiasset: types::MultiAssetData,
+        #[storage_field]
+        minting: types::MintingData,
     }
 
     impl PSP34 for Rmrk {}
@@ -128,9 +188,13 @@ pub mod rmrk_contract {
 
     impl PSP34Enumerable for Rmrk {}
 
-    impl Psp34Custom for Rmrk {}
+    impl Utils for Rmrk {}
+
+    impl Minting for Rmrk {}
 
     impl Nesting for Rmrk {}
+
+    impl MultiAsset for Rmrk {}
 
     impl Rmrk {
         /// Instantiate new RMRK contract
@@ -153,12 +217,12 @@ pub mod rmrk_contract {
                 instance._set_attribute(collection_id.clone(), String::from("symbol"), symbol);
                 instance._set_attribute(collection_id.clone(), String::from("baseUri"), base_uri);
                 instance._set_attribute(
-                    collection_id.clone(),
+                    collection_id,
                     String::from("collection_metadata"),
                     collection_metadata,
                 );
-                instance.psp34_custom.max_supply = max_supply;
-                instance.psp34_custom.price_per_mint = price_per_mint;
+                instance.minting.max_supply = max_supply;
+                instance.minting.price_per_mint = price_per_mint;
             })
         }
     }
@@ -191,7 +255,7 @@ pub mod rmrk_contract {
         fn _emit_added_child_event(&self, to: &Id, collection: &AccountId, child: &Id) {
             self.env().emit_event(ChildAdded {
                 to: to.clone(),
-                collection: collection.clone(),
+                collection: *collection,
                 child: child.clone(),
             });
         }
@@ -200,7 +264,7 @@ pub mod rmrk_contract {
         fn _emit_child_accepted_event(&self, parent: &Id, collection: &AccountId, child: &Id) {
             self.env().emit_event(ChildAccepted {
                 parent: parent.clone(),
-                collection: collection.clone(),
+                collection: *collection,
                 child: child.clone(),
             });
         }
@@ -214,7 +278,7 @@ pub mod rmrk_contract {
         ) {
             self.env().emit_event(ChildRemoved {
                 parent: parent.clone(),
-                child_collection: child_collection.clone(),
+                child_collection: *child_collection,
                 child_token_id: child_token_id.clone(),
             });
         }
@@ -228,12 +292,63 @@ pub mod rmrk_contract {
         ) {
             self.env().emit_event(ChildRejected {
                 parent: parent.clone(),
-                child_collection: child_collection.clone(),
+                child_collection: *child_collection,
                 child_token_id: child_token_id.clone(),
             });
         }
     }
+    impl multiasset::MultiAssetEvents for Rmrk {
+        /// Used to notify listeners that an asset object is initialized at `assetId`.
+        fn _emit_asset_set_event(&self, asset_id: &AssetId) {
+            self.env().emit_event(AssetSet { asset: *asset_id });
+        }
 
+        /// Used to notify listeners that an asset object at `assetId` is added to token's pending asset array.
+        fn _emit_asset_added_to_token_event(
+            &self,
+            token_id: &Id,
+            asset_id: &AssetId,
+            replaces_id: Option<Id>,
+        ) {
+            self.env().emit_event(AssetAddedToToken {
+                token: token_id.clone(),
+                asset: *asset_id,
+                replaces: replaces_id,
+            });
+        }
+
+        /// Used to notify listeners that an asset object at `assetId` is accepted by the token and migrated
+        fn _emit_asset_accepted_event(&self, token_id: &Id, asset_id: &AssetId) {
+            self.env().emit_event(AssetAccepted {
+                token: token_id.clone(),
+                asset: *asset_id,
+            });
+        }
+
+        /// Used to notify listeners that an asset object at `assetId` is rejected from token and is dropped from the pending assets array of the token.
+        fn _emit_asset_rejected_event(&self, token_id: &Id, asset_id: &AssetId) {
+            self.env().emit_event(AssetRejected {
+                token: token_id.clone(),
+                asset: *asset_id,
+            });
+        }
+
+        /// Used to notify listeners that an asset object at `assetId` is removed from token
+        fn _emit_asset_removed_event(&self, token_id: &Id, asset_id: &AssetId) {
+            self.env().emit_event(AssetRemoved {
+                token: token_id.clone(),
+                asset: *asset_id,
+            });
+        }
+
+        /// Used to notify listeners that token's prioritiy array is reordered.
+        fn _emit_asset_priority_set_event(&self, token_id: &Id, priorities: Vec<AssetId>) {
+            self.env().emit_event(AssetPrioritySet {
+                token: token_id.clone(),
+                priorities,
+            });
+        }
+    }
     #[cfg(test)]
     mod tests {
         use super::*;
@@ -246,8 +361,9 @@ pub mod rmrk_contract {
         use ink_prelude::string::String as PreludeString;
         use rmrk::impls::rmrk::{
             errors::RmrkError,
-            psp34_custom::CustomInternal,
+            minting::Internal,
         };
+
         const PRICE: Balance = 100_000_000_000_000_000;
         const BASE_URI: &str = "ipfs://myIpfsUri/";
         const MAX_SUPPLY: u64 = 10;
@@ -301,7 +417,7 @@ pub mod rmrk_contract {
             assert_eq!(rmrk.balance_of(accounts.bob), 1);
 
             assert_eq!(rmrk.owners_token_by_index(accounts.bob, 0), Ok(Id::U64(1)));
-            assert_eq!(rmrk.psp34_custom.last_token_id, 1);
+            assert_eq!(rmrk.minting.last_token_id, 1);
             assert_eq!(1, ink_env::test::recorded_events().count());
         }
 
@@ -316,7 +432,7 @@ pub mod rmrk_contract {
             test::set_value_transferred::<ink_env::DefaultEnvironment>(
                 PRICE * num_of_mints as u128,
             );
-            assert!(rmrk.mint_for(accounts.bob, num_of_mints).is_ok());
+            assert!(rmrk.mint(accounts.bob, num_of_mints).is_ok());
             assert_eq!(rmrk.total_supply(), num_of_mints as u128);
             assert_eq!(rmrk.balance_of(accounts.bob), 5);
             assert_eq!(rmrk.owners_token_by_index(accounts.bob, 0), Ok(Id::U64(1)));
@@ -343,7 +459,7 @@ pub mod rmrk_contract {
                 PRICE * num_of_mints as u128,
             );
             assert_eq!(
-                rmrk.mint_for(accounts.bob, num_of_mints),
+                rmrk.mint(accounts.bob, num_of_mints),
                 Err(PSP34Error::Custom(RmrkError::CollectionIsFull.as_str()))
             );
         }
@@ -360,7 +476,7 @@ pub mod rmrk_contract {
                 PRICE * num_of_mints as u128 - 1,
             );
             assert_eq!(
-                rmrk.mint_for(accounts.bob, num_of_mints),
+                rmrk.mint(accounts.bob, num_of_mints),
                 Err(PSP34Error::Custom(RmrkError::BadMintValue.as_str()))
             );
             test::set_value_transferred::<ink_env::DefaultEnvironment>(
@@ -463,7 +579,7 @@ pub mod rmrk_contract {
                 accounts.eve,
                 0,
             );
-            rmrk.psp34_custom.last_token_id = max_supply - 1;
+            rmrk.minting.last_token_id = max_supply - 1;
 
             // check case when last_token_id.add(mint_amount) if more than u64::MAX
             assert_eq!(
@@ -498,6 +614,152 @@ pub mod rmrk_contract {
             assert_eq!(
                 rmrk._check_value(transferred_value, mint_amount),
                 Err(PSP34Error::Custom(RmrkError::BadMintValue.as_str()))
+            );
+        }
+
+        #[ink::test]
+        fn add_asset_entry_works() {
+            const ASSET_URI: &str = "asset_uri/";
+            const ASSET_ID: AssetId = 1;
+            let mut rmrk = init();
+            assert!(rmrk
+                .add_asset_entry(ASSET_ID, 1, 1, String::from(ASSET_URI), vec![1, 2, 3],)
+                .is_ok());
+            assert_eq!(rmrk.total_assets(), 1);
+            assert_eq!(rmrk.get_asset_uri(ASSET_ID), Some(String::from(ASSET_URI)));
+            assert_eq!(rmrk.get_asset_uri(42), None);
+
+            // reject adding asset with same asset_id
+            assert_eq!(
+                rmrk.add_asset_entry(ASSET_ID, 1, 1, String::from(ASSET_URI), vec![1, 2, 3],),
+                Err(PSP34Error::Custom(RmrkError::AssetIdAlreadyExists.as_str()))
+            );
+        }
+
+        #[ink::test]
+        fn add_asset_to_token_works() {
+            let accounts = default_accounts();
+            const ASSET_URI: &str = "asset_uri/";
+            const ASSET_ID: AssetId = 1;
+            const TOKEN_ID1: Id = Id::U64(1);
+            const TOKEN_ID2: Id = Id::U64(2);
+
+            let mut rmrk = init();
+            // Add new asset entry
+            assert!(rmrk
+                .add_asset_entry(ASSET_ID, 1, 1, String::from(ASSET_URI), vec![1, 2, 3],)
+                .is_ok());
+            assert_eq!(rmrk.total_assets(), 1);
+            assert_eq!(1, ink_env::test::recorded_events().count());
+
+            // mint token and add asset to it. Should be accepted without approval
+            test::set_value_transferred::<ink_env::DefaultEnvironment>(PRICE as u128);
+            assert!(rmrk.mint(accounts.alice, 1).is_ok());
+            assert_eq!(2, ink_env::test::recorded_events().count());
+            assert!(rmrk.add_asset_to_token(TOKEN_ID1, ASSET_ID, None).is_ok());
+            assert_eq!(4, ink_env::test::recorded_events().count());
+            assert_eq!(rmrk.total_token_assets(TOKEN_ID1), Ok((1, 0)));
+
+            // error cases
+            assert_eq!(
+                rmrk.add_asset_to_token(TOKEN_ID1, ASSET_ID, None),
+                Err(PSP34Error::Custom(RmrkError::AlreadyAddedAsset.as_str()))
+            );
+            assert_eq!(
+                rmrk.add_asset_to_token(TOKEN_ID1, 42, None),
+                Err(PSP34Error::Custom(RmrkError::AssetIdNotFound.as_str()))
+            );
+
+            // mint second token to non owner (Bob)
+            test::set_value_transferred::<ink_env::DefaultEnvironment>(PRICE as u128);
+            assert!(rmrk.mint(accounts.bob, 1).is_ok());
+            assert_eq!(5, ink_env::test::recorded_events().count());
+
+            // Add asset by alice and reject asset by Bob to test asset_reject
+            assert!(rmrk.add_asset_to_token(TOKEN_ID2, ASSET_ID, None).is_ok());
+            assert_eq!(6, ink_env::test::recorded_events().count());
+            assert_eq!(rmrk.total_token_assets(TOKEN_ID2), Ok((0, 1)));
+            set_sender(accounts.bob);
+            assert!(rmrk.reject_asset(TOKEN_ID2, ASSET_ID).is_ok());
+            assert_eq!(7, ink_env::test::recorded_events().count());
+            assert_eq!(rmrk.total_token_assets(TOKEN_ID2), Ok((0, 0)));
+
+            // Add asset by alice and accept asset by Bob, to test accept_asset
+            set_sender(accounts.alice);
+            assert!(rmrk.add_asset_to_token(TOKEN_ID2, ASSET_ID, None).is_ok());
+            assert_eq!(8, ink_env::test::recorded_events().count());
+            assert_eq!(rmrk.total_token_assets(TOKEN_ID2), Ok((0, 1)));
+            set_sender(accounts.bob);
+            assert!(rmrk.accept_asset(TOKEN_ID2, ASSET_ID).is_ok());
+            assert_eq!(9, ink_env::test::recorded_events().count());
+            assert_eq!(rmrk.total_token_assets(TOKEN_ID2), Ok((1, 0)));
+            assert_eq!(rmrk.get_accepted_token_assets(TOKEN_ID2), Ok(Some(vec![1])));
+
+            // Try adding asset to not minted token
+            assert_eq!(
+                rmrk.add_asset_to_token(Id::U64(3), ASSET_ID, None),
+                Err(TokenNotExists)
+            );
+
+            // Try removing not added asset
+            assert_eq!(
+                rmrk.remove_asset(TOKEN_ID2, 42),
+                Err(PSP34Error::Custom(RmrkError::AssetIdNotFound.as_str()))
+            );
+
+            // Try removing asset for not minted token
+            assert_eq!(rmrk.remove_asset(Id::U64(3), ASSET_ID), Err(TokenNotExists));
+
+            // Remove accepted asset
+            assert!(rmrk.remove_asset(TOKEN_ID2, ASSET_ID).is_ok());
+            assert_eq!(10, ink_env::test::recorded_events().count());
+            assert_eq!(rmrk.get_accepted_token_assets(TOKEN_ID2), Ok(Some(vec![])));
+            assert_eq!(rmrk.total_token_assets(TOKEN_ID2), Ok((0, 0)));
+        }
+        #[ink::test]
+        fn set_asset_priority_works() {
+            let accounts = default_accounts();
+            const ASSET_URI: &str = "asset_uri/";
+            const ASSET_ID1: AssetId = 1;
+            const ASSET_ID2: AssetId = 100;
+            const TOKEN_ID1: Id = Id::U64(1);
+
+            let mut rmrk = init();
+            // Add new asset entry
+            assert!(rmrk
+                .add_asset_entry(ASSET_ID1, 1, 1, String::from(ASSET_URI), vec![1, 2, 3],)
+                .is_ok());
+            assert!(rmrk
+                .add_asset_entry(ASSET_ID2, 1, 1, String::from(ASSET_URI), vec![1, 2, 3],)
+                .is_ok());
+            assert_eq!(rmrk.total_assets(), 2);
+
+            // mint token and add two assets to it. Should be accepted without approval
+            test::set_value_transferred::<ink_env::DefaultEnvironment>(PRICE * 2 as u128);
+            assert!(rmrk.mint(accounts.alice, 2).is_ok());
+            assert!(rmrk.add_asset_to_token(TOKEN_ID1, ASSET_ID1, None).is_ok());
+            assert!(rmrk.add_asset_to_token(TOKEN_ID1, ASSET_ID2, None).is_ok());
+            assert_eq!(rmrk.total_token_assets(TOKEN_ID1), Ok((2, 0)));
+            assert_eq!(
+                rmrk.get_accepted_token_assets(TOKEN_ID1),
+                Ok(Some(vec![ASSET_ID1, ASSET_ID2]))
+            );
+            assert!(rmrk
+                .set_priority(TOKEN_ID1, vec![ASSET_ID2, ASSET_ID1])
+                .is_ok());
+            assert_eq!(
+                rmrk.get_accepted_token_assets(TOKEN_ID1),
+                Ok(Some(vec![ASSET_ID2, ASSET_ID1]))
+            );
+
+            // error cases
+            assert_eq!(
+                rmrk.set_priority(TOKEN_ID1, vec![ASSET_ID2]),
+                Err(PSP34Error::Custom(RmrkError::BadPriorityLength.as_str()))
+            );
+            assert_eq!(
+                rmrk.set_priority(TOKEN_ID1, vec![ASSET_ID2, 42]),
+                Err(PSP34Error::Custom(RmrkError::AssetIdNotFound.as_str()))
             );
         }
 

@@ -100,6 +100,90 @@ export default class EventsClass {
 		return this.__subscribeOnEvent(callbackWrapper, (eventName : string) => eventName == 'ChildRejected');
 	}
 
+	public subscribeOnAssetSetEvent(callback : (event : EventTypes.AssetSet) => void) {
+		const callbackWrapper = (args: any[], event: any) => {
+			let _event: Record < string, any > = {};
+
+			for (let i = 0; i < args.length; i++) {
+				_event[event.args[i]!.name] = args[i]!.toJSON();
+			}
+
+			callback(handleEventReturn(_event, getEventTypeDescription('AssetSet', 'rmrk_contract')) as EventTypes.AssetSet);
+		};
+
+		return this.__subscribeOnEvent(callbackWrapper, (eventName : string) => eventName == 'AssetSet');
+	}
+
+	public subscribeOnAssetAddedToTokenEvent(callback : (event : EventTypes.AssetAddedToToken) => void) {
+		const callbackWrapper = (args: any[], event: any) => {
+			let _event: Record < string, any > = {};
+
+			for (let i = 0; i < args.length; i++) {
+				_event[event.args[i]!.name] = args[i]!.toJSON();
+			}
+
+			callback(handleEventReturn(_event, getEventTypeDescription('AssetAddedToToken', 'rmrk_contract')) as EventTypes.AssetAddedToToken);
+		};
+
+		return this.__subscribeOnEvent(callbackWrapper, (eventName : string) => eventName == 'AssetAddedToToken');
+	}
+
+	public subscribeOnAssetAcceptedEvent(callback : (event : EventTypes.AssetAccepted) => void) {
+		const callbackWrapper = (args: any[], event: any) => {
+			let _event: Record < string, any > = {};
+
+			for (let i = 0; i < args.length; i++) {
+				_event[event.args[i]!.name] = args[i]!.toJSON();
+			}
+
+			callback(handleEventReturn(_event, getEventTypeDescription('AssetAccepted', 'rmrk_contract')) as EventTypes.AssetAccepted);
+		};
+
+		return this.__subscribeOnEvent(callbackWrapper, (eventName : string) => eventName == 'AssetAccepted');
+	}
+
+	public subscribeOnAssetRejectedEvent(callback : (event : EventTypes.AssetRejected) => void) {
+		const callbackWrapper = (args: any[], event: any) => {
+			let _event: Record < string, any > = {};
+
+			for (let i = 0; i < args.length; i++) {
+				_event[event.args[i]!.name] = args[i]!.toJSON();
+			}
+
+			callback(handleEventReturn(_event, getEventTypeDescription('AssetRejected', 'rmrk_contract')) as EventTypes.AssetRejected);
+		};
+
+		return this.__subscribeOnEvent(callbackWrapper, (eventName : string) => eventName == 'AssetRejected');
+	}
+
+	public subscribeOnAssetRemovedEvent(callback : (event : EventTypes.AssetRemoved) => void) {
+		const callbackWrapper = (args: any[], event: any) => {
+			let _event: Record < string, any > = {};
+
+			for (let i = 0; i < args.length; i++) {
+				_event[event.args[i]!.name] = args[i]!.toJSON();
+			}
+
+			callback(handleEventReturn(_event, getEventTypeDescription('AssetRemoved', 'rmrk_contract')) as EventTypes.AssetRemoved);
+		};
+
+		return this.__subscribeOnEvent(callbackWrapper, (eventName : string) => eventName == 'AssetRemoved');
+	}
+
+	public subscribeOnAssetPrioritySetEvent(callback : (event : EventTypes.AssetPrioritySet) => void) {
+		const callbackWrapper = (args: any[], event: any) => {
+			let _event: Record < string, any > = {};
+
+			for (let i = 0; i < args.length; i++) {
+				_event[event.args[i]!.name] = args[i]!.toJSON();
+			}
+
+			callback(handleEventReturn(_event, getEventTypeDescription('AssetPrioritySet', 'rmrk_contract')) as EventTypes.AssetPrioritySet);
+		};
+
+		return this.__subscribeOnEvent(callbackWrapper, (eventName : string) => eventName == 'AssetPrioritySet');
+	}
+
 
 	private __subscribeOnEvent(
 		callback : (args: any[], event: any) => void,

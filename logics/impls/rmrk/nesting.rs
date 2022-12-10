@@ -1,25 +1,5 @@
-// Copyright (c) 2022 Astar Network
-//
-// Permission is hereby granted, free of charge, to any person obtaining
-// a copy of this software and associated documentation files (the"Software"),
-// to deal in the Software without restriction, including
-// without limitation the rights to use, copy, modify, merge, publish,
-// distribute, sublicense, and/or sell copies of the Software, and to
-// permit persons to whom the Software is furnished to do so, subject to
-// the following conditions:
-//
-// The above copyright notice and this permission notice shall be
-// included in all copies or substantial portions of the Software.
-//
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
-// LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
-// OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
-// WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
 //! This module enables nesting of RMRK or any other NFT which inherits PSP34.
+
 use crate::impls::rmrk::{
     errors::RmrkError,
     types::*,
@@ -254,7 +234,6 @@ where
         child_nft: ChildNft,
     ) -> Result<(), PSP34Error> {
         let parent_owner = self.ensure_exists(&to_parent_token_id)?;
-        let caller = Self::env().caller();
         self.accepted(&to_parent_token_id, &child_nft)?;
         self.pending(&to_parent_token_id, &child_nft)?;
 
@@ -264,6 +243,7 @@ where
 
         // Insert child nft and emit event
         self._emit_added_child_event(&to_parent_token_id, &child_nft.0, &child_nft.1);
+        let caller = Self::env().caller();
         if caller == parent_owner {
             self.add_to_accepted(to_parent_token_id, child_nft);
         } else {
@@ -430,7 +410,7 @@ where
     }
 }
 
-/// Helper trait for Psp34Custom
+/// Event trait for Nesting
 impl<T> NestingEvents for T
 where
     T: Storage<NestingData> + Storage<psp34::Data<enumerable::Balances>>,
