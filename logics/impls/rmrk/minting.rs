@@ -64,10 +64,8 @@ where
         let mint_offset = next_to_mint + mint_amount;
 
         for mint_id in next_to_mint..mint_offset {
-            assert!(self
-                .data::<psp34::Data<enumerable::Balances>>()
-                ._mint_to(to, Id::U64(mint_id))
-                .is_ok());
+            self.data::<psp34::Data<enumerable::Balances>>()
+                ._mint_to(to, Id::U64(mint_id))?;
             self.data::<MintingData>().last_token_id += 1;
             self._emit_transfer_event(None, Some(to), Id::U64(mint_id));
         }

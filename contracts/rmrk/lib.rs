@@ -217,7 +217,7 @@ pub mod rmrk_contract {
                 instance._set_attribute(collection_id.clone(), String::from("symbol"), symbol);
                 instance._set_attribute(collection_id.clone(), String::from("baseUri"), base_uri);
                 instance._set_attribute(
-                    collection_id.clone(),
+                    collection_id,
                     String::from("collection_metadata"),
                     collection_metadata,
                 );
@@ -255,7 +255,7 @@ pub mod rmrk_contract {
         fn _emit_added_child_event(&self, to: &Id, collection: &AccountId, child: &Id) {
             self.env().emit_event(ChildAdded {
                 to: to.clone(),
-                collection: collection.clone(),
+                collection: *collection,
                 child: child.clone(),
             });
         }
@@ -264,7 +264,7 @@ pub mod rmrk_contract {
         fn _emit_child_accepted_event(&self, parent: &Id, collection: &AccountId, child: &Id) {
             self.env().emit_event(ChildAccepted {
                 parent: parent.clone(),
-                collection: collection.clone(),
+                collection: *collection,
                 child: child.clone(),
             });
         }
@@ -278,7 +278,7 @@ pub mod rmrk_contract {
         ) {
             self.env().emit_event(ChildRemoved {
                 parent: parent.clone(),
-                child_collection: child_collection.clone(),
+                child_collection: *child_collection,
                 child_token_id: child_token_id.clone(),
             });
         }
@@ -292,7 +292,7 @@ pub mod rmrk_contract {
         ) {
             self.env().emit_event(ChildRejected {
                 parent: parent.clone(),
-                child_collection: child_collection.clone(),
+                child_collection: *child_collection,
                 child_token_id: child_token_id.clone(),
             });
         }
@@ -300,9 +300,7 @@ pub mod rmrk_contract {
     impl multiasset::MultiAssetEvents for Rmrk {
         /// Used to notify listeners that an asset object is initialized at `assetId`.
         fn _emit_asset_set_event(&self, asset_id: &AssetId) {
-            self.env().emit_event(AssetSet {
-                asset: asset_id.clone(),
-            });
+            self.env().emit_event(AssetSet { asset: *asset_id });
         }
 
         /// Used to notify listeners that an asset object at `assetId` is added to token's pending asset array.
@@ -314,8 +312,8 @@ pub mod rmrk_contract {
         ) {
             self.env().emit_event(AssetAddedToToken {
                 token: token_id.clone(),
-                asset: asset_id.clone(),
-                replaces: replaces_id.clone(),
+                asset: *asset_id,
+                replaces: replaces_id,
             });
         }
 
@@ -323,7 +321,7 @@ pub mod rmrk_contract {
         fn _emit_asset_accepted_event(&self, token_id: &Id, asset_id: &AssetId) {
             self.env().emit_event(AssetAccepted {
                 token: token_id.clone(),
-                asset: asset_id.clone(),
+                asset: *asset_id,
             });
         }
 
@@ -331,7 +329,7 @@ pub mod rmrk_contract {
         fn _emit_asset_rejected_event(&self, token_id: &Id, asset_id: &AssetId) {
             self.env().emit_event(AssetRejected {
                 token: token_id.clone(),
-                asset: asset_id.clone(),
+                asset: *asset_id,
             });
         }
 
@@ -339,7 +337,7 @@ pub mod rmrk_contract {
         fn _emit_asset_removed_event(&self, token_id: &Id, asset_id: &AssetId) {
             self.env().emit_event(AssetRemoved {
                 token: token_id.clone(),
-                asset: asset_id.clone(),
+                asset: *asset_id,
             });
         }
 

@@ -29,7 +29,7 @@ where
     T: Storage<MultiAssetData> + Storage<psp34::Data<enumerable::Balances>>,
 {
     /// Check if token is minted. Return the token uri
-    fn asset_id_exists(&self, asset_id: AssetId) -> Option<String> {
+    default fn asset_id_exists(&self, asset_id: AssetId) -> Option<String> {
         if let Some(index) = self
             .data::<MultiAssetData>()
             .collection_asset_entries
@@ -45,7 +45,7 @@ where
     }
 
     /// Check if token is minted. Return the owner
-    fn ensure_exists(&self, id: &Id) -> Result<AccountId, PSP34Error> {
+    default fn ensure_exists(&self, id: &Id) -> Result<AccountId, PSP34Error> {
         let token_owner = self
             .data::<psp34::Data<enumerable::Balances>>()
             .owner_of(id.clone())
@@ -54,7 +54,7 @@ where
     }
 
     /// Ensure that the caller is the token owner
-    fn ensure_token_owner(&self, token_owner: AccountId) -> Result<(), PSP34Error> {
+    default fn ensure_token_owner(&self, token_owner: AccountId) -> Result<(), PSP34Error> {
         let caller = Self::env().caller();
         if caller != token_owner {
             return Err(PSP34Error::Custom(String::from(
@@ -120,7 +120,7 @@ where
             .get(&token_id)
             .unwrap_or(Vec::new());
         if !assets.contains(&asset_id) {
-            assets.push(asset_id.clone());
+            assets.push(*asset_id);
             self.data::<MultiAssetData>()
                 .accepted_assets
                 .insert(&token_id, &assets);
@@ -136,7 +136,7 @@ where
             .get(&token_id)
             .unwrap_or(Vec::new());
         if !assets.contains(&asset_id) {
-            assets.push(asset_id.clone());
+            assets.push(*asset_id);
             self.data::<MultiAssetData>()
                 .pending_assets
                 .insert(&token_id, &assets);
@@ -284,9 +284,10 @@ where
         self.is_pending(&token_id, &asset_id)?;
         let token_owner = self.ensure_exists(&token_id)?;
         self.ensure_token_owner(token_owner)?;
-        self.remove_from_pending_assets(&token_id, &asset_id)?;
-        self._emit_asset_rejected_event(&token_id, &asset_id);
 
+        self.remove_from_pending_assets(&token_id, &asset_id)?;
+
+        self._emit_asset_rejected_event(&token_id, &asset_id);
         Ok(())
     }
 
@@ -295,9 +296,10 @@ where
         self.is_accepted(&token_id, &asset_id)?;
         let token_owner = self.ensure_exists(&token_id)?;
         self.ensure_token_owner(token_owner)?;
-        self.remove_from_accepted_assets(&token_id, &asset_id)?;
-        self._emit_asset_removed_event(&token_id, &asset_id);
 
+        self.remove_from_accepted_assets(&token_id, &asset_id)?;
+
+        self._emit_asset_removed_event(&token_id, &asset_id);
         Ok(())
     }
 
