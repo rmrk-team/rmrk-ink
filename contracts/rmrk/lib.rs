@@ -198,6 +198,7 @@ pub mod rmrk_contract {
 
     impl Rmrk {
         /// Instantiate new RMRK contract
+        #[allow(clippy::too_many_arguments)]
         #[ink(constructor)]
         pub fn new(
             name: String,
