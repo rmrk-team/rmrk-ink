@@ -4,10 +4,13 @@ use crate::impls::rmrk::{
     errors::RmrkError,
     types::*,
 };
-pub use crate::traits::multiasset::{
-    Internal,
-    MultiAsset,
-    MultiAssetEvents,
+pub use crate::traits::{
+    multiasset::{
+        Internal,
+        MultiAsset,
+        MultiAssetEvents,
+    },
+    utils,
 };
 use ink_prelude::vec::Vec;
 use openbrush::{
@@ -42,15 +45,6 @@ where
         }
 
         None
-    }
-
-    /// Check if token is minted. Return the owner
-    default fn ensure_exists(&self, id: &Id) -> Result<AccountId, PSP34Error> {
-        let token_owner = self
-            .data::<psp34::Data<enumerable::Balances>>()
-            .owner_of(id.clone())
-            .ok_or(PSP34Error::TokenNotExists)?;
-        Ok(token_owner)
     }
 
     /// Ensure that the caller is the token owner
@@ -206,7 +200,8 @@ impl<T> MultiAsset for T
 where
     T: Storage<MultiAssetData>
         + Storage<psp34::Data<enumerable::Balances>>
-        + Storage<ownable::Data>,
+        + Storage<ownable::Data>
+        + utils::Internal,
 {
     /// Used to add a asset entry.
     #[modifiers(only_owner)]

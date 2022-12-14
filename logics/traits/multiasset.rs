@@ -122,9 +122,6 @@ pub trait Internal {
     /// Check if asset is already added.
     fn asset_id_exists(&self, asset_id: AssetId) -> Option<String>;
 
-    /// TODO duplicated. find common module for this method
-    fn ensure_exists(&self, id: &Id) -> Result<AccountId, PSP34Error>;
-
     /// Ensure that the caller is the token owner
     fn ensure_token_owner(&self, token_owner: AccountId) -> Result<(), PSP34Error>;
 
