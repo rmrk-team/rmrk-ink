@@ -77,6 +77,7 @@ pub struct MultiAssetData {
     pub pending_assets: Mapping<Id, Vec<AssetId>>,
 }
 
+/// Part's details
 #[derive(scale::Encode, scale::Decode, SpreadLayout, PackedLayout, Default, Debug)]
 #[cfg_attr(
     feature = "std",
@@ -101,4 +102,56 @@ impl SpreadAllocate for Asset {
         ptr.next_for::<Asset>();
         Asset::default()
     }
+}
+
+pub const STORAGE_BASE_KEY: u32 = openbrush::storage_unique_key!(BaseData);
+
+/// The structure used to describe the Base
+#[derive(Default, Debug)]
+#[openbrush::upgradeable_storage(STORAGE_BASE_KEY)]
+pub struct BaseData {
+    /// List of all parts of Base.
+    part_ids: Vec<PartId>,
+
+    /// Mapping for all part details.
+    parts: Mapping<PartId, Part>,
+
+    /// Counter for assigning new parts to Base.
+    next_part_id: PartId,
+}
+
+/// Part's details
+#[derive(scale::Encode, scale::Decode, SpreadLayout, PackedLayout, Default, Debug)]
+#[cfg_attr(
+    feature = "std",
+    derive(scale_info::TypeInfo, ink_storage::traits::StorageLayout)
+)]
+pub struct Part {
+    /// Part type `None`, `Slot` or `Fixed`.
+    part_type: PartType,
+
+    /// Depth used for composing parts
+    z: u8,
+
+    /// Collections that can be equipped into this part
+    equippable: Vec<AccountId>,
+
+    /// Uri for this part
+    metadata_uri: String,
+
+    /// Is accepting to be equipped by any collection
+    is_equippable_by_all: bool,
+}
+
+/// Used to define a type of the part. Possible values are `None`, `Slot` or `Fixed`.
+#[derive(scale::Encode, scale::Decode, SpreadLayout, PackedLayout, Default, Debug)]
+#[cfg_attr(
+    feature = "std",
+    derive(scale_info::TypeInfo, ink_storage::traits::StorageLayout)
+)]
+pub enum PartType {
+    #[default]
+    None,
+    Slot,
+    Fixed,
 }
