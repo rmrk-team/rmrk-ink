@@ -30,6 +30,7 @@ pub mod rmrk_contract {
             *,
         },
         traits::{
+            base::*,
             minting::*,
             multiasset::*,
             nesting::*,
@@ -178,6 +179,8 @@ pub mod rmrk_contract {
         multiasset: types::MultiAssetData,
         #[storage_field]
         minting: types::MintingData,
+        #[storage_field]
+        base: types::BaseData,
     }
 
     impl PSP34 for Rmrk {}
@@ -195,6 +198,8 @@ pub mod rmrk_contract {
     impl Nesting for Rmrk {}
 
     impl MultiAsset for Rmrk {}
+
+    impl Base for Rmrk {}
 
     impl Rmrk {
         /// Instantiate new RMRK contract
@@ -716,6 +721,7 @@ pub mod rmrk_contract {
             assert_eq!(rmrk.get_accepted_token_assets(TOKEN_ID2), Ok(Some(vec![])));
             assert_eq!(rmrk.total_token_assets(TOKEN_ID2), Ok((0, 0)));
         }
+
         #[ink::test]
         fn set_asset_priority_works() {
             let accounts = default_accounts();
@@ -761,6 +767,75 @@ pub mod rmrk_contract {
                 rmrk.set_priority(TOKEN_ID1, vec![ASSET_ID2, 42]),
                 Err(PSP34Error::Custom(RmrkError::AssetIdNotFound.as_str()))
             );
+        }
+
+        #[ink::test]
+        fn add_parts_to_base_works() {
+            let accounts = default_accounts();
+            const ASSET_URI: &str = "asset_uri/";
+            const ASSET_ID: AssetId = 1;
+            const TOKEN_ID1: Id = Id::U64(1);
+            const TOKEN_ID2: Id = Id::U64(2);
+            let part_list = vec![
+                // Background option 1
+                Part {
+                    part_type: PartType::Fixed,
+                    z: 0,
+                    equippable: vec![],
+                    metadata_uri: String::from("ipfs://backgrounds/1.svg"),
+                    is_equippable_by_all: false,
+                },
+                // Background option 2
+                Part {
+                    part_type: PartType::Fixed,
+                    z: 0,
+                    equippable: vec![],
+                    metadata_uri: String::from("ipfs://backgrounds/2.svg"),
+                    is_equippable_by_all: false,
+                },
+                // Head option 1
+                Part {
+                    part_type: PartType::Fixed,
+                    z: 3,
+                    equippable: vec![],
+                    metadata_uri: String::from("ipfs://heads/1.svg"),
+                    is_equippable_by_all: false,
+                },
+                // Head option 2
+                Part {
+                    part_type: PartType::Fixed,
+                    z: 3,
+                    equippable: vec![],
+                    metadata_uri: String::from("ipfs://heads/2.svg"),
+                    is_equippable_by_all: false,
+                },
+                // Body option 1
+                Part {
+                    part_type: PartType::Fixed,
+                    z: 2,
+                    equippable: vec![],
+                    metadata_uri: String::from("ipfs://body/1.svg"),
+                    is_equippable_by_all: false,
+                },
+                // Body option 2
+                Part {
+                    part_type: PartType::Fixed,
+                    z: 2,
+                    equippable: vec![],
+                    metadata_uri: String::from("ipfs://body/2.svg"),
+                    is_equippable_by_all: false,
+                },
+            ];
+
+            let mut rmrk = init();
+            // Add new asset entry
+            assert!(rmrk.get_parts_count() == 0);
+            assert!(rmrk.add_part_list(part_list.clone()).is_ok());
+            assert_eq!(rmrk.get_parts_count(), part_list.len() as u32);
+            assert_eq!(rmrk.get_base_metadata(), "");
+            assert_eq!(rmrk.get_part(0).unwrap().z, part_list[0].z);
+            assert_eq!(rmrk.get_part(0).unwrap().metadata_uri, part_list[0].metadata_uri);
+            // assert_eq!(1, ink_env::test::recorded_events().count());
         }
 
         fn default_accounts() -> test::DefaultAccounts<ink_env::DefaultEnvironment> {

@@ -111,40 +111,43 @@ pub const STORAGE_BASE_KEY: u32 = openbrush::storage_unique_key!(BaseData);
 #[openbrush::upgradeable_storage(STORAGE_BASE_KEY)]
 pub struct BaseData {
     /// List of all parts of Base.
-    part_ids: Vec<PartId>,
+    pub part_ids: Vec<PartId>,
 
     /// Mapping for all part details.
-    parts: Mapping<PartId, Part>,
+    pub parts: Mapping<PartId, Part>,
 
     /// Counter for assigning new parts to Base.
-    next_part_id: PartId,
+    pub next_part_id: PartId,
+
+    /// Metadata for Base
+    pub base_metadata_uri: String,
 }
 
 /// Part's details
-#[derive(scale::Encode, scale::Decode, SpreadLayout, PackedLayout, Default, Debug)]
+#[derive(scale::Encode, scale::Decode, SpreadLayout, PackedLayout, Default, Debug, Clone)]
 #[cfg_attr(
     feature = "std",
     derive(scale_info::TypeInfo, ink_storage::traits::StorageLayout)
 )]
 pub struct Part {
     /// Part type `None`, `Slot` or `Fixed`.
-    part_type: PartType,
+    pub part_type: PartType,
 
     /// Depth used for composing parts
-    z: u8,
+    pub z: u8,
 
     /// Collections that can be equipped into this part
-    equippable: Vec<AccountId>,
+    pub equippable: Vec<AccountId>,
 
     /// Uri for this part
-    metadata_uri: String,
+    pub metadata_uri: String,
 
     /// Is accepting to be equipped by any collection
-    is_equippable_by_all: bool,
+    pub is_equippable_by_all: bool,
 }
 
 /// Used to define a type of the part. Possible values are `None`, `Slot` or `Fixed`.
-#[derive(scale::Encode, scale::Decode, SpreadLayout, PackedLayout, Default, Debug)]
+#[derive(scale::Encode, scale::Decode, SpreadLayout, PackedLayout, Default, Debug, Clone)]
 #[cfg_attr(
     feature = "std",
     derive(scale_info::TypeInfo, ink_storage::traits::StorageLayout)
