@@ -112,7 +112,7 @@ where
 
     /// Sets the metadata URI for Base
     #[modifiers(only_owner)]
-    default fn set_base_metadata(&mut self, base_metadata: String) -> Result<(), PSP34Error> {
+    default fn setup_base(&mut self, base_metadata: String) -> Result<(), PSP34Error> {
         self.data::<BaseData>().base_metadata_uri = base_metadata;
 
         Ok(())

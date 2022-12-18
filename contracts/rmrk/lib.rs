@@ -882,7 +882,7 @@ pub mod rmrk_contract {
             // verify set/get base metadata
             assert_eq!(rmrk.get_base_metadata(), "");
             assert!(rmrk
-                .set_base_metadata(String::from("ipfs://base_metadata"))
+                .setup_base(String::from("ipfs://base_metadata"))
                 .is_ok());
             assert_eq!(rmrk.get_base_metadata(), "ipfs://base_metadata");
 

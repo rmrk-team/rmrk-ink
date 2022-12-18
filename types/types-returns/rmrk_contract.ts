@@ -55,6 +55,20 @@ export type Asset = {
 	partIds: Array<number>
 }
 
+export type Part = {
+	partType: PartType,
+	z: number,
+	equippable: Array<AccountId>,
+	metadataUri: Array<number>,
+	isEquippableByAll: boolean
+}
+
+export enum PartType {
+	none = 'None',
+	slot = 'Slot',
+	fixed = 'Fixed'
+}
+
 export interface PSP34Error {
 	custom ? : Array<number>,
 	selfApprove ? : null,

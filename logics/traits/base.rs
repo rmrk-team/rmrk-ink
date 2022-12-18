@@ -44,7 +44,7 @@ pub trait Base {
 
     //// Set the Base metadataURI.
     #[ink(message)]
-    fn set_base_metadata(&mut self, base_metadata: String) -> Result<(), PSP34Error>;
+    fn setup_base(&mut self, base_metadata: String) -> Result<(), PSP34Error>;
 
     //// Get the Base metadataURI.
     #[ink(message)]
