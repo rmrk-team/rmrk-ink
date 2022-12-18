@@ -1,9 +1,5 @@
 //! RMRK Base implementation
 
-use ink_prelude::string::{
-    String as PreludeString,
-    ToString,
-};
 use crate::impls::rmrk::{
     errors::RmrkError,
     types::*,
@@ -12,7 +8,10 @@ pub use crate::traits::base::{
     Base,
     Internal,
 };
-use ink_prelude::vec::Vec;
+use ink_prelude::{
+    string::String as PreludeString,
+    vec::Vec,
+};
 use openbrush::{
     contracts::{
         ownable::*,
@@ -31,14 +30,25 @@ impl<T> Internal for T
 where
     T: Storage<BaseData>,
 {
-    default fn ensure_part_exists(&self, part_id: PartId) -> Result<(), PSP34Error> {
-        if part_id >= self.data::<BaseData>().next_part_id {
+    default fn ensure_only_slot(&self, part_id: PartId) -> Result<(), PSP34Error> {
+        if let Some(part) = self.data::<BaseData>().parts.get(part_id) {
+            if part.part_type != PartType::Slot {
+                return Err(PSP34Error::Custom(String::from(
+                    RmrkError::PartIsNotSlot.as_str(),
+                )))
+            }
+            return Ok(())
+        } else {
             return Err(PSP34Error::Custom(String::from(
                 RmrkError::UnknownPartId.as_str(),
             )))
         }
-
-        Ok(())
+        // match self.data::<BaseData>().parts.get(part_id) {
+        //     Some(ref p) => Ok(p),
+        //     None => Err(PSP34Error::Custom(String::from(
+        //                 RmrkError::PartIsNotSlot.as_str(),
+        //             )))
+        // }
     }
 }
 impl<T> Base for T
@@ -65,14 +75,11 @@ where
         part_id: PartId,
         equipable_address: Vec<AccountId>,
     ) -> Result<(), PSP34Error> {
+        self.ensure_only_slot(part_id)?;
         if let Some(mut part) = self.data::<BaseData>().parts.get(part_id) {
             for address in equipable_address {
                 part.equippable.push(address);
             }
-        } else {
-            return Err(PSP34Error::Custom(String::from(
-                RmrkError::UnknownPartId.as_str(),
-            )))
         }
 
         Ok(())
@@ -81,12 +88,11 @@ where
     /// Remove list of equipable addresses for given Part
     #[modifiers(only_owner)]
     default fn reset_equipable_addresses(&mut self, part_id: PartId) -> Result<(), PSP34Error> {
+        self.ensure_only_slot(part_id)?;
         if let Some(mut part) = self.data::<BaseData>().parts.get(part_id) {
+            part.is_equippable_by_all = false;
             part.equippable.clear();
-        } else {
-            return Err(PSP34Error::Custom(String::from(
-                RmrkError::UnknownPartId.as_str(),
-            )))
+            self.data::<BaseData>().parts.insert(part_id, &part);
         }
 
         Ok(())
@@ -95,12 +101,10 @@ where
     /// Sets the is_equippable_by_all flag to true, meaning that any collection may be equipped into the `PartId`
     #[modifiers(only_owner)]
     default fn set_equippable_by_all(&mut self, part_id: PartId) -> Result<(), PSP34Error> {
+        self.ensure_only_slot(part_id)?;
         if let Some(mut part) = self.data::<BaseData>().parts.get(part_id) {
             part.is_equippable_by_all = true;
-        } else {
-            return Err(PSP34Error::Custom(String::from(
-                RmrkError::UnknownPartId.as_str(),
-            )))
+            self.data::<BaseData>().parts.insert(part_id, &part);
         }
 
         Ok(())
@@ -119,7 +123,7 @@ where
         PreludeString::from_utf8(self.data::<BaseData>().base_metadata_uri.clone()).unwrap()
     }
 
-    /// Get the list of all parts.
+    /// Get the number of parts.
     default fn get_parts_count(&self) -> PartId {
         self.data::<BaseData>().next_part_id
     }
@@ -131,11 +135,22 @@ where
 
     /// Check whether the given address is allowed to equip the desired `PartId`.
     default fn is_equippable(&self, part_id: PartId, target_address: AccountId) -> bool {
-        todo!()
+        if let Some(part) = self.data::<BaseData>().parts.get(part_id) {
+            if part.equippable.contains(&target_address) {
+                return true
+            }
+        }
+
+        return false
     }
 
-    /// Checks if is_equippable_by_all is set to true for the given `PartId`
+    /// Checks if the given `PartId` can be equipped by any collection
     default fn is_equippable_by_all(&self, part_id: PartId) -> bool {
-        todo!()
+        if let Some(part) = self.data::<BaseData>().parts.get(part_id) {
+            return part.is_equippable_by_all
+        }
+
+        return false
     }
 }
+

@@ -22,6 +22,7 @@ pub enum RmrkError {
     AddingPendingAsset,
     BadPriorityLength,
     UnknownPartId,
+    PartIsNotSlot,
 }
 
 impl RmrkError {
@@ -44,6 +45,7 @@ impl RmrkError {
             RmrkError::AddingPendingAsset => String::from("AddingPendingAsset"),
             RmrkError::BadPriorityLength => String::from("BadPriorityLength"),
             RmrkError::UnknownPartId => String::from("UnknownPartId"),
+            RmrkError::PartIsNotSlot => String::from("PartIsNotSlot"),
         }
     }
 }

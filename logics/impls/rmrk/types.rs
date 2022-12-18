@@ -147,7 +147,9 @@ pub struct Part {
 }
 
 /// Used to define a type of the part. Possible values are `None`, `Slot` or `Fixed`.
-#[derive(scale::Encode, scale::Decode, SpreadLayout, PackedLayout, Default, Debug, Clone)]
+#[derive(
+    scale::Encode, scale::Decode, SpreadLayout, PackedLayout, Default, Debug, Clone, PartialEq,
+)]
 #[cfg_attr(
     feature = "std",
     derive(scale_info::TypeInfo, ink_storage::traits::StorageLayout)

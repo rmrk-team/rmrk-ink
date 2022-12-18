@@ -1,11 +1,12 @@
 //! RMRK Base traits
 
-use ink_prelude::string::{
-    String as PreludeString,
-    ToString,
-};
 use crate::impls::rmrk::types::*;
-use ink_prelude::vec::Vec;
+use ink_prelude::{
+    string::{
+        String as PreludeString,
+    },
+    vec::Vec,
+};
 use openbrush::{
     contracts::psp34::PSP34Error,
     traits::{
@@ -16,7 +17,7 @@ use openbrush::{
 
 /// Implement internal helper trait for MultiAsset
 pub trait Internal {
-    fn ensure_part_exists(&self, part_id: PartId) -> Result<(), PSP34Error>;
+    fn ensure_only_slot(&self, part_id: PartId) -> Result<(), PSP34Error>;
 }
 /// Trait definitions for Base functions
 #[openbrush::trait_definition]

@@ -361,6 +361,7 @@ pub mod rmrk_contract {
         use ink_env::{
             pay_with_call,
             test,
+            AccountId,
         };
         use ink_lang as ink;
         use ink_prelude::string::String as PreludeString;
@@ -771,17 +772,21 @@ pub mod rmrk_contract {
 
         #[ink::test]
         fn add_parts_to_base_works() {
-            let accounts = default_accounts();
             const ASSET_URI: &str = "asset_uri/";
             const ASSET_ID: AssetId = 1;
             const TOKEN_ID1: Id = Id::U64(1);
             const TOKEN_ID2: Id = Id::U64(2);
+            const EQUIPABLE_ADDRESS1: [u8; 32] = [1; 32];
+            const EQUIPABLE_ADDRESS2: [u8; 32] = [2; 32];
+            const EQUIPABLE_ADDRESS3: [u8; 32] = [3; 32];
+            const PART_ID0: PartId = 0;
+            const PART_ID1: PartId = 1;
             let part_list = vec![
                 // Background option 1
                 Part {
-                    part_type: PartType::Fixed,
+                    part_type: PartType::Slot,
                     z: 0,
-                    equippable: vec![],
+                    equippable: vec![EQUIPABLE_ADDRESS1.into(), EQUIPABLE_ADDRESS2.into()],
                     metadata_uri: String::from("ipfs://backgrounds/1.svg"),
                     is_equippable_by_all: false,
                 },
@@ -828,13 +833,59 @@ pub mod rmrk_contract {
             ];
 
             let mut rmrk = init();
-            // Add new asset entry
+
+            // verify add/get parts
             assert!(rmrk.get_parts_count() == 0);
             assert!(rmrk.add_part_list(part_list.clone()).is_ok());
             assert_eq!(rmrk.get_parts_count(), part_list.len() as u32);
-            assert_eq!(rmrk.get_base_metadata(), "");
             assert_eq!(rmrk.get_part(0).unwrap().z, part_list[0].z);
-            assert_eq!(rmrk.get_part(0).unwrap().metadata_uri, part_list[0].metadata_uri);
+            assert_eq!(
+                rmrk.get_part(0).unwrap().metadata_uri,
+                part_list[0].metadata_uri
+            );
+
+            // verify array of equipable addresses
+            assert!(rmrk.is_equippable(PART_ID0, EQUIPABLE_ADDRESS1.into()));
+            assert!(rmrk.is_equippable(PART_ID0, EQUIPABLE_ADDRESS1.into()));
+            assert!(rmrk.is_equippable(PART_ID0, EQUIPABLE_ADDRESS2.into()));
+            assert!(!rmrk.is_equippable(PART_ID1, EQUIPABLE_ADDRESS2.into()));
+
+            assert!(!rmrk.is_equippable_by_all(PART_ID0));
+            assert!(rmrk.set_equippable_by_all(PART_ID0).is_ok());
+            assert!(rmrk.is_equippable_by_all(PART_ID0));
+            assert!(!rmrk.is_equippable_by_all(42));
+
+            assert!(rmrk.reset_equipable_addresses(PART_ID0).is_ok());
+            assert!(!rmrk.is_equippable(PART_ID0, EQUIPABLE_ADDRESS1.into()));
+            assert!(rmrk
+                .add_equipable_addresses(
+                    PART_ID0,
+                    vec![EQUIPABLE_ADDRESS1.into(), EQUIPABLE_ADDRESS2.into()]
+                )
+                .is_ok());
+            assert!(!rmrk.is_equippable_by_all(PART_ID1));
+            assert_eq!(
+                rmrk.add_equipable_addresses(PART_ID1, vec![EQUIPABLE_ADDRESS1.into()]),
+                Err(PSP34Error::Custom(RmrkError::PartIsNotSlot.as_str()))
+            );
+            assert_eq!(
+                rmrk.reset_equipable_addresses(PART_ID1),
+                Err(PSP34Error::Custom(RmrkError::PartIsNotSlot.as_str()))
+            );
+            assert_eq!(
+                rmrk.set_equippable_by_all(PART_ID1),
+                Err(PSP34Error::Custom(RmrkError::PartIsNotSlot.as_str()))
+            );
+
+            assert!(!rmrk.is_equippable(PART_ID0, EQUIPABLE_ADDRESS3.into()));
+
+            // verify set/get base metadata
+            assert_eq!(rmrk.get_base_metadata(), "");
+            assert!(rmrk
+                .set_base_metadata(String::from("ipfs://base_metadata"))
+                .is_ok());
+            assert_eq!(rmrk.get_base_metadata(), "ipfs://base_metadata");
+
             // assert_eq!(1, ink_env::test::recorded_events().count());
         }
 
