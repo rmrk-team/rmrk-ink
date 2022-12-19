@@ -2,9 +2,7 @@
 
 use crate::impls::rmrk::types::*;
 use ink_prelude::{
-    string::{
-        String as PreludeString,
-    },
+    string::String as PreludeString,
     vec::Vec,
 };
 use openbrush::{
@@ -15,11 +13,11 @@ use openbrush::{
     },
 };
 
-/// Implement internal helper trait for MultiAsset
+/// Implement internal helper trait for Base
 pub trait Internal {
     fn ensure_only_slot(&self, part_id: PartId) -> Result<(), PSP34Error>;
 }
-/// Trait definitions for Base functions
+/// Trait definitions for Base
 #[openbrush::trait_definition]
 pub trait Base {
     /// Add one or more parts to the base
@@ -28,15 +26,15 @@ pub trait Base {
 
     /// Add collection address(es) that can be used to equip given `PartId`.
     #[ink(message)]
-    fn add_equipable_addresses(
+    fn add_equippable_addresses(
         &mut self,
         part_id: PartId,
-        equipable_address: Vec<AccountId>,
+        equippable_address: Vec<AccountId>,
     ) -> Result<(), PSP34Error>;
 
-    /// Remove list of equipable addresses for given Part
+    /// Remove list of equippable addresses for given Part
     #[ink(message)]
-    fn reset_equipable_addresses(&mut self, part_id: PartId) -> Result<(), PSP34Error>;
+    fn reset_equippable_addresses(&mut self, part_id: PartId) -> Result<(), PSP34Error>;
 
     /// Sets the is_equippable_by_all flag to true, meaning that any collection may be equipped into the `PartId`
     #[ink(message)]
@@ -62,7 +60,7 @@ pub trait Base {
     #[ink(message)]
     fn is_equippable(&self, part_id: PartId, target_address: AccountId) -> bool;
 
-    /// Checks if is_equippable_by_all is set to true for the given `PartId`
+    /// Checks if the given `PartId` can be equipped by any collection
     #[ink(message)]
     fn is_equippable_by_all(&self, part_id: PartId) -> bool;
 }

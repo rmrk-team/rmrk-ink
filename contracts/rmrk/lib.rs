@@ -844,8 +844,7 @@ pub mod rmrk_contract {
                 part_list[0].metadata_uri
             );
 
-            // verify array of equipable addresses
-            assert!(rmrk.is_equippable(PART_ID0, EQUIPABLE_ADDRESS1.into()));
+            // verify array of equippable addresses
             assert!(rmrk.is_equippable(PART_ID0, EQUIPABLE_ADDRESS1.into()));
             assert!(rmrk.is_equippable(PART_ID0, EQUIPABLE_ADDRESS2.into()));
             assert!(!rmrk.is_equippable(PART_ID1, EQUIPABLE_ADDRESS2.into()));
@@ -855,21 +854,22 @@ pub mod rmrk_contract {
             assert!(rmrk.is_equippable_by_all(PART_ID0));
             assert!(!rmrk.is_equippable_by_all(42));
 
-            assert!(rmrk.reset_equipable_addresses(PART_ID0).is_ok());
+            assert!(rmrk.reset_equippable_addresses(PART_ID0).is_ok());
+            assert!(!rmrk.is_equippable_by_all(PART_ID0));
             assert!(!rmrk.is_equippable(PART_ID0, EQUIPABLE_ADDRESS1.into()));
             assert!(rmrk
-                .add_equipable_addresses(
+                .add_equippable_addresses(
                     PART_ID0,
                     vec![EQUIPABLE_ADDRESS1.into(), EQUIPABLE_ADDRESS2.into()]
                 )
                 .is_ok());
-            assert!(!rmrk.is_equippable_by_all(PART_ID1));
+            assert!(rmrk.is_equippable(PART_ID0, EQUIPABLE_ADDRESS1.into()));
             assert_eq!(
-                rmrk.add_equipable_addresses(PART_ID1, vec![EQUIPABLE_ADDRESS1.into()]),
+                rmrk.add_equippable_addresses(PART_ID1, vec![EQUIPABLE_ADDRESS1.into()]),
                 Err(PSP34Error::Custom(RmrkError::PartIsNotSlot.as_str()))
             );
             assert_eq!(
-                rmrk.reset_equipable_addresses(PART_ID1),
+                rmrk.reset_equippable_addresses(PART_ID1),
                 Err(PSP34Error::Custom(RmrkError::PartIsNotSlot.as_str()))
             );
             assert_eq!(

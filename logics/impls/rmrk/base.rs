@@ -25,7 +25,7 @@ use openbrush::{
     },
 };
 
-/// Implement internal helper trait for MultiAsset
+/// Implement internal helper trait for Base
 impl<T> Internal for T
 where
     T: Storage<BaseData>,
@@ -43,12 +43,6 @@ where
                 RmrkError::UnknownPartId.as_str(),
             )))
         }
-        // match self.data::<BaseData>().parts.get(part_id) {
-        //     Some(ref p) => Ok(p),
-        //     None => Err(PSP34Error::Custom(String::from(
-        //                 RmrkError::PartIsNotSlot.as_str(),
-        //             )))
-        // }
     }
 }
 impl<T> Base for T
@@ -70,24 +64,25 @@ where
 
     /// Add collection address(es) that can be used to equip given `PartId`.
     #[modifiers(only_owner)]
-    default fn add_equipable_addresses(
+    default fn add_equippable_addresses(
         &mut self,
         part_id: PartId,
-        equipable_address: Vec<AccountId>,
+        equippable_address: Vec<AccountId>,
     ) -> Result<(), PSP34Error> {
         self.ensure_only_slot(part_id)?;
         if let Some(mut part) = self.data::<BaseData>().parts.get(part_id) {
-            for address in equipable_address {
+            for address in equippable_address {
                 part.equippable.push(address);
             }
+            self.data::<BaseData>().parts.insert(part_id, &part);
         }
 
         Ok(())
     }
 
-    /// Remove list of equipable addresses for given Part
+    /// Remove list of equippable addresses for given Part
     #[modifiers(only_owner)]
-    default fn reset_equipable_addresses(&mut self, part_id: PartId) -> Result<(), PSP34Error> {
+    default fn reset_equippable_addresses(&mut self, part_id: PartId) -> Result<(), PSP34Error> {
         self.ensure_only_slot(part_id)?;
         if let Some(mut part) = self.data::<BaseData>().parts.get(part_id) {
             part.is_equippable_by_all = false;
@@ -153,4 +148,3 @@ where
         return false
     }
 }
-

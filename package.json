@@ -23,7 +23,7 @@
   "scripts": {
     "compile": "typechain-compiler",
     "compile:release": "typechain-compiler --release",
-    "test:typechain": "mocha --require ts-node/register --recursive ./tests --extension \".spec.ts\" --exit --timeout 20000",
+    "test": "mocha --require ts-node/register --recursive ./tests --extension \".spec.ts\" --exit --timeout 20000",
     "test:single": "mocha --require ts-node/register --extension \".ts\" --exit --timeout 20000",
     "postinstall": "patch-package"
   },
