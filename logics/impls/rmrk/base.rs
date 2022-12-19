@@ -115,7 +115,10 @@ where
 
     /// Get the Base metadataURI.
     default fn get_base_metadata(&self) -> PreludeString {
-        PreludeString::from_utf8(self.data::<BaseData>().base_metadata_uri.clone()).unwrap()
+        match PreludeString::from_utf8(self.data::<BaseData>().base_metadata_uri.clone()) {
+            Ok(m) => m,
+            _ => PreludeString::from(""),
+        }
     }
 
     /// Get the number of parts.
