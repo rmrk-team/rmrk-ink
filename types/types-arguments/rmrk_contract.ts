@@ -49,9 +49,7 @@ export type Key = string | number[]
 export type Asset = {
 	assetId: (number | string | BN),
 	equippableGroupId: (number | string | BN),
-	baseId: (number | string | BN),
-	assetUri: Array<(number | string | BN)>,
-	partIds: Array<(number | string | BN)>
+	assetUri: Array<(number | string | BN)>
 }
 
 export type Part = {

@@ -65,7 +65,11 @@ where
     }
 
     /// Check if asset is already accepted
-    default fn ensure_not_accepted(&self, token_id: &Id, asset_id: &AssetId) -> Result<(), PSP34Error> {
+    default fn ensure_not_accepted(
+        &self,
+        token_id: &Id,
+        asset_id: &AssetId,
+    ) -> Result<(), PSP34Error> {
         if let Some(children) = self.data::<MultiAssetData>().accepted_assets.get(token_id) {
             if children.contains(asset_id) {
                 return Err(PSP34Error::Custom(String::from(
@@ -77,7 +81,11 @@ where
     }
 
     /// Check if asset is already pending
-    default fn ensure_not_pending(&self, token_id: &Id, asset_id: &AssetId) -> Result<(), PSP34Error> {
+    default fn ensure_not_pending(
+        &self,
+        token_id: &Id,
+        asset_id: &AssetId,
+    ) -> Result<(), PSP34Error> {
         if let Some(assets) = self.data::<MultiAssetData>().pending_assets.get(token_id) {
             if assets.contains(asset_id) {
                 return Err(PSP34Error::Custom(String::from(

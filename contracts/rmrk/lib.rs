@@ -726,7 +726,8 @@ pub mod rmrk_contract {
 
             // Try removing asset by collection owner fails
             set_sender(accounts.alice);
-            assert_eq!(rmrk.remove_asset(TOKEN_ID2, ASSET_ID),
+            assert_eq!(
+                rmrk.remove_asset(TOKEN_ID2, ASSET_ID),
                 Err(PSP34Error::Custom(RmrkError::NotAuthorised.as_str()))
             );
 
