@@ -31,6 +31,6 @@ cargo test
 ```sh
 yarn
 yarn compile
-yarn test:typechain
+yarn test
 ````
 

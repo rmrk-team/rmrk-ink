@@ -65,7 +65,7 @@ where
     }
 
     /// Check if asset is already accepted
-    default fn in_accepted(&self, token_id: &Id, asset_id: &AssetId) -> Result<(), PSP34Error> {
+    default fn ensure_not_accepted(&self, token_id: &Id, asset_id: &AssetId) -> Result<(), PSP34Error> {
         if let Some(children) = self.data::<MultiAssetData>().accepted_assets.get(token_id) {
             if children.contains(asset_id) {
                 return Err(PSP34Error::Custom(String::from(
@@ -77,7 +77,7 @@ where
     }
 
     /// Check if asset is already pending
-    default fn in_pending(&self, token_id: &Id, asset_id: &AssetId) -> Result<(), PSP34Error> {
+    default fn ensure_not_pending(&self, token_id: &Id, asset_id: &AssetId) -> Result<(), PSP34Error> {
         if let Some(assets) = self.data::<MultiAssetData>().pending_assets.get(token_id) {
             if assets.contains(asset_id) {
                 return Err(PSP34Error::Custom(String::from(
@@ -89,7 +89,7 @@ where
     }
 
     /// Check if asset is already pending
-    default fn is_pending(&self, token_id: &Id, asset_id: &AssetId) -> Result<(), PSP34Error> {
+    default fn ensure_pending(&self, token_id: &Id, asset_id: &AssetId) -> Result<(), PSP34Error> {
         if let Some(assets) = self.data::<MultiAssetData>().pending_assets.get(token_id) {
             if !assets.contains(asset_id) {
                 return Err(PSP34Error::Custom(String::from(
@@ -101,7 +101,7 @@ where
     }
 
     /// Check if asset is already accepted
-    default fn is_accepted(&self, token_id: &Id, asset_id: &AssetId) -> Result<(), PSP34Error> {
+    default fn ensure_accepted(&self, token_id: &Id, asset_id: &AssetId) -> Result<(), PSP34Error> {
         if let Some(assets) = self.data::<MultiAssetData>().accepted_assets.get(token_id) {
             if !assets.contains(asset_id) {
                 return Err(PSP34Error::Custom(String::from(
@@ -214,9 +214,7 @@ where
         &mut self,
         asset_id: AssetId,
         equippable_group_id: EquippableGroupId,
-        base_id: BaseId,
         asset_uri: String,
-        part_ids: Vec<PartId>,
     ) -> Result<(), PSP34Error> {
         if self.asset_id_exists(asset_id).is_some() {
             return Err(PSP34Error::Custom(String::from(
@@ -228,9 +226,7 @@ where
             .push(Asset {
                 asset_id,
                 equippable_group_id,
-                base_id,
                 asset_uri,
-                part_ids,
             });
         self._emit_asset_set_event(&asset_id);
 
@@ -238,6 +234,7 @@ where
     }
 
     /// Used to add an asset to a token.
+    #[modifiers(only_owner)]
     fn add_asset_to_token(
         &mut self,
         token_id: Id,
@@ -249,8 +246,8 @@ where
                 RmrkError::AssetIdNotFound.as_str(),
             )))?;
         let token_owner = self.ensure_exists(&token_id)?;
-        self.in_accepted(&token_id, &asset_id)?;
-        self.in_pending(&token_id, &asset_id)?;
+        self.ensure_not_accepted(&token_id, &asset_id)?;
+        self.ensure_not_pending(&token_id, &asset_id)?;
 
         self._emit_asset_added_to_token_event(&token_id, &asset_id, None);
         let caller = Self::env().caller();
@@ -265,7 +262,7 @@ where
 
     /// Accepts an asset from the pending array of given token.
     fn accept_asset(&mut self, token_id: Id, asset_id: AssetId) -> Result<(), PSP34Error> {
-        self.is_pending(&token_id, &asset_id)?;
+        self.ensure_pending(&token_id, &asset_id)?;
         let token_owner = self.ensure_exists(&token_id)?;
         let caller = Self::env().caller();
         if caller == token_owner {
@@ -281,7 +278,7 @@ where
 
     /// Rejects an asset from the pending array of given token.
     fn reject_asset(&mut self, token_id: Id, asset_id: AssetId) -> Result<(), PSP34Error> {
-        self.is_pending(&token_id, &asset_id)?;
+        self.ensure_pending(&token_id, &asset_id)?;
         let token_owner = self.ensure_exists(&token_id)?;
         self.ensure_token_owner(token_owner)?;
 
@@ -291,9 +288,9 @@ where
         Ok(())
     }
 
-    /// Rejects an asset from the pending array of given token.
+    /// Remove an asset from the pending array of given token.
     fn remove_asset(&mut self, token_id: Id, asset_id: AssetId) -> Result<(), PSP34Error> {
-        self.is_accepted(&token_id, &asset_id)?;
+        self.ensure_accepted(&token_id, &asset_id)?;
         let token_owner = self.ensure_exists(&token_id)?;
         self.ensure_token_owner(token_owner)?;
 

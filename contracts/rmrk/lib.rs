@@ -629,7 +629,7 @@ pub mod rmrk_contract {
             const ASSET_ID: AssetId = 1;
             let mut rmrk = init();
             assert!(rmrk
-                .add_asset_entry(ASSET_ID, 1, 1, String::from(ASSET_URI), vec![1, 2, 3],)
+                .add_asset_entry(ASSET_ID, 1, String::from(ASSET_URI))
                 .is_ok());
             assert_eq!(rmrk.total_assets(), 1);
             assert_eq!(rmrk.get_asset_uri(ASSET_ID), Some(String::from(ASSET_URI)));
@@ -637,7 +637,7 @@ pub mod rmrk_contract {
 
             // reject adding asset with same asset_id
             assert_eq!(
-                rmrk.add_asset_entry(ASSET_ID, 1, 1, String::from(ASSET_URI), vec![1, 2, 3],),
+                rmrk.add_asset_entry(ASSET_ID, 1, String::from(ASSET_URI)),
                 Err(PSP34Error::Custom(RmrkError::AssetIdAlreadyExists.as_str()))
             );
         }
@@ -653,7 +653,7 @@ pub mod rmrk_contract {
             let mut rmrk = init();
             // Add new asset entry
             assert!(rmrk
-                .add_asset_entry(ASSET_ID, 1, 1, String::from(ASSET_URI), vec![1, 2, 3],)
+                .add_asset_entry(ASSET_ID, 1, String::from(ASSET_URI))
                 .is_ok());
             assert_eq!(rmrk.total_assets(), 1);
             assert_eq!(1, ink_env::test::recorded_events().count());
@@ -677,11 +677,18 @@ pub mod rmrk_contract {
             );
 
             // mint second token to non owner (Bob)
+            set_sender(accounts.alice);
             test::set_value_transferred::<ink_env::DefaultEnvironment>(PRICE as u128);
             assert!(rmrk.mint(accounts.bob, 1).is_ok());
             assert_eq!(5, ink_env::test::recorded_events().count());
+            set_sender(accounts.bob);
+            assert_eq!(
+                rmrk.add_asset_to_token(TOKEN_ID2, ASSET_ID, None),
+                Err(PSP34Error::Custom(String::from("O::CallerIsNotOwner")))
+            );
 
             // Add asset by alice and reject asset by Bob to test asset_reject
+            set_sender(accounts.alice);
             assert!(rmrk.add_asset_to_token(TOKEN_ID2, ASSET_ID, None).is_ok());
             assert_eq!(6, ink_env::test::recorded_events().count());
             assert_eq!(rmrk.total_token_assets(TOKEN_ID2), Ok((0, 1)));
@@ -701,22 +708,30 @@ pub mod rmrk_contract {
             assert_eq!(rmrk.total_token_assets(TOKEN_ID2), Ok((1, 0)));
             assert_eq!(rmrk.get_accepted_token_assets(TOKEN_ID2), Ok(Some(vec![1])));
 
-            // Try adding asset to not minted token
+            // Try adding asset to not minted token fails
+            set_sender(accounts.alice);
             assert_eq!(
                 rmrk.add_asset_to_token(Id::U64(3), ASSET_ID, None),
                 Err(TokenNotExists)
             );
 
-            // Try removing not added asset
+            // Try removing not added asset fails
             assert_eq!(
                 rmrk.remove_asset(TOKEN_ID2, 42),
                 Err(PSP34Error::Custom(RmrkError::AssetIdNotFound.as_str()))
             );
 
-            // Try removing asset for not minted token
+            // Try removing asset for not minted token fails
             assert_eq!(rmrk.remove_asset(Id::U64(3), ASSET_ID), Err(TokenNotExists));
 
+            // Try removing asset by collection owner fails
+            set_sender(accounts.alice);
+            assert_eq!(rmrk.remove_asset(TOKEN_ID2, ASSET_ID),
+                Err(PSP34Error::Custom(RmrkError::NotAuthorised.as_str()))
+            );
+
             // Remove accepted asset
+            set_sender(accounts.bob);
             assert!(rmrk.remove_asset(TOKEN_ID2, ASSET_ID).is_ok());
             assert_eq!(10, ink_env::test::recorded_events().count());
             assert_eq!(rmrk.get_accepted_token_assets(TOKEN_ID2), Ok(Some(vec![])));
@@ -734,10 +749,10 @@ pub mod rmrk_contract {
             let mut rmrk = init();
             // Add new asset entry
             assert!(rmrk
-                .add_asset_entry(ASSET_ID1, 1, 1, String::from(ASSET_URI), vec![1, 2, 3],)
+                .add_asset_entry(ASSET_ID1, 1, String::from(ASSET_URI))
                 .is_ok());
             assert!(rmrk
-                .add_asset_entry(ASSET_ID2, 1, 1, String::from(ASSET_URI), vec![1, 2, 3],)
+                .add_asset_entry(ASSET_ID2, 1, String::from(ASSET_URI))
                 .is_ok());
             assert_eq!(rmrk.total_assets(), 2);
 

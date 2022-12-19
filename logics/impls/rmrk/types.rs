@@ -86,9 +86,7 @@ pub struct MultiAssetData {
 pub struct Asset {
     pub asset_id: AssetId,
     pub equippable_group_id: EquippableGroupId,
-    pub base_id: BaseId,
     pub asset_uri: String,
-    pub part_ids: Vec<PartId>,
 }
 
 impl ink_storage::traits::PackedAllocate for Asset {
@@ -124,7 +122,7 @@ pub struct BaseData {
 }
 
 /// Part's details
-#[derive(scale::Encode, scale::Decode, SpreadLayout, PackedLayout, Default, Debug, Clone)]
+#[derive(scale::Encode, scale::Decode, SpreadLayout, PackedLayout, Debug, Clone)]
 #[cfg_attr(
     feature = "std",
     derive(scale_info::TypeInfo, ink_storage::traits::StorageLayout)
@@ -148,14 +146,13 @@ pub struct Part {
 
 /// Used to define a type of the part. Possible values are `None`, `Slot` or `Fixed`.
 #[derive(
-    scale::Encode, scale::Decode, SpreadLayout, PackedLayout, Default, Debug, Clone, PartialEq,
+    scale::Encode, scale::Decode, SpreadLayout, PackedLayout, Debug, Clone, PartialEq,
 )]
 #[cfg_attr(
     feature = "std",
     derive(scale_info::TypeInfo, ink_storage::traits::StorageLayout)
 )]
 pub enum PartType {
-    #[default]
     None,
     Slot,
     Fixed,
