@@ -814,39 +814,22 @@ pub mod rmrk_contract {
                     metadata_uri: String::from("ipfs://backgrounds/2.svg"),
                     is_equippable_by_all: false,
                 },
-                // Head option 1
-                Part {
-                    part_type: PartType::Fixed,
-                    z: 3,
-                    equippable: vec![],
-                    metadata_uri: String::from("ipfs://heads/1.svg"),
-                    is_equippable_by_all: false,
-                },
-                // Head option 2
-                Part {
-                    part_type: PartType::Fixed,
-                    z: 3,
-                    equippable: vec![],
-                    metadata_uri: String::from("ipfs://heads/2.svg"),
-                    is_equippable_by_all: false,
-                },
-                // Body option 1
-                Part {
-                    part_type: PartType::Fixed,
-                    z: 2,
-                    equippable: vec![],
-                    metadata_uri: String::from("ipfs://body/1.svg"),
-                    is_equippable_by_all: false,
-                },
-                // Body option 2
-                Part {
-                    part_type: PartType::Fixed,
-                    z: 2,
-                    equippable: vec![],
-                    metadata_uri: String::from("ipfs://body/2.svg"),
-                    is_equippable_by_all: false,
-                },
             ];
+
+            let bad_part_list1 = vec![Part {
+                part_type: PartType::Fixed,
+                z: 0,
+                equippable: vec![EQUIPABLE_ADDRESS1.into()],
+                metadata_uri: String::from("ipfs://backgrounds/2.svg"),
+                is_equippable_by_all: false,
+            }];
+            let bad_part_list2 = vec![Part {
+                part_type: PartType::Fixed,
+                z: 0,
+                equippable: vec![],
+                metadata_uri: String::from("ipfs://backgrounds/2.svg"),
+                is_equippable_by_all: true,
+            }];
 
             let mut rmrk = init();
 
@@ -891,6 +874,14 @@ pub mod rmrk_contract {
             assert_eq!(
                 rmrk.set_equippable_by_all(PART_ID1),
                 Err(PSP34Error::Custom(RmrkError::PartIsNotSlot.as_str()))
+            );
+            assert_eq!(
+                rmrk.add_part_list(bad_part_list1.clone()),
+                Err(PSP34Error::Custom(RmrkError::BadConfig.as_str()))
+            );
+            assert_eq!(
+                rmrk.add_part_list(bad_part_list2.clone()),
+                Err(PSP34Error::Custom(RmrkError::BadConfig.as_str()))
             );
 
             assert!(!rmrk.is_equippable(PART_ID0, EQUIPABLE_ADDRESS3.into()));

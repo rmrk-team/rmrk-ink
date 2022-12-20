@@ -23,6 +23,7 @@ pub enum RmrkError {
     BadPriorityLength,
     UnknownPartId,
     PartIsNotSlot,
+    BadConfig,
 }
 
 impl RmrkError {
@@ -46,6 +47,7 @@ impl RmrkError {
             RmrkError::BadPriorityLength => String::from("BadPriorityLength"),
             RmrkError::UnknownPartId => String::from("UnknownPartId"),
             RmrkError::PartIsNotSlot => String::from("PartIsNotSlot"),
+            RmrkError::BadConfig => String::from("BadConfig"),
         }
     }
 }

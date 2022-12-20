@@ -54,6 +54,14 @@ where
     default fn add_part_list(&mut self, parts: Vec<Part>) -> Result<(), PSP34Error> {
         for part in parts {
             let part_id = self.data::<BaseData>().next_part_id;
+
+            if part.part_type == PartType::Fixed {
+                if part.equippable.len() != 0 || part.is_equippable_by_all {
+                    return Err(PSP34Error::Custom(String::from(
+                        RmrkError::BadConfig.as_str(),
+                    )))
+                }
+            }
             self.data::<BaseData>().parts.insert(part_id, &part);
             self.data::<BaseData>().part_ids.push(part_id);
             self.data::<BaseData>().next_part_id += 1;
