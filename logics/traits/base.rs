@@ -15,7 +15,7 @@ use openbrush::{
 
 /// Implement internal helper trait for Base
 pub trait Internal {
-    fn ensure_only_slot(&self, part_id: PartId) -> Result<(), PSP34Error>;
+    fn ensure_only_slot(&self, part_id: PartId) -> Result<Part, PSP34Error>;
 }
 /// Trait definitions for Base
 #[openbrush::trait_definition]
