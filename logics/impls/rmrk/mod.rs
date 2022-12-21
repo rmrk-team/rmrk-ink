@@ -1,3 +1,4 @@
+pub mod base;
 pub mod errors;
 pub mod minting;
 pub mod multiasset;

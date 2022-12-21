@@ -28,9 +28,7 @@ pub trait MultiAsset {
         &mut self,
         id: AssetId,
         equippable_group_id: EquippableGroupId,
-        base_id: BaseId,
         asset_uri: String,
-        part_ids: Vec<PartId>,
     ) -> Result<(), PSP34Error>;
 
     /// Used to add an asset to a token.
@@ -128,17 +126,17 @@ pub trait Internal {
     /// Ensure that the caller is the token owner
     fn ensure_token_owner(&self, token_owner: AccountId) -> Result<(), PSP34Error>;
 
-    /// Check if asset is already accepted.
-    fn in_accepted(&self, token_id: &Id, asset_id: &AssetId) -> Result<(), PSP34Error>;
+    /// Check if asset is already accepted. Return error if it is
+    fn ensure_not_accepted(&self, token_id: &Id, asset_id: &AssetId) -> Result<(), PSP34Error>;
 
     /// Check if asset is already pending. Return error if it is
-    fn in_pending(&self, token_id: &Id, asset_id: &AssetId) -> Result<(), PSP34Error>;
+    fn ensure_not_pending(&self, token_id: &Id, asset_id: &AssetId) -> Result<(), PSP34Error>;
 
     /// Check if asset is already pending. Return OK if it is
-    fn is_pending(&self, token_id: &Id, asset_id: &AssetId) -> Result<(), PSP34Error>;
+    fn ensure_pending(&self, token_id: &Id, asset_id: &AssetId) -> Result<(), PSP34Error>;
 
     /// Check if asset is already accepted
-    fn is_accepted(&self, token_id: &Id, asset_id: &AssetId) -> Result<(), PSP34Error>;
+    fn ensure_accepted(&self, token_id: &Id, asset_id: &AssetId) -> Result<(), PSP34Error>;
 
     /// Add the asset to the list of accepted assets
     fn add_to_accepted_assets(&mut self, token_id: &Id, asset_id: &AssetId);

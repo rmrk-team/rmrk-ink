@@ -50,9 +50,21 @@ export type Key = string | number[]
 export type Asset = {
 	assetId: number,
 	equippableGroupId: number,
-	baseId: number,
-	assetUri: Array<number>,
-	partIds: Array<number>
+	assetUri: Array<number>
+}
+
+export type Part = {
+	partType: PartType,
+	z: number,
+	equippable: Array<AccountId>,
+	metadataUri: Array<number>,
+	isEquippableByAll: boolean
+}
+
+export enum PartType {
+	none = 'None',
+	slot = 'Slot',
+	fixed = 'Fixed'
 }
 
 export interface PSP34Error {

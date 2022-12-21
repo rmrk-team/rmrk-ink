@@ -1,30 +1,66 @@
-//! RMRK minting traits
+//! RMRK Base traits
 
+use crate::impls::rmrk::types::*;
+use ink_prelude::{
+    string::String as PreludeString,
+    vec::Vec,
+};
 use openbrush::{
     contracts::psp34::PSP34Error,
-    traits::AccountId,
+    traits::{
+        AccountId,
+        String,
+    },
 };
 
-#[openbrush::wrapper]
-pub type MintingRef = dyn Minting;
-
-/// Trait definitions for Minting internal functions.
+/// Implement internal helper trait for Base
 pub trait Internal {
-    /// Check if the transferred mint values is as expected.
-    fn _check_value(&self, transfered_value: u128, mint_amount: u64) -> Result<(), PSP34Error>;
-
-    /// Check amount of tokens to be minted.
-    fn _check_amount(&self, mint_amount: u64) -> Result<(), PSP34Error>;
+    fn ensure_only_slot(&self, part_id: PartId) -> Result<Part, PSP34Error>;
 }
-
-/// Trait definitions for Minting functions
+/// Trait definitions for Base
 #[openbrush::trait_definition]
-pub trait Minting {
-    /// Mint next available token for the caller.
-    #[ink(message, payable)]
-    fn mint_next(&mut self) -> Result<(), PSP34Error>;
+pub trait Base {
+    /// Add one or more parts to the base
+    #[ink(message)]
+    fn add_part_list(&mut self, parts: Vec<Part>) -> Result<(), PSP34Error>;
 
-    /// Mint one or more tokens.
-    #[ink(message, payable)]
-    fn mint(&mut self, to: AccountId, mint_amount: u64) -> Result<(), PSP34Error>;
+    /// Add collection address(es) that can be used to equip given `PartId`.
+    #[ink(message)]
+    fn add_equippable_addresses(
+        &mut self,
+        part_id: PartId,
+        equippable_address: Vec<AccountId>,
+    ) -> Result<(), PSP34Error>;
+
+    /// Remove list of equippable addresses for given Part
+    #[ink(message)]
+    fn reset_equippable_addresses(&mut self, part_id: PartId) -> Result<(), PSP34Error>;
+
+    /// Sets the is_equippable_by_all flag to true, meaning that any collection may be equipped into the `PartId`
+    #[ink(message)]
+    fn set_equippable_by_all(&mut self, part_id: PartId) -> Result<(), PSP34Error>;
+
+    //// Set the Base metadataURI.
+    #[ink(message)]
+    fn setup_base(&mut self, base_metadata: String) -> Result<(), PSP34Error>;
+
+    //// Get the Base metadataURI.
+    #[ink(message)]
+    fn get_base_metadata(&self) -> PreludeString;
+
+    /// Get the list of all parts.
+    #[ink(message)]
+    fn get_parts_count(&self) -> PartId;
+
+    /// Get the part details for the given PartId.
+    #[ink(message)]
+    fn get_part(&self, part_id: PartId) -> Option<Part>;
+
+    /// Check whether the given address is allowed to equip the desired `PartId`.
+    #[ink(message)]
+    fn is_equippable(&self, part_id: PartId, target_address: AccountId) -> bool;
+
+    /// Checks if the given `PartId` can be equipped by any collection
+    #[ink(message)]
+    fn is_equippable_by_all(&self, part_id: PartId) -> bool;
 }

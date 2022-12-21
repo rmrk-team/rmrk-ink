@@ -122,10 +122,10 @@ describe('RMRK Multi Asset tests', () => {
     expect((await gem.query.balanceOf(bob.address)).value).to.equal(15);
     
     // deployer adds two assets for kanaria
-    const assetEntryGas = (await kanaria.withSigner(deployer).query.addAssetEntry(assetDefaultId, "1", "1", ["ipfs://default.png"], [1, 2, 3])).gasRequired;
-    const addAssetResult = await kanaria.withSigner(deployer).tx.addAssetEntry(assetDefaultId, "1", "1", ["ipfs://default.png"], [], { gasLimit: assetEntryGas * 2n });
+    const assetEntryGas = (await kanaria.withSigner(deployer).query.addAssetEntry(assetDefaultId, "1", ["ipfs://default.png"])).gasRequired;
+    const addAssetResult = await kanaria.withSigner(deployer).tx.addAssetEntry(assetDefaultId, "1", ["ipfs://default.png"], { gasLimit: assetEntryGas * 2n });
     emit(addAssetResult, 'AssetSet', { asset: 1 });
-    await kanaria.withSigner(deployer).tx.addAssetEntry(assetComposedId, "1", "1", ["ipfs://meta1.json"], [1, 3, 5, 7, 9, 10, 11], { gasLimit: assetEntryGas * 2n });
+    await kanaria.withSigner(deployer).tx.addAssetEntry(assetComposedId, "1", ["ipfs://meta1.json"], { gasLimit: assetEntryGas * 2n });
     expect((await kanaria.withSigner(deployer).query.totalAssets())?.value.toString()).to.be.equal("2");
     
     // add both assets to token 1
@@ -147,15 +147,15 @@ describe('RMRK Multi Asset tests', () => {
     const equippableRefIdLeftGem = 1;
     const equippableRefIdMidGem = 2;
     const equippableRefIdRightGem = 3;
-    const gemAssetAddGas = (await gem.withSigner(deployer).query.addAssetEntry(0, "1", "1", ["ipfs://gems/typeA/full.svg"], [])).gasRequired;
-    await gem.withSigner(deployer).tx.addAssetEntry(1, 0, "1", ["ipfs://gems/typeA/full.svg"], [], { gasLimit: gemAssetAddGas });
-    await gem.withSigner(deployer).tx.addAssetEntry(2, equippableRefIdLeftGem, "1", ["ipfs://gems/typeA/left.svg"], [], { gasLimit: gemAssetAddGas * 2n });
-    await gem.withSigner(deployer).tx.addAssetEntry(3, equippableRefIdMidGem, "1", ["ipfs://gems/typeA/mid.svg"], [], { gasLimit: gemAssetAddGas * 2n });
-    await gem.withSigner(deployer).tx.addAssetEntry(4, equippableRefIdRightGem, "1", ["ipfs://gems/typeA/right.svg"], [], { gasLimit: gemAssetAddGas * 2n });
-    await gem.withSigner(deployer).tx.addAssetEntry(5, 0, "1", ["ipfs://gems/typeB/full.svg"], [], { gasLimit: gemAssetAddGas * 2n });
-    await gem.withSigner(deployer).tx.addAssetEntry(6, equippableRefIdLeftGem, "1", ["ipfs://gems/typeB/left.svg"], [], { gasLimit: gemAssetAddGas * 2n });
-    await gem.withSigner(deployer).tx.addAssetEntry(7, equippableRefIdMidGem, "1", ["ipfs://gems/typeB/mid.svg"], [], { gasLimit: gemAssetAddGas * 2n });
-    await gem.withSigner(deployer).tx.addAssetEntry(8, equippableRefIdRightGem, "1", ["ipfs://gems/typeB/right.svg"], [], { gasLimit: gemAssetAddGas * 2n });
+    const gemAssetAddGas = (await gem.withSigner(deployer).query.addAssetEntry(0, 0,  ["ipfs://gems/typeA/full.svg"])).gasRequired;
+    await gem.withSigner(deployer).tx.addAssetEntry(1, 0, ["ipfs://gems/typeA/full.svg"], { gasLimit: gemAssetAddGas });
+    await gem.withSigner(deployer).tx.addAssetEntry(2, equippableRefIdLeftGem,  ["ipfs://gems/typeA/left.svg"], { gasLimit: gemAssetAddGas * 2n });
+    await gem.withSigner(deployer).tx.addAssetEntry(3, equippableRefIdMidGem,  ["ipfs://gems/typeA/mid.svg"], { gasLimit: gemAssetAddGas * 2n });
+    await gem.withSigner(deployer).tx.addAssetEntry(4, equippableRefIdRightGem,  ["ipfs://gems/typeA/right.svg"], { gasLimit: gemAssetAddGas * 2n });
+    await gem.withSigner(deployer).tx.addAssetEntry(5, 0, ["ipfs://gems/typeB/full.svg"], { gasLimit: gemAssetAddGas * 2n });
+    await gem.withSigner(deployer).tx.addAssetEntry(6, equippableRefIdLeftGem,  ["ipfs://gems/typeB/left.svg"], { gasLimit: gemAssetAddGas * 2n });
+    await gem.withSigner(deployer).tx.addAssetEntry(7, equippableRefIdMidGem,  ["ipfs://gems/typeB/mid.svg"], { gasLimit: gemAssetAddGas * 2n });
+    await gem.withSigner(deployer).tx.addAssetEntry(8, equippableRefIdRightGem, ["ipfs://gems/typeB/right.svg"], { gasLimit: gemAssetAddGas * 2n });
     expect((await gem.withSigner(deployer).query.totalAssets())?.value.toString()).to.be.equal("8");
 
     // We add assets of type A to gem 1 and 2, and type Bto gem 3. Both are nested into the first kanaria

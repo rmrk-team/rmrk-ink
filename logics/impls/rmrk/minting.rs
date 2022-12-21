@@ -74,7 +74,7 @@ where
     }
 }
 
-/// Helper trait for Psp34Custom
+/// Helper trait for Minting
 impl<T> Internal for T
 where
     T: Storage<MintingData> + Storage<psp34::Data<enumerable::Balances>>,

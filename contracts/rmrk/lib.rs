@@ -30,6 +30,7 @@ pub mod rmrk_contract {
             *,
         },
         traits::{
+            base::*,
             minting::*,
             multiasset::*,
             nesting::*,
@@ -178,6 +179,8 @@ pub mod rmrk_contract {
         multiasset: types::MultiAssetData,
         #[storage_field]
         minting: types::MintingData,
+        #[storage_field]
+        base: types::BaseData,
     }
 
     impl PSP34 for Rmrk {}
@@ -195,6 +198,8 @@ pub mod rmrk_contract {
     impl Nesting for Rmrk {}
 
     impl MultiAsset for Rmrk {}
+
+    impl Base for Rmrk {}
 
     impl Rmrk {
         /// Instantiate new RMRK contract
@@ -356,6 +361,7 @@ pub mod rmrk_contract {
         use ink_env::{
             pay_with_call,
             test,
+            AccountId,
         };
         use ink_lang as ink;
         use ink_prelude::string::String as PreludeString;
@@ -623,7 +629,7 @@ pub mod rmrk_contract {
             const ASSET_ID: AssetId = 1;
             let mut rmrk = init();
             assert!(rmrk
-                .add_asset_entry(ASSET_ID, 1, 1, String::from(ASSET_URI), vec![1, 2, 3],)
+                .add_asset_entry(ASSET_ID, 1, String::from(ASSET_URI))
                 .is_ok());
             assert_eq!(rmrk.total_assets(), 1);
             assert_eq!(rmrk.get_asset_uri(ASSET_ID), Some(String::from(ASSET_URI)));
@@ -631,7 +637,7 @@ pub mod rmrk_contract {
 
             // reject adding asset with same asset_id
             assert_eq!(
-                rmrk.add_asset_entry(ASSET_ID, 1, 1, String::from(ASSET_URI), vec![1, 2, 3],),
+                rmrk.add_asset_entry(ASSET_ID, 1, String::from(ASSET_URI)),
                 Err(PSP34Error::Custom(RmrkError::AssetIdAlreadyExists.as_str()))
             );
         }
@@ -647,7 +653,7 @@ pub mod rmrk_contract {
             let mut rmrk = init();
             // Add new asset entry
             assert!(rmrk
-                .add_asset_entry(ASSET_ID, 1, 1, String::from(ASSET_URI), vec![1, 2, 3],)
+                .add_asset_entry(ASSET_ID, 1, String::from(ASSET_URI))
                 .is_ok());
             assert_eq!(rmrk.total_assets(), 1);
             assert_eq!(1, ink_env::test::recorded_events().count());
@@ -671,11 +677,18 @@ pub mod rmrk_contract {
             );
 
             // mint second token to non owner (Bob)
+            set_sender(accounts.alice);
             test::set_value_transferred::<ink_env::DefaultEnvironment>(PRICE as u128);
             assert!(rmrk.mint(accounts.bob, 1).is_ok());
             assert_eq!(5, ink_env::test::recorded_events().count());
+            set_sender(accounts.bob);
+            assert_eq!(
+                rmrk.add_asset_to_token(TOKEN_ID2, ASSET_ID, None),
+                Err(PSP34Error::Custom(String::from("O::CallerIsNotOwner")))
+            );
 
             // Add asset by alice and reject asset by Bob to test asset_reject
+            set_sender(accounts.alice);
             assert!(rmrk.add_asset_to_token(TOKEN_ID2, ASSET_ID, None).is_ok());
             assert_eq!(6, ink_env::test::recorded_events().count());
             assert_eq!(rmrk.total_token_assets(TOKEN_ID2), Ok((0, 1)));
@@ -695,27 +708,37 @@ pub mod rmrk_contract {
             assert_eq!(rmrk.total_token_assets(TOKEN_ID2), Ok((1, 0)));
             assert_eq!(rmrk.get_accepted_token_assets(TOKEN_ID2), Ok(Some(vec![1])));
 
-            // Try adding asset to not minted token
+            // Try adding asset to not minted token fails
+            set_sender(accounts.alice);
             assert_eq!(
                 rmrk.add_asset_to_token(Id::U64(3), ASSET_ID, None),
                 Err(TokenNotExists)
             );
 
-            // Try removing not added asset
+            // Try removing not added asset fails
             assert_eq!(
                 rmrk.remove_asset(TOKEN_ID2, 42),
                 Err(PSP34Error::Custom(RmrkError::AssetIdNotFound.as_str()))
             );
 
-            // Try removing asset for not minted token
+            // Try removing asset for not minted token fails
             assert_eq!(rmrk.remove_asset(Id::U64(3), ASSET_ID), Err(TokenNotExists));
 
+            // Try removing asset by collection owner fails
+            set_sender(accounts.alice);
+            assert_eq!(
+                rmrk.remove_asset(TOKEN_ID2, ASSET_ID),
+                Err(PSP34Error::Custom(RmrkError::NotAuthorised.as_str()))
+            );
+
             // Remove accepted asset
+            set_sender(accounts.bob);
             assert!(rmrk.remove_asset(TOKEN_ID2, ASSET_ID).is_ok());
             assert_eq!(10, ink_env::test::recorded_events().count());
             assert_eq!(rmrk.get_accepted_token_assets(TOKEN_ID2), Ok(Some(vec![])));
             assert_eq!(rmrk.total_token_assets(TOKEN_ID2), Ok((0, 0)));
         }
+
         #[ink::test]
         fn set_asset_priority_works() {
             let accounts = default_accounts();
@@ -727,10 +750,10 @@ pub mod rmrk_contract {
             let mut rmrk = init();
             // Add new asset entry
             assert!(rmrk
-                .add_asset_entry(ASSET_ID1, 1, 1, String::from(ASSET_URI), vec![1, 2, 3],)
+                .add_asset_entry(ASSET_ID1, 1, String::from(ASSET_URI))
                 .is_ok());
             assert!(rmrk
-                .add_asset_entry(ASSET_ID2, 1, 1, String::from(ASSET_URI), vec![1, 2, 3],)
+                .add_asset_entry(ASSET_ID2, 1, String::from(ASSET_URI))
                 .is_ok());
             assert_eq!(rmrk.total_assets(), 2);
 
@@ -761,6 +784,116 @@ pub mod rmrk_contract {
                 rmrk.set_priority(TOKEN_ID1, vec![ASSET_ID2, 42]),
                 Err(PSP34Error::Custom(RmrkError::AssetIdNotFound.as_str()))
             );
+        }
+
+        #[ink::test]
+        fn add_parts_to_base_works() {
+            const ASSET_URI: &str = "asset_uri/";
+            const ASSET_ID: AssetId = 1;
+            const TOKEN_ID1: Id = Id::U64(1);
+            const TOKEN_ID2: Id = Id::U64(2);
+            const EQUIPABLE_ADDRESS1: [u8; 32] = [1; 32];
+            const EQUIPABLE_ADDRESS2: [u8; 32] = [2; 32];
+            const EQUIPABLE_ADDRESS3: [u8; 32] = [3; 32];
+            const PART_ID0: PartId = 0;
+            const PART_ID1: PartId = 1;
+            let part_list = vec![
+                // Background option 1
+                Part {
+                    part_type: PartType::Slot,
+                    z: 0,
+                    equippable: vec![EQUIPABLE_ADDRESS1.into(), EQUIPABLE_ADDRESS2.into()],
+                    metadata_uri: String::from("ipfs://backgrounds/1.svg"),
+                    is_equippable_by_all: false,
+                },
+                // Background option 2
+                Part {
+                    part_type: PartType::Fixed,
+                    z: 0,
+                    equippable: vec![],
+                    metadata_uri: String::from("ipfs://backgrounds/2.svg"),
+                    is_equippable_by_all: false,
+                },
+            ];
+
+            let bad_part_list1 = vec![Part {
+                part_type: PartType::Fixed,
+                z: 0,
+                equippable: vec![EQUIPABLE_ADDRESS1.into()],
+                metadata_uri: String::from("ipfs://backgrounds/2.svg"),
+                is_equippable_by_all: false,
+            }];
+            let bad_part_list2 = vec![Part {
+                part_type: PartType::Fixed,
+                z: 0,
+                equippable: vec![],
+                metadata_uri: String::from("ipfs://backgrounds/2.svg"),
+                is_equippable_by_all: true,
+            }];
+
+            let mut rmrk = init();
+
+            // verify add/get parts
+            assert!(rmrk.get_parts_count() == 0);
+            assert!(rmrk.add_part_list(part_list.clone()).is_ok());
+            assert_eq!(rmrk.get_parts_count(), part_list.len() as u32);
+            assert_eq!(rmrk.get_part(0).unwrap().z, part_list[0].z);
+            assert_eq!(
+                rmrk.get_part(0).unwrap().metadata_uri,
+                part_list[0].metadata_uri
+            );
+
+            // verify array of equippable addresses
+            assert!(rmrk.is_equippable(PART_ID0, EQUIPABLE_ADDRESS1.into()));
+            assert!(rmrk.is_equippable(PART_ID0, EQUIPABLE_ADDRESS2.into()));
+            assert!(!rmrk.is_equippable(PART_ID1, EQUIPABLE_ADDRESS2.into()));
+
+            assert!(!rmrk.is_equippable_by_all(PART_ID0));
+            assert!(rmrk.set_equippable_by_all(PART_ID0).is_ok());
+            assert!(rmrk.is_equippable_by_all(PART_ID0));
+            assert!(!rmrk.is_equippable_by_all(42));
+
+            assert!(rmrk.reset_equippable_addresses(PART_ID0).is_ok());
+            assert!(!rmrk.is_equippable_by_all(PART_ID0));
+            assert!(!rmrk.is_equippable(PART_ID0, EQUIPABLE_ADDRESS1.into()));
+            assert!(rmrk
+                .add_equippable_addresses(
+                    PART_ID0,
+                    vec![EQUIPABLE_ADDRESS1.into(), EQUIPABLE_ADDRESS2.into()]
+                )
+                .is_ok());
+            assert!(rmrk.is_equippable(PART_ID0, EQUIPABLE_ADDRESS1.into()));
+            assert_eq!(
+                rmrk.add_equippable_addresses(PART_ID1, vec![EQUIPABLE_ADDRESS1.into()]),
+                Err(PSP34Error::Custom(RmrkError::PartIsNotSlot.as_str()))
+            );
+            assert_eq!(
+                rmrk.reset_equippable_addresses(PART_ID1),
+                Err(PSP34Error::Custom(RmrkError::PartIsNotSlot.as_str()))
+            );
+            assert_eq!(
+                rmrk.set_equippable_by_all(PART_ID1),
+                Err(PSP34Error::Custom(RmrkError::PartIsNotSlot.as_str()))
+            );
+            assert_eq!(
+                rmrk.add_part_list(bad_part_list1.clone()),
+                Err(PSP34Error::Custom(RmrkError::BadConfig.as_str()))
+            );
+            assert_eq!(
+                rmrk.add_part_list(bad_part_list2.clone()),
+                Err(PSP34Error::Custom(RmrkError::BadConfig.as_str()))
+            );
+
+            assert!(!rmrk.is_equippable(PART_ID0, EQUIPABLE_ADDRESS3.into()));
+
+            // verify set/get base metadata
+            assert_eq!(rmrk.get_base_metadata(), "");
+            assert!(rmrk
+                .setup_base(String::from("ipfs://base_metadata"))
+                .is_ok());
+            assert_eq!(rmrk.get_base_metadata(), "ipfs://base_metadata");
+
+            // assert_eq!(1, ink_env::test::recorded_events().count());
         }
 
         fn default_accounts() -> test::DefaultAccounts<ink_env::DefaultEnvironment> {
