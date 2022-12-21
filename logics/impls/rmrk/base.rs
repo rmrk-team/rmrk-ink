@@ -55,12 +55,12 @@ where
         for part in parts {
             let part_id = self.data::<BaseData>().next_part_id;
 
-            if part.part_type == PartType::Fixed {
-                if part.equippable.len() != 0 || part.is_equippable_by_all {
-                    return Err(PSP34Error::Custom(String::from(
-                        RmrkError::BadConfig.as_str(),
-                    )))
-                }
+            if part.part_type == PartType::Fixed
+                && (part.equippable.len() != 0 || part.is_equippable_by_all)
+            {
+                return Err(PSP34Error::Custom(String::from(
+                    RmrkError::BadConfig.as_str(),
+                )))
             }
             self.data::<BaseData>().parts.insert(part_id, &part);
             self.data::<BaseData>().part_ids.push(part_id);
@@ -78,9 +78,7 @@ where
         equippable_address: Vec<AccountId>,
     ) -> Result<(), PSP34Error> {
         let mut part = self.ensure_only_slot(part_id)?;
-        for address in equippable_address {
-            part.equippable.push(address);
-        }
+        part.equippable.extend(equippable_address);
         self.data::<BaseData>().parts.insert(part_id, &part);
 
         Ok(())
