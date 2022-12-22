@@ -114,7 +114,7 @@ pub trait MultiAsset {
     fn remove_asset(&mut self, token_id: Id, asset_id: AssetId) -> Result<(), PSP34Error>;
 }
 
-/// Trait definitions for Resource helper functions
+/// Trait definitions for MultiAsset helper functions
 #[openbrush::trait_definition]
 pub trait Internal {
     /// Check if asset is already added.
@@ -159,7 +159,7 @@ pub trait Internal {
     ) -> Result<(), PSP34Error>;
 }
 
-/// Trait definitions for Resource ink events
+/// Trait definitions for MultiAsset ink events
 #[openbrush::trait_definition]
 pub trait MultiAssetEvents {
     /// Used to notify listeners that an asset object is initialized at `assetId`.

@@ -62,10 +62,10 @@ pub struct MintingData {
     pub price_per_mint: Balance,
 }
 
-pub const STORAGE_MUSLTIASSET_KEY: u32 = openbrush::storage_unique_key!(MultiAssetData);
+pub const STORAGE_MULTIASSET_KEY: u32 = openbrush::storage_unique_key!(MultiAssetData);
 
 #[derive(Default, Debug)]
-#[openbrush::upgradeable_storage(STORAGE_MUSLTIASSET_KEY)]
+#[openbrush::upgradeable_storage(STORAGE_MULTIASSET_KEY)]
 pub struct MultiAssetData {
     /// List of available asset entries for this collection
     pub collection_asset_entries: Vec<Asset>,
@@ -154,4 +154,30 @@ pub enum PartType {
     None,
     Slot,
     Fixed,
+}
+
+pub const STORAGE_EQUIPMENT_KEY: u32 = openbrush::storage_unique_key!(EquipmentData);
+
+/// Used to link tokens with Equipment
+#[derive(Default, Debug)]
+#[openbrush::upgradeable_storage(STORAGE_EQUIPMENT_KEY)]
+struct EquipmentData {
+    equipment: Mapping<Id, Equipment>,
+}
+
+/// Used to define Equipment
+#[derive(scale::Encode, scale::Decode, SpreadLayout, PackedLayout, Debug, Clone, PartialEq)]
+#[cfg_attr(
+    feature = "std",
+    derive(scale_info::TypeInfo, ink_storage::traits::StorageLayout)
+)]
+struct Equipment {
+    // asset_id: The ID of the asset equipping a child
+    asset_id: AssetId,
+
+    // child_asset_id: The ID of the asset used as equipment
+    child_asset_id: AssetId,
+
+    // child_id: The (Address of the collection, token ID) of token that is equipped
+    child_nft: ChildNft,
 }
