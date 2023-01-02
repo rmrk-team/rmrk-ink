@@ -60,6 +60,7 @@ pub struct MintingData {
     pub last_token_id: u64,
     pub max_supply: u64,
     pub price_per_mint: Balance,
+    pub nft_metadata: Mapping<Id, String>,
 }
 
 pub const STORAGE_MULTIASSET_KEY: u32 = openbrush::storage_unique_key!(MultiAssetData);
@@ -161,8 +162,10 @@ pub const STORAGE_EQUIPMENT_KEY: u32 = openbrush::storage_unique_key!(EquipmentD
 /// Used to link tokens with Equipment
 #[derive(Default, Debug)]
 #[openbrush::upgradeable_storage(STORAGE_EQUIPMENT_KEY)]
-struct EquipmentData {
-    equipment: Mapping<Id, Equipment>,
+pub struct EquippableData {
+    pub equipment: Mapping<(Id, PartId), Equipment>,
+    pub equippable_asset: Mapping<AssetId, EquippableAsset>,
+    pub valid_parent_slot: Mapping<(EquippableGroupId, AccountId), PartId>,
 }
 
 /// Used to define Equipment
@@ -171,13 +174,24 @@ struct EquipmentData {
     feature = "std",
     derive(scale_info::TypeInfo, ink_storage::traits::StorageLayout)
 )]
-struct Equipment {
+pub struct Equipment {
     // asset_id: The ID of the asset equipping a child
-    asset_id: AssetId,
+    pub(crate) asset_id: AssetId,
 
     // child_asset_id: The ID of the asset used as equipment
-    child_asset_id: AssetId,
+    pub child_asset_id: AssetId,
 
     // child_id: The (Address of the collection, token ID) of token that is equipped
-    child_nft: ChildNft,
+    pub child_nft: ChildNft,
+}
+
+/// Used to extend Asset for the Equipping functions
+#[derive(scale::Encode, scale::Decode, SpreadLayout, PackedLayout, Debug, Clone, PartialEq)]
+#[cfg_attr(
+    feature = "std",
+    derive(scale_info::TypeInfo, ink_storage::traits::StorageLayout)
+)]
+pub struct EquippableAsset {
+    pub group_id: EquippableGroupId,
+    pub port_ids: Vec<PartId>,
 }

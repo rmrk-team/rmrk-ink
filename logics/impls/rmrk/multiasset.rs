@@ -28,22 +28,6 @@ impl<T> Internal for T
 where
     T: Storage<MultiAssetData> + Storage<psp34::Data<enumerable::Balances>>,
 {
-    /// Check if token is minted. Return the token uri
-    default fn asset_id_exists(&self, asset_id: AssetId) -> Option<String> {
-        if let Some(index) = self
-            .data::<MultiAssetData>()
-            .collection_asset_entries
-            .iter()
-            .position(|a| a.asset_id == asset_id)
-        {
-            let asset_uri =
-                &self.data::<MultiAssetData>().collection_asset_entries[index].asset_uri;
-            return Some(asset_uri.clone())
-        }
-
-        None
-    }
-
     /// Check if token is minted. Return the owner
     default fn ensure_exists(&self, id: &Id) -> Result<AccountId, PSP34Error> {
         let token_owner = self
@@ -109,7 +93,11 @@ where
     }
 
     /// Check if asset is already accepted
-    default fn ensure_accepted(&self, token_id: &Id, asset_id: &AssetId) -> Result<(), PSP34Error> {
+    default fn ensure_asset_accepted(
+        &self,
+        token_id: &Id,
+        asset_id: &AssetId,
+    ) -> Result<(), PSP34Error> {
         if let Some(assets) = self.data::<MultiAssetData>().accepted_assets.get(token_id) {
             if !assets.contains(asset_id) {
                 return Err(PSP34Error::Custom(String::from(
@@ -298,7 +286,7 @@ where
 
     /// Remove an asset from the pending array of given token.
     fn remove_asset(&mut self, token_id: Id, asset_id: AssetId) -> Result<(), PSP34Error> {
-        self.ensure_accepted(&token_id, &asset_id)?;
+        self.ensure_asset_accepted(&token_id, &asset_id)?;
         let token_owner = self.ensure_exists(&token_id)?;
         self.ensure_token_owner(token_owner)?;
 
@@ -362,8 +350,24 @@ where
         Ok((accepted_assets_on_token, pending_assets_on_token))
     }
 
+    /// Check if token is minted. Return the token uri
+    default fn asset_id_exists(&self, asset_id: AssetId) -> Option<String> {
+        if let Some(index) = self
+            .data::<MultiAssetData>()
+            .collection_asset_entries
+            .iter()
+            .position(|a| a.asset_id == asset_id)
+        {
+            let asset_uri =
+                &self.data::<MultiAssetData>().collection_asset_entries[index].asset_uri;
+            return Some(asset_uri.clone())
+        }
+
+        None
+    }
+
     /// Used to retrieve asset's uri
-    fn get_asset_uri(&self, asset_id: AssetId) -> Option<String> {
+    default fn get_asset_uri(&self, asset_id: AssetId) -> Option<String> {
         self.asset_id_exists(asset_id)
     }
 

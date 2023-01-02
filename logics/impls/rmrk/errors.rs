@@ -23,7 +23,13 @@ pub enum RmrkError {
     BadPriorityLength,
     UnknownPartId,
     PartIsNotSlot,
+    SlotAlreayUsed,
+    TargetAssetCannotReceiveSlot,
+    UnknownPart,
     BadConfig,
+    EquipmentNotFound,
+    UnknownEquippableAsset,
+    NotEquipped,
 }
 
 impl RmrkError {
@@ -47,7 +53,13 @@ impl RmrkError {
             RmrkError::BadPriorityLength => String::from("BadPriorityLength"),
             RmrkError::UnknownPartId => String::from("UnknownPartId"),
             RmrkError::PartIsNotSlot => String::from("PartIsNotSlot"),
+            RmrkError::TargetAssetCannotReceiveSlot => String::from("TargetAssetCannotReceiveSlot"),
+            RmrkError::SlotAlreayUsed => String::from("SlotAlreayUsed"),
             RmrkError::BadConfig => String::from("BadConfig"),
+            RmrkError::EquipmentNotFound => String::from("EquipmentNotFound"),
+            RmrkError::UnknownPart => String::from("UnknownPart"),
+            RmrkError::UnknownEquippableAsset => String::from("UnknownEquippableAsset"),
+            RmrkError::NotEquipped => String::from("NotEquipped"),
         }
     }
 }

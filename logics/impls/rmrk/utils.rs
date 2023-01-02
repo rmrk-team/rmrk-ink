@@ -54,14 +54,23 @@ where
     /// Get URI for the token Id
     default fn token_uri(&self, token_id: u64) -> Result<PreludeString, PSP34Error> {
         self._token_exists(Id::U64(token_id))?;
-        let value = self.get_attribute(
-            self.data::<psp34::Data<enumerable::Balances>>()
-                .collection_id(),
-            String::from("baseUri"),
-        );
-        let mut token_uri = PreludeString::from_utf8(value.unwrap()).unwrap();
-        token_uri = token_uri + &token_id.to_string() + &PreludeString::from(".json");
-        Ok(token_uri)
+        let uri: PreludeString;
+        if let Some(token_uri) = self
+            .data::<MintingData>()
+            .nft_metadata
+            .get(Id::U64(token_id))
+        {
+            uri = PreludeString::from_utf8(token_uri).unwrap();
+        } else {
+            let value = self.get_attribute(
+                self.data::<psp34::Data<enumerable::Balances>>()
+                    .collection_id(),
+                String::from("baseUri"),
+            );
+            let token_uri = PreludeString::from_utf8(value.unwrap()).unwrap();
+            uri = token_uri + &token_id.to_string() + &PreludeString::from(".json");
+        }
+        Ok(uri)
     }
 
     /// Get max supply of tokens

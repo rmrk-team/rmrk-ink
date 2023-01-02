@@ -35,14 +35,18 @@ pub trait Equippable {
     #[ink(message)]
     fn equip(
         &mut self,
-        token_id: Id, asset_id: &AssetId, slot_part_id: PartId, child_nft: ChildNft, child_asset_id: AssetId
+        token_id: Id,
+        asset_id: AssetId,
+        slot_part_id: PartId,
+        child_nft: ChildNft,
+        child_asset_id: AssetId,
     ) -> Result<(), PSP34Error>;
-    
+
     /// Used to unequip child from parent token.
     /// # Requirements
     ///  * This can only be called by the owner of the token or by an account that has been granted permission to
     ///  * Called on Parent token contract
-    /// 
+    ///
     /// # Arguments:
     ///  * `token_id` ID of the token that had an asset unequipped
     ///  * `asset_id` ID of the asset associated with the token we are unequipping from
@@ -51,28 +55,25 @@ pub trait Equippable {
     ///  * `child_asset_id` ID of the asset associated with the token we are unequipping
     /// Emits an {ChildAssetUnequipped} event.
     #[ink(message)]
-    fn unequip(
-        &mut self,
-        token_id: Id, asset_id: &AssetId, slot_part_id: PartId, child_nft: ChildNft, child_asset_id: AssetId
-    ) -> Result<(), PSP34Error>;
-    
+    fn unequip(&mut self, token_id: Id, slot_part_id: PartId) -> Result<(), PSP34Error>;
+
     /// Used to declare that the assets belonging to a given `equippableGroupId` are equippable into the `Slot`
     /// associated with the `partId` of the collection at the specified `parentAddress`
     /// # Requirements
     ///  * Called on Child Token contract
-    /// 
+    ///
     /// # Arguments:
     ///  * `equippable_group_id` ID of the equippable group
     ///  * `parent_address` Address of the parent into which the equippable group can be equipped into
     ///  * `part_id` ID of the `Slot` that the items belonging to the equippable group can be equipped into
     #[ink(message)]
-    fn set_valid_parent_for_equippable_group(&mut self, 
+    fn set_valid_parent_for_equippable_group(
+        &mut self,
         equippable_group_id: EquippableGroupId,
         parent_address: AccountId,
         part_id: PartId,
     ) -> Result<(), PSP34Error>;
-    
-    
+
     /// Used to extend already added Asset with details needed to support equipping.
     /// These details are not present in MultiAsset trait to avoid dependencies on Equippable trait.
     /// # Arguments:
@@ -80,7 +81,12 @@ pub trait Equippable {
     ///  * `equippableGroupId` ID of the equippable group
     ///  * `partIds` An array of IDs of fixed and slot parts to be included in the asset
     #[ink(message)]
-    fn extend_equippable_asset(&mut self, asset_id: AssetId, group_id: EquippableGroupId, port_ids: Vec<PortId>) -> Result<(), PSP34Error>;
+    fn extend_equippable_asset(
+        &mut self,
+        asset_id: AssetId,
+        group_id: EquippableGroupId,
+        port_ids: Vec<PartId>,
+    ) -> Result<(), PSP34Error>;
 
     /// Used to get the Equipment object equipped into the specified slot of the desired token.
     ///
@@ -89,7 +95,7 @@ pub trait Equippable {
     ///  * `slot_part_id` ID of the `Slot` part that we are checking for equipped objects
     #[ink(message)]
     fn get_equipment(&self, token_id: Id, slot_part_id: PartId) -> Result<Equipment, PSP34Error>;
-    
+
     /// Used to get the asset and equippable data associated with given `asset_id`.
     /// # Arguments:
     ///  * tokenId ID of the token for which to retrieve the asset
@@ -98,27 +104,26 @@ pub trait Equippable {
     ///    * asset_id metadataURI,
     ///    * EquippableAsset
     #[ink(message)]
-    fn get_asset_and_equippable_data(&self, token_id: Id, asset_id: AssetId) -> Result<(String, EquippableAsset), PSP34Error>;
+    fn get_asset_and_equippable_data(
+        &self,
+        token_id: Id,
+        asset_id: AssetId,
+    ) -> Result<(Option<String>, EquippableAsset), PSP34Error>;
 }
 
 /// Trait definitions for Resource helper functions
 #[openbrush::trait_definition]
 pub trait Internal {
+    /// Check if slot is already used/equipped.
+    fn ensure_token_slot_free(&self, token_id: &Id, part_id: &PartId) -> Result<(), PSP34Error>;
+
     /// Check if asset is already added.
     fn ensure_asset_accepts_slot(
-        asset_id: AssetId,
-        part_id: PartId
+        &self,
+        asset_id: &AssetId,
+        part_id: &PartId,
     ) -> Result<(), PSP34Error>;
 
-    /// Used to check whether the token has a given child equipped.
-    /// This call is used to prevent from equipping a child that is equipped.
-    /// # Arguments:
-    ///  * token_id ID of the parent token for which we are querying for
-    ///  * child_nft Child NFT tuple (CollectionId, Id)
-    fn ensure_child_not_equipped(
-        token_id: Id, child_nft: ChildNft, 
-    ) -> Result<(), PSP34Error>;
-    
     /// Used to ensure a token can be equipped into a given parent's slot.
     /// # Arguments:
     ///  * parent Address of the parent token's smart contract
@@ -126,8 +131,20 @@ pub trait Internal {
     ///  * asset_id ID of the asset associated with the token we want to equip
     ///  * slotId ID of the slot that we want to equip the token into
     /// * @return bool The boolean indicating whether the token with the given asset can be equipped into the desired
-    fn ensure_token_can_be_equipped_with_asset_into_slot(&mut self, parent_address: AccountId, 
-        parent_token_id: Id, asset_id: AssetId, slot_part_id: PartId) -> Result<(), PSP34Error>;
+    fn ensure_token_can_be_equipped_with_asset_into_slot(
+        &self,
+        parent_address: AccountId,
+        parent_token_id: Id,
+        asset_id: AssetId,
+        slot_part_id: PartId,
+    ) -> Result<(), PSP34Error>;
+
+    /// Used to ensure a token is not equipped and can be un-equipped.
+    fn ensure_equipped(
+        &self,
+        token_id: &Id,
+        slot_part_id: &PartId,
+    ) -> Result<Equipment, PSP34Error>;
 }
 
 /// Trait definitions for Resource ink events
@@ -140,7 +157,14 @@ pub trait EquippableEvents {
     ///  * slot_part_id ID of the slot we are using to equip
     ///  * child_nft Child NFT tuple (CollectionId, Id)
     ///  * child_asset_id ID of the asset associated with the token we are equipping
-    fn _emit_child_asset_equipped(&self, token_id: Id, asset_id: &AssetId, slot_part_id: PartId, child_nft: ChildNft, child_asset_id: AssetId);
+    fn _emit_child_asset_equipped(
+        &self,
+        token_id: Id,
+        asset_id: AssetId,
+        slot_part_id: PartId,
+        child_nft: ChildNft,
+        child_asset_id: AssetId,
+    );
 
     /// Used to notify listeners that an asset object at `asset_id` is added to token's pending asset
     /// # Arguments:
@@ -149,8 +173,8 @@ pub trait EquippableEvents {
     ///  * slot_part_id ID of the slot we are using to unequip
     ///  * child_nft Child NFT tuple (CollectionId, Id)
     ///  * child_asset_id ID of the asset associated with the token we are unequipping
-    fn _emit_child_asset_unequipped(&self, token_id: Id, asset_id: &AssetId, slot_part_id: PartId, child_nft: ChildNft, child_asset_id: AssetId);
-    
+    fn _emit_child_asset_unequipped(&self, token_id: Id, asset_id: AssetId, slot_part_id: PartId);
+
     //// Used to notify listeners that the assets belonging to a `equippableGroupId` have been marked as
     /// equippable into a given slot and parent
     /// # Arguments:
@@ -160,5 +184,10 @@ pub trait EquippableEvents {
     ///     associated with `equippableGroupId` can be equipped
     ///  * `parentAddress` Address of the collection into which the parts belonging to `equippableGroupId` can be
     ///     equipped
-    fn _emit_valid_parent_equippable_group_set(&self, group_id: EquippableGroupId, slot_part_id: PartId, parent_address: AccountId);
+    fn _emit_valid_parent_equippable_group_set(
+        &self,
+        group_id: EquippableGroupId,
+        slot_part_id: PartId,
+        parent_address: AccountId,
+    );
 }

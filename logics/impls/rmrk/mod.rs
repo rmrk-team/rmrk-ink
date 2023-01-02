@@ -1,5 +1,5 @@
 pub mod base;
-pub mod equipment;
+pub mod equippable;
 pub mod errors;
 pub mod minting;
 pub mod multiasset;

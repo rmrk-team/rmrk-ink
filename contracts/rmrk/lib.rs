@@ -31,6 +31,7 @@ pub mod rmrk_contract {
         },
         traits::{
             base::*,
+            equippable::*,
             minting::*,
             multiasset::*,
             nesting::*,
@@ -181,6 +182,8 @@ pub mod rmrk_contract {
         minting: types::MintingData,
         #[storage_field]
         base: types::BaseData,
+        #[storage_field]
+        equippable: types::EquippableData,
     }
 
     impl PSP34 for Rmrk {}
@@ -201,6 +204,8 @@ pub mod rmrk_contract {
 
     impl Base for Rmrk {}
 
+    impl Equippable for Rmrk {}
+
     impl Rmrk {
         /// Instantiate new RMRK contract
         #[ink(constructor)]
@@ -214,7 +219,10 @@ pub mod rmrk_contract {
             _royalty_receiver: AccountId,
             _royalty: u8,
         ) -> Self {
-            ink_env::debug_println!("####### initializing RMRK contract");
+            ink_env::debug_println!(
+                "####### initializing {:?} contract",
+                String::to_owned(&symbol)
+            );
             ink_lang::codegen::initialize_contract(|instance: &mut Rmrk| {
                 instance._init_with_owner(instance.env().caller());
                 let collection_id = instance.collection_id();
@@ -450,6 +458,49 @@ pub mod rmrk_contract {
             assert_eq!(
                 rmrk.owners_token_by_index(accounts.bob, 5),
                 Err(TokenNotExists)
+            );
+        }
+
+        #[ink::test]
+        fn mint_with_metadata_works() {
+            const RMRK_METADATA: &str = "ipfs://rmrkIpfsUri/";
+
+            let mut rmrk = init();
+            let accounts = default_accounts();
+            assert_eq!(rmrk.owner(), accounts.alice);
+
+            // only owner is allowed to mint
+            set_sender(accounts.bob);
+            assert_eq!(
+                rmrk.mint_with_metadata(RMRK_METADATA.into(), accounts.bob),
+                Err(PSP34Error::Custom(String::from("O::CallerIsNotOwner")))
+            );
+
+            // owner mints
+            set_sender(accounts.alice);
+            assert_eq!(rmrk.total_supply(), 0);
+            assert!(rmrk
+                .mint_with_metadata(RMRK_METADATA.into(), accounts.bob)
+                .is_ok());
+            assert_eq!(rmrk.total_supply(), 1);
+            assert_eq!(rmrk.owner_of(Id::U64(1)), Some(accounts.bob));
+            assert_eq!(rmrk.balance_of(accounts.bob), 1);
+            assert_eq!(rmrk.owners_token_by_index(accounts.bob, 0), Ok(Id::U64(1)));
+            assert_eq!(1, ink_env::test::recorded_events().count());
+
+            // token_uri for rmrk mint works
+            assert_eq!(
+                rmrk.token_uri(1),
+                Ok(PreludeString::from(RMRK_METADATA.to_owned()))
+            );
+
+            // token_uri for mint_next work
+            set_sender(accounts.bob);
+            test::set_value_transferred::<ink_env::DefaultEnvironment>(PRICE);
+            assert!(rmrk.mint_next().is_ok());
+            assert_eq!(
+                rmrk.token_uri(2),
+                Ok(PreludeString::from(BASE_URI.to_owned() + "2.json"))
             );
         }
 
@@ -894,6 +945,67 @@ pub mod rmrk_contract {
             assert_eq!(rmrk.get_base_metadata(), "ipfs://base_metadata");
 
             // assert_eq!(1, ink_env::test::recorded_events().count());
+        }
+
+        #[ink::test]
+        fn equip_works() {
+            const ASSET_URI: &str = "asset_uri/";
+            const ASSET_ID: AssetId = 1;
+            const TOKEN_ID1: Id = Id::U64(1);
+            const TOKEN_ID2: Id = Id::U64(2);
+            const EQUIPABLE_ADDRESS1: [u8; 32] = [1; 32];
+            const EQUIPABLE_ADDRESS2: [u8; 32] = [2; 32];
+            const EQUIPABLE_ADDRESS3: [u8; 32] = [3; 32];
+            const CHILD_COLLECTION_ADDRESS: [u8; 32] = [10; 32];
+            const CHILD_TOKEN_ID: Id = Id::U64(2);
+            const CHILD_ASSET_ID: AssetId = 2;
+
+            const PART_ID0: PartId = 0;
+            const PART_ID1: PartId = 1;
+            let part_list = vec![
+                // Background option 1
+                Part {
+                    part_type: PartType::Slot,
+                    z: 0,
+                    equippable: vec![EQUIPABLE_ADDRESS1.into(), EQUIPABLE_ADDRESS2.into()],
+                    metadata_uri: String::from("ipfs://backgrounds/1.svg"),
+                    is_equippable_by_all: false,
+                },
+                // Background option 2
+                Part {
+                    part_type: PartType::Fixed,
+                    z: 0,
+                    equippable: vec![],
+                    metadata_uri: String::from("ipfs://backgrounds/2.svg"),
+                    is_equippable_by_all: false,
+                },
+            ];
+
+            let accounts = default_accounts();
+            let mut kanaria = init();
+
+            assert!(kanaria.add_part_list(part_list.clone()).is_ok());
+            assert!(kanaria
+                .add_asset_entry(ASSET_ID, 1, String::from(ASSET_URI))
+                .is_ok());
+
+            // mint kanaria and equip it
+            set_sender(accounts.bob);
+            test::set_value_transferred::<ink_env::DefaultEnvironment>(PRICE);
+            assert!(kanaria.mint_next().is_ok());
+            let k = kanaria.equip(
+                Id::U64(1),
+                ASSET_ID,
+                PART_ID0,
+                (CHILD_COLLECTION_ADDRESS.into(), CHILD_TOKEN_ID),
+                CHILD_ASSET_ID,
+            );
+            println!("equip result {:?}", k);
+
+            let h = kanaria.unequip(Id::U64(1), PART_ID0);
+            println!("unequip result {:?}", h);
+
+            // assert!(false);
         }
 
         fn default_accounts() -> test::DefaultAccounts<ink_env::DefaultEnvironment> {
