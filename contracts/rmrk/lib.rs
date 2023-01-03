@@ -376,6 +376,7 @@ pub mod rmrk_contract {
         use rmrk::impls::rmrk::{
             errors::RmrkError,
             minting::Internal,
+            types::EquippableGroupId,
         };
 
         const PRICE: Balance = 100_000_000_000_000_000;
@@ -959,6 +960,7 @@ pub mod rmrk_contract {
             const CHILD_COLLECTION_ADDRESS: [u8; 32] = [10; 32];
             const CHILD_TOKEN_ID: Id = Id::U64(2);
             const CHILD_ASSET_ID: AssetId = 2;
+            const EQUIPPABLE_GROUP_ID: EquippableGroupId = 1;
 
             const PART_ID0: PartId = 0;
             const PART_ID1: PartId = 1;
@@ -993,19 +995,45 @@ pub mod rmrk_contract {
             set_sender(accounts.bob);
             test::set_value_transferred::<ink_env::DefaultEnvironment>(PRICE);
             assert!(kanaria.mint_next().is_ok());
-            let k = kanaria.equip(
-                Id::U64(1),
-                ASSET_ID,
-                PART_ID0,
-                (CHILD_COLLECTION_ADDRESS.into(), CHILD_TOKEN_ID),
-                CHILD_ASSET_ID,
+            assert!(kanaria
+                .equip(
+                    TOKEN_ID1,
+                    ASSET_ID,
+                    PART_ID0,
+                    (CHILD_COLLECTION_ADDRESS.into(), CHILD_TOKEN_ID),
+                    CHILD_ASSET_ID,
+                )
+                .is_ok());
+            assert_eq!(
+                kanaria.get_equipment(TOKEN_ID1, PART_ID0),
+                Ok(Equipment {
+                    asset_id: 1,
+                    child_asset_id: 2,
+                    child_nft: (CHILD_COLLECTION_ADDRESS.into(), CHILD_TOKEN_ID)
+                })
             );
-            println!("equip result {:?}", k);
 
-            let h = kanaria.unequip(Id::U64(1), PART_ID0);
-            println!("unequip result {:?}", h);
+            // extend asset to be used as equipment
+            assert!(kanaria
+                .extend_equippable_asset(ASSET_ID, EQUIPPABLE_GROUP_ID, vec![PART_ID0, PART_ID1])
+                .is_ok());
+            assert_eq!(
+                kanaria.get_asset_and_equippable_data(TOKEN_ID1, ASSET_ID),
+                Ok((
+                    Some(String::from(ASSET_URI)),
+                    EquippableAsset {
+                        group_id: 1,
+                        port_ids: vec![PART_ID0, PART_ID1]
+                    }
+                ))
+            );
 
-            // assert!(false);
+            // un-equip token
+            assert!(kanaria.unequip(TOKEN_ID1, PART_ID0).is_ok());
+            assert_eq!(
+                kanaria.get_equipment(TOKEN_ID1, PART_ID0),
+                Err(PSP34Error::Custom(RmrkError::EquipmentNotFound.as_str()))
+            );
         }
 
         fn default_accounts() -> test::DefaultAccounts<ink_env::DefaultEnvironment> {

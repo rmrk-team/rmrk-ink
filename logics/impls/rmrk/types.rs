@@ -175,8 +175,8 @@ pub struct EquippableData {
     derive(scale_info::TypeInfo, ink_storage::traits::StorageLayout)
 )]
 pub struct Equipment {
-    // asset_id: The ID of the asset equipping a child
-    pub(crate) asset_id: AssetId,
+    // asset_id: The ID of the asset being equipped by child
+    pub asset_id: AssetId,
 
     // child_asset_id: The ID of the asset used as equipment
     pub child_asset_id: AssetId,
