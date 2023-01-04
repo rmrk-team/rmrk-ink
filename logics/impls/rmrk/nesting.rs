@@ -197,7 +197,6 @@ where
             .call_flags(CallFlags::default().set_allow_reentry(true))
             .fire()
             .unwrap()?;
-        ink_env::debug_println!("####### transfer  executed!!!!");
 
         Ok(())
     }

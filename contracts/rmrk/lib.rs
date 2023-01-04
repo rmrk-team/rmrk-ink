@@ -25,7 +25,11 @@ pub mod rmrk_contract {
     };
     use rmrk::{
         impls::rmrk::{
-            types::*,
+            types::{
+                EquippableGroupId,
+                SlotId,
+                *,
+            },
             *,
         },
         traits::{
@@ -38,7 +42,6 @@ pub mod rmrk_contract {
         },
     };
 
-    // Event definitions
     /// Event emitted when a token transfer occurs.
     #[ink(event)]
     pub struct Transfer {
@@ -157,6 +160,42 @@ pub mod rmrk_contract {
         token: Id,
         #[ink(topic)]
         priorities: Vec<AssetId>,
+    }
+
+    /// Event emitted when the asset is equipped.
+    #[ink(event)]
+    pub struct AssetEquipped {
+        #[ink(topic)]
+        token: Id,
+        #[ink(topic)]
+        asset: AssetId,
+        #[ink(topic)]
+        child: Id,
+        #[ink(topic)]
+        child_asset: AssetId,
+    }
+
+    /// Event emitted when the asset is un-equipped.
+    #[ink(event)]
+    pub struct AssetUnEquipped {
+        #[ink(topic)]
+        token: Id,
+        #[ink(topic)]
+        asset: AssetId,
+        #[ink(topic)]
+        slot: SlotId,
+    }
+
+    /// Used to notify listeners that the assets belonging to a `equippableGroupId` have been marked as
+    /// equippable into a given slot and parent
+    #[ink(event)]
+    pub struct ParentEquippableGroupSet {
+        #[ink(topic)]
+        group: EquippableGroupId,
+        #[ink(topic)]
+        slot: SlotId,
+        #[ink(topic)]
+        parent: AccountId,
     }
 
     // Rmrk contract storage
@@ -305,6 +344,7 @@ pub mod rmrk_contract {
             });
         }
     }
+
     impl multiasset::MultiAssetEvents for Rmrk {
         /// Used to notify listeners that an asset object is initialized at `assetId`.
         fn _emit_asset_set_event(&self, asset_id: &AssetId) {
@@ -354,6 +394,54 @@ pub mod rmrk_contract {
             self.env().emit_event(AssetPrioritySet {
                 token: token_id.clone(),
                 priorities,
+            });
+        }
+    }
+
+    impl equippable::EquippableEvents for Rmrk {
+        /// Used to notify listeners that a child's asset has been equipped into one of its parent assets.
+        fn emit_child_asset_equipped(
+            &self,
+            token_id: Id,
+            asset_id: AssetId,
+            _slot_part_id: PartId,
+            child_nft: ChildNft,
+            child_asset_id: AssetId,
+        ) {
+            self.env().emit_event(AssetEquipped {
+                token: token_id,
+                asset: asset_id,
+                child: child_nft.1,
+                child_asset: child_asset_id,
+            });
+        }
+
+        /// Used to notify listeners that an asset object at `asset_id` is added to token's pending asset
+        fn emit_child_asset_unequipped(
+            &self,
+            token_id: Id,
+            asset_id: AssetId,
+            slot_part_id: PartId,
+        ) {
+            self.env().emit_event(AssetUnEquipped {
+                token: token_id,
+                asset: asset_id,
+                slot: slot_part_id,
+            });
+        }
+
+        /// Used to notify listeners that the assets belonging to a `equippableGroupId` have been marked as
+        /// equippable into a given slot and parent
+        fn emit_valid_parent_equippable_group_set(
+            &self,
+            group_id: EquippableGroupId,
+            slot_part_id: PartId,
+            parent_address: AccountId,
+        ) {
+            self.env().emit_event(ParentEquippableGroupSet {
+                group: group_id,
+                slot: slot_part_id,
+                parent: parent_address,
             });
         }
     }
@@ -993,6 +1081,7 @@ pub mod rmrk_contract {
             assert!(kanaria
                 .add_asset_entry(ASSET_ID, EQUIPPABLE_GROUP_ID, String::from(ASSET_URI))
                 .is_ok());
+            assert_eq!(1, ink_env::test::recorded_events().count());
 
             // equip fails, token does not exist. Not minted yet
             // TODO
@@ -1001,6 +1090,7 @@ pub mod rmrk_contract {
             set_sender(accounts.bob);
             test::set_value_transferred::<ink_env::DefaultEnvironment>(PRICE);
             assert!(kanaria.mint_next().is_ok());
+            assert_eq!(2, ink_env::test::recorded_events().count());
 
             // equip fails, caller not token owner
             set_sender(accounts.alice);
@@ -1032,6 +1122,7 @@ pub mod rmrk_contract {
             assert!(kanaria
                 .add_asset_to_token(TOKEN_ID1, ASSET_ID, None)
                 .is_ok());
+            assert_eq!(4, ink_env::test::recorded_events().count());
 
             // extend asset with equipping capability
             assert!(kanaria
@@ -1058,7 +1149,6 @@ pub mod rmrk_contract {
                 ),
                 Err(PSP34Error::Custom(RmrkError::AddressNotEquippable.as_str()))
             );
-            // add child address to asset
 
             // equip works
             assert!(kanaria
@@ -1079,6 +1169,9 @@ pub mod rmrk_contract {
                     child_nft: (CHILD_COLLECTION_ADDRESS.into(), CHILD_TOKEN_ID)
                 })
             );
+
+            // check AssetEquipped event is emitted
+            assert_eq!(5, ink_env::test::recorded_events().count());
 
             // equip fails, TargetAssetCannotReceiveSlot
             assert_eq!(

@@ -157,7 +157,7 @@ pub trait EquippableEvents {
     ///  * slot_part_id ID of the slot we are using to equip
     ///  * child_nft Child NFT tuple (CollectionId, Id)
     ///  * child_asset_id ID of the asset associated with the token we are equipping
-    fn _emit_child_asset_equipped(
+    fn emit_child_asset_equipped(
         &self,
         token_id: Id,
         asset_id: AssetId,
@@ -173,7 +173,7 @@ pub trait EquippableEvents {
     ///  * slot_part_id ID of the slot we are using to unequip
     ///  * child_nft Child NFT tuple (CollectionId, Id)
     ///  * child_asset_id ID of the asset associated with the token we are unequipping
-    fn _emit_child_asset_unequipped(&self, token_id: Id, asset_id: AssetId, slot_part_id: PartId);
+    fn emit_child_asset_unequipped(&self, token_id: Id, asset_id: AssetId, slot_part_id: PartId);
 
     //// Used to notify listeners that the assets belonging to a `equippableGroupId` have been marked as
     /// equippable into a given slot and parent
@@ -184,7 +184,7 @@ pub trait EquippableEvents {
     ///     associated with `equippableGroupId` can be equipped
     ///  * `parentAddress` Address of the collection into which the parts belonging to `equippableGroupId` can be
     ///     equipped
-    fn _emit_valid_parent_equippable_group_set(
+    fn emit_valid_parent_equippable_group_set(
         &self,
         group_id: EquippableGroupId,
         slot_part_id: PartId,

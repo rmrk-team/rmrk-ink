@@ -6,10 +6,7 @@ use openbrush::{
         Id,
         PSP34Error,
     },
-    traits::{
-        AccountId,
-        String,
-    },
+    traits::String,
 };
 
 #[openbrush::wrapper]

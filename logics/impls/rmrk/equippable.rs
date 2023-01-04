@@ -1,4 +1,4 @@
-//! RMRK Base implementation
+//! RMRK Equippable implementation
 
 use crate::impls::rmrk::{
     errors::RmrkError,
@@ -65,24 +65,18 @@ where
         asset_id: &AssetId,
         part_id: &PartId,
     ) -> Result<(), PSP34Error> {
-        // (, bool found) = _partIds[assetId].indexOf(slotPartId);
-        // if (!found) revert RMRKTargetAssetCannotReceiveSlot();
         if let Some(equippable_asset) = self.data::<EquippableData>().equippable_asset.get(asset_id)
         {
-            println!("equippable_asset {:?}", equippable_asset.port_ids);
             if !equippable_asset.port_ids.contains(part_id) {
-                println!("TargetAssetCannotReceiveSlot");
                 return Err(PSP34Error::Custom(String::from(
                     RmrkError::TargetAssetCannotReceiveSlot.as_str(),
                 )))
             }
         } else {
-            println!("AssetHasNoParts");
             return Err(PSP34Error::Custom(String::from(
                 RmrkError::AssetHasNoParts.as_str(),
             )))
         }
-        println!("OK");
         Ok(())
     }
 
@@ -92,16 +86,8 @@ where
         parent_address: AccountId,
         token_id: Id,
         asset_id: AssetId,
-        part_slot_id: PartId,
+        _part_slot_id: PartId,
     ) -> Result<(), PSP34Error> {
-        // uint64 equippableGroupId = _equippableGroupIds[assetId];
-        // uint64 equippableSlot = _validParentSlots[equippableGroupId][parent];
-        // if (equippableSlot == slotId) {
-        //     (, bool found) = getActiveAssets(tokenId).indexOf(assetId);
-        //     return found;
-        // }
-        // return false;
-
         if let Some(equippable_asset) = self.data::<EquippableData>().equippable_asset.get(asset_id)
         {
             let equippable_group_id = equippable_asset.group_id;
@@ -164,10 +150,8 @@ where
         child_nft: ChildNft,
         child_asset_id: AssetId,
     ) -> Result<(), PSP34Error> {
-        // TODO check token exist
         let token_owner = self.ensure_exists(&token_id)?;
         self.ensure_token_owner(token_owner)?;
-
         self.ensure_asset_accepts_slot(&asset_id, &slot_part_id)?;
         self.ensure_token_slot_free(&token_id, &slot_part_id)?;
 
@@ -190,18 +174,14 @@ where
             .equipment
             .insert((token_id.clone(), slot_part_id), &equipment);
 
-        self._emit_child_asset_equipped(
-            token_id,
-            asset_id,
-            slot_part_id,
-            child_nft,
-            child_asset_id,
-        );
+        self.emit_child_asset_equipped(token_id, asset_id, slot_part_id, child_nft, child_asset_id);
         Ok(())
     }
 
     /// Used to unequip child from parent token.
     default fn unequip(&mut self, token_id: Id, slot_part_id: PartId) -> Result<(), PSP34Error> {
+        let token_owner = self.ensure_exists(&token_id)?;
+        self.ensure_token_owner(token_owner)?;
         let equipment = self.ensure_equipped(&token_id, &slot_part_id)?;
         let asset_id = equipment.asset_id;
 
@@ -209,7 +189,7 @@ where
             .equipment
             .remove((token_id.clone(), slot_part_id));
 
-        self._emit_child_asset_unequipped(token_id, asset_id, slot_part_id);
+        self.emit_child_asset_unequipped(token_id, asset_id, slot_part_id);
         Ok(())
     }
 
@@ -224,6 +204,8 @@ where
         self.data::<EquippableData>()
             .valid_parent_slot
             .insert((equippable_group_id, parent_address), &part_id);
+        self.emit_valid_parent_equippable_group_set(equippable_group_id, part_id, parent_address);
+
         Ok(())
     }
 
@@ -279,7 +261,7 @@ where
 
 impl<T> EquippableEvents for T {
     /// Used to notify listeners that a child's asset has been equipped into one of its parent assets.
-    default fn _emit_child_asset_equipped(
+    default fn emit_child_asset_equipped(
         &self,
         _token_id: Id,
         _asset_id: AssetId,
@@ -290,7 +272,7 @@ impl<T> EquippableEvents for T {
     }
 
     /// Used to notify listeners that an asset object at `asset_id` is added to token's pending asset
-    default fn _emit_child_asset_unequipped(
+    default fn emit_child_asset_unequipped(
         &self,
         _token_id: Id,
         _asset_id: AssetId,
@@ -298,9 +280,9 @@ impl<T> EquippableEvents for T {
     ) {
     }
 
-    //// Used to notify listeners that the assets belonging to a `equippableGroupId` have been marked as
+    /// Used to notify listeners that the assets belonging to a `equippableGroupId` have been marked as
     /// equippable into a given slot and parent
-    default fn _emit_valid_parent_equippable_group_set(
+    default fn emit_valid_parent_equippable_group_set(
         &self,
         _group_id: EquippableGroupId,
         _slot_part_id: PartId,
