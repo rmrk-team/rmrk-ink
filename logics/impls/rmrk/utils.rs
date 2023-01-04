@@ -54,7 +54,7 @@ where
 
     /// Get URI for the token Id
     default fn token_uri(&self, token_id: u64) -> Result<PreludeString, PSP34Error> {
-        self._token_exists(Id::U64(token_id))?;
+        self.ensure_exists(&Id::U64(token_id))?;
         let uri: PreludeString;
         if let Some(token_uri) = self
             .data::<MintingData>()
@@ -114,35 +114,5 @@ where
             )))
         }
         Ok(())
-    }
-}
-
-/// Helper trait for Psp34Custom
-impl<T> Internal for T
-where
-    T: Storage<MintingData> + Storage<psp34::Data<enumerable::Balances>>,
-{
-    /// Check if token is minted
-    default fn _token_exists(&self, id: Id) -> Result<(), PSP34Error> {
-        self.data::<psp34::Data<enumerable::Balances>>()
-            .owner_of(id)
-            .ok_or(PSP34Error::TokenNotExists)?;
-        Ok(())
-    }
-}
-
-//---------------------- T E S T ---------------------------------------------
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn check_value_overflow_ok2() {
-        struct testing {};
-        impl Psp34Custom for testing {}
-        assert_eq!(
-            testing._check_value(transferred_value, mint_amount),
-            Err(PSP34Error::Custom(RmrkError::BadMintValue.as_str()))
-        );
     }
 }
