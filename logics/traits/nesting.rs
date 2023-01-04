@@ -171,9 +171,6 @@ pub trait Internal {
         child_nft: &ChildNft,
     ) -> Result<(), PSP34Error>;
 
-    /// Check if token is minted. Return the owner.
-    fn ensure_exists(&self, id: &Id) -> Result<AccountId, PSP34Error>;
-
     /// Check if caller is the owner of this parent token.
     fn is_caller_parent_owner(
         &self,

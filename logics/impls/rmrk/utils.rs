@@ -24,6 +24,7 @@ use openbrush::{
     },
     modifiers,
     traits::{
+        AccountId,
         Balance,
         Storage,
         String,
@@ -53,7 +54,7 @@ where
 
     /// Get URI for the token Id
     default fn token_uri(&self, token_id: u64) -> Result<PreludeString, PSP34Error> {
-        self._token_exists(Id::U64(token_id))?;
+        self.ensure_exists(&Id::U64(token_id))?;
         let value = self.get_attribute(
             self.data::<psp34::Data<enumerable::Balances>>()
                 .collection_id(),
@@ -91,14 +92,15 @@ where
 /// Helper trait for Psp34Custom
 impl<T> Internal for T
 where
-    T: Storage<MintingData> + Storage<psp34::Data<enumerable::Balances>>,
+    T: Storage<psp34::Data<enumerable::Balances>>,
 {
     /// Check if token is minted
-    default fn _token_exists(&self, id: Id) -> Result<(), PSP34Error> {
-        self.data::<psp34::Data<enumerable::Balances>>()
-            .owner_of(id)
+    default fn ensure_exists(&self, id: &Id) -> Result<AccountId, PSP34Error> {
+        let account_id = self
+            .data::<psp34::Data<enumerable::Balances>>()
+            .owner_of(id.clone())
             .ok_or(PSP34Error::TokenNotExists)?;
-        Ok(())
+        Ok(account_id)
     }
 }
 
