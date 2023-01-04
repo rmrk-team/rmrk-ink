@@ -26,6 +26,7 @@ pub trait MultiAsset {
         id: AssetId,
         equippable_group_id: EquippableGroupId,
         asset_uri: String,
+        part_ids: Vec<PartId>,
     ) -> Result<(), PSP34Error>;
 
     /// Used to add an asset to a token.
@@ -111,7 +112,10 @@ pub trait MultiAsset {
     fn remove_asset(&mut self, token_id: Id, asset_id: AssetId) -> Result<(), PSP34Error>;
 
     /// Check if asset is already added.
-    fn asset_id_exists(&self, asset_id: AssetId) -> Option<String>;
+    fn ensure_asset_id_exists(&self, asset_id: AssetId) -> Result<(), PSP34Error>;
+
+    /// Check that asset id does not already exist.
+    fn ensure_new_asset(&self, asset_id: AssetId) -> Result<(), PSP34Error>;
 }
 
 /// Trait definitions for MultiAsset helper functions

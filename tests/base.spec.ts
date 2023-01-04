@@ -102,8 +102,8 @@ describe('RMRK Base tests', () => {
     // add/remove equippable addresses
     const addEquipGas = (await gem.withSigner(deployer).query.addEquippableAddresses(0, [kanaria.address])).gasRequired;
     await gem.withSigner(deployer).tx.addEquippableAddresses(0, [kanaria.address], { gasLimit: addEquipGas * 2n });
-    expect((await gem.query.isEquippable(0, kanaria.address))?.value).to.be.true;
-    expect((await gem.query.isEquippable(1, kanaria.address))?.value).to.be.false;
+    expect((await gem.query.ensureEquippable(0, kanaria.address))?.value).to.be.ok;
+    expect((await gem.query.ensureEquippable(1, kanaria.address))?.value).to.be.ok;
     const removePartListGas = (await gem.withSigner(deployer).query.resetEquippableAddresses(0)).gasRequired;
     await gem.withSigner(deployer).tx.resetEquippableAddresses(0, { gasLimit: removePartListGas * 2n });
 

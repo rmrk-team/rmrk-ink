@@ -1,16 +1,9 @@
 //! Types definition for RMRK contract
 
 use ink_prelude::vec::Vec;
-use ink_primitives::{
-    Key,
-    KeyPtr,
-};
 use ink_storage::{
     traits::{
-        ExtKeyPtr,
-        PackedAllocate,
         PackedLayout,
-        SpreadAllocate,
         SpreadLayout,
     },
     Mapping,
@@ -68,8 +61,11 @@ pub const STORAGE_MULTIASSET_KEY: u32 = openbrush::storage_unique_key!(MultiAsse
 #[derive(Default, Debug)]
 #[openbrush::upgradeable_storage(STORAGE_MULTIASSET_KEY)]
 pub struct MultiAssetData {
-    /// List of available asset entries for this collection
-    pub collection_asset_entries: Vec<Asset>,
+    /// Mapping of available asset entries for this collection
+    pub collection_asset_entries: Mapping<AssetId, Asset>,
+
+    /// Collection asset id list
+    pub collection_asset_ids: Vec<AssetId>,
 
     /// Mapping of tokenId to an array of active assets
     pub accepted_assets: Mapping<Id, Vec<AssetId>>,
@@ -85,22 +81,14 @@ pub struct MultiAssetData {
     derive(scale_info::TypeInfo, ink_storage::traits::StorageLayout)
 )]
 pub struct Asset {
-    pub asset_id: AssetId,
+    /// Only used for assets meant to equip into others
     pub equippable_group_id: EquippableGroupId,
+
+    /// metadata URI for Asset
     pub asset_uri: String,
-}
 
-impl ink_storage::traits::PackedAllocate for Asset {
-    fn allocate_packed(&mut self, at: &Key) {
-        PackedAllocate::allocate_packed(&mut *self, at)
-    }
-}
-
-impl SpreadAllocate for Asset {
-    fn allocate_spread(ptr: &mut KeyPtr) -> Self {
-        ptr.next_for::<Asset>();
-        Asset::default()
-    }
+    /// list of parts for this asset
+    pub part_ids: Vec<PartId>,
 }
 
 pub const STORAGE_BASE_KEY: u32 = openbrush::storage_unique_key!(BaseData);
@@ -164,7 +152,6 @@ pub const STORAGE_EQUIPMENT_KEY: u32 = openbrush::storage_unique_key!(EquipmentD
 #[openbrush::upgradeable_storage(STORAGE_EQUIPMENT_KEY)]
 pub struct EquippableData {
     pub equipment: Mapping<(Id, PartId), Equipment>,
-    pub equippable_asset: Mapping<AssetId, EquippableAsset>,
     pub valid_parent_slot: Mapping<(EquippableGroupId, AccountId), PartId>,
 }
 
@@ -183,15 +170,4 @@ pub struct Equipment {
 
     // child_id: The (Address of the collection, token ID) of token that is equipped
     pub child_nft: ChildNft,
-}
-
-/// Used to extend Asset for the Equipping functions
-#[derive(scale::Encode, scale::Decode, SpreadLayout, PackedLayout, Debug, Clone, PartialEq)]
-#[cfg_attr(
-    feature = "std",
-    derive(scale_info::TypeInfo, ink_storage::traits::StorageLayout)
-)]
-pub struct EquippableAsset {
-    pub group_id: EquippableGroupId,
-    pub port_ids: Vec<PartId>,
 }

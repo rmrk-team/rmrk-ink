@@ -194,19 +194,28 @@ where
         asset_id: AssetId,
         equippable_group_id: EquippableGroupId,
         asset_uri: String,
+        part_ids: Vec<PartId>,
     ) -> Result<(), PSP34Error> {
-        if self.asset_id_exists(asset_id).is_some() {
-            return Err(PSP34Error::Custom(String::from(
-                RmrkError::AssetIdAlreadyExists.as_str(),
-            )))
-        };
+        self.ensure_new_asset(asset_id)?;
         self.data::<MultiAssetData>()
             .collection_asset_entries
-            .push(Asset {
+            .insert(
                 asset_id,
-                equippable_group_id,
-                asset_uri,
-            });
+                &Asset {
+                    equippable_group_id,
+                    asset_uri,
+                    part_ids: part_ids.clone(),
+                },
+            );
+        ink_env::debug_println!(
+            "##################### add_asset_entry asset {:?}, adding parts {:?} group {:?}",
+            asset_id,
+            part_ids,
+            equippable_group_id
+        );
+        self.data::<MultiAssetData>()
+            .collection_asset_ids
+            .push(asset_id);
         self._emit_asset_set_event(&asset_id);
 
         Ok(())
@@ -219,10 +228,7 @@ where
         asset_id: AssetId,
         _replaces_asset_with_id: Option<Id>, // TODO implement replacement
     ) -> Result<(), PSP34Error> {
-        self.asset_id_exists(asset_id)
-            .ok_or(PSP34Error::Custom(String::from(
-                RmrkError::AssetIdNotFound.as_str(),
-            )))?;
+        self.ensure_asset_id_exists(asset_id)?;
         let token_owner = self.ensure_exists(&token_id)?;
         self.ensure_not_accepted(&token_id, &asset_id)?;
         self.ensure_not_pending(&token_id, &asset_id)?;
@@ -310,7 +316,7 @@ where
 
     /// Used to retrieve the total number of asset entries
     fn total_assets(&self) -> u32 {
-        self.data::<MultiAssetData>().collection_asset_entries.len() as u32
+        self.data::<MultiAssetData>().collection_asset_ids.len() as u32
     }
 
     /// Used to retrieve the total number of assets per token
@@ -332,25 +338,46 @@ where
         Ok((accepted_assets_on_token, pending_assets_on_token))
     }
 
-    /// Check if token is minted. Return the token uri
-    default fn asset_id_exists(&self, asset_id: AssetId) -> Option<String> {
-        if let Some(index) = self
+    /// Check if asset id is valid. Return the token uri
+    default fn ensure_asset_id_exists(&self, asset_id: AssetId) -> Result<(), PSP34Error> {
+        if self
             .data::<MultiAssetData>()
             .collection_asset_entries
-            .iter()
-            .position(|a| a.asset_id == asset_id)
+            .get(asset_id)
+            .is_none()
         {
-            let asset_uri =
-                &self.data::<MultiAssetData>().collection_asset_entries[index].asset_uri;
-            return Some(asset_uri.clone())
+            return Err(PSP34Error::Custom(String::from(
+                RmrkError::AssetIdNotFound.as_str(),
+            )))
         }
+        return Ok(())
+    }
 
-        None
+    /// Check that asset id does not already exist.
+    default fn ensure_new_asset(&self, asset_id: AssetId) -> Result<(), PSP34Error> {
+        if self
+            .data::<MultiAssetData>()
+            .collection_asset_entries
+            .get(asset_id)
+            .is_some()
+        {
+            return Err(PSP34Error::Custom(String::from(
+                RmrkError::AssetIdAlreadyExists.as_str(),
+            )))
+        }
+        return Ok(())
     }
 
     /// Used to retrieve asset's uri
     default fn get_asset_uri(&self, asset_id: AssetId) -> Option<String> {
-        self.asset_id_exists(asset_id)
+        if let Some(asset) = self
+            .data::<MultiAssetData>()
+            .collection_asset_entries
+            .get(asset_id)
+        {
+            return Some(asset.asset_uri)
+        }
+        return None
     }
 
     /// Fetch all accepted assets for the token_id

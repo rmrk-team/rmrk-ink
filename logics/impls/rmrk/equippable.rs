@@ -17,7 +17,6 @@ pub use crate::traits::{
     },
     utils::Utils,
 };
-use ink_prelude::vec::Vec;
 use openbrush::{
     contracts::{
         ownable::*,
@@ -65,9 +64,12 @@ where
         asset_id: &AssetId,
         part_id: &PartId,
     ) -> Result<(), PSP34Error> {
-        if let Some(equippable_asset) = self.data::<EquippableData>().equippable_asset.get(asset_id)
+        if let Some(asset) = self
+            .data::<MultiAssetData>()
+            .collection_asset_entries
+            .get(asset_id)
         {
-            if !equippable_asset.port_ids.contains(part_id) {
+            if !asset.part_ids.contains(part_id) {
                 return Err(PSP34Error::Custom(String::from(
                     RmrkError::TargetAssetCannotReceiveSlot.as_str(),
                 )))
@@ -88,9 +90,12 @@ where
         asset_id: AssetId,
         _part_slot_id: PartId,
     ) -> Result<(), PSP34Error> {
-        if let Some(equippable_asset) = self.data::<EquippableData>().equippable_asset.get(asset_id)
+        if let Some(asset) = self
+            .data::<MultiAssetData>()
+            .collection_asset_entries
+            .get(asset_id)
         {
-            let equippable_group_id = equippable_asset.group_id;
+            let equippable_group_id = asset.equippable_group_id;
             if self
                 .data::<EquippableData>()
                 .valid_parent_slot
@@ -210,22 +215,18 @@ where
     }
 
     /// Used to extend already added Asset with details needed to support equipping.
-    default fn extend_equippable_asset(
-        &mut self,
-        asset_id: AssetId,
-        group_id: EquippableGroupId,
-        port_ids: Vec<PartId>,
-    ) -> Result<(), PSP34Error> {
-        if self.asset_id_exists(asset_id).is_none() {
-            return Err(PSP34Error::Custom(String::from(
-                RmrkError::AssetIdNotFound.as_str(),
-            )))
-        }
-        self.data::<EquippableData>()
-            .equippable_asset
-            .insert(&asset_id, &EquippableAsset { group_id, port_ids });
-        Ok(())
-    }
+    // default fn extend_equippable_asset(
+    //     &mut self,
+    //     asset_id: AssetId,
+    //     group_id: EquippableGroupId,
+    //     port_ids: Vec<PartId>,
+    // ) -> Result<(), PSP34Error> {
+    //     ensure_asset_id_exists(asset_id)?;
+    //     self.data::<EquippableData>()
+    //         .equippable_asset
+    //         .insert(&asset_id, &EquippableAsset { group_id, port_ids });
+    //     Ok(())
+    // }
 
     /// Used to get the Equipment object equipped into the specified slot of the desired token.
     default fn get_equipment(
@@ -246,11 +247,15 @@ where
         &self,
         token_id: Id,
         asset_id: AssetId,
-    ) -> Result<(Option<String>, EquippableAsset), PSP34Error> {
+    ) -> Result<Asset, PSP34Error> {
         self.ensure_asset_accepted(&token_id, &asset_id)?;
-        if let Some(e) = self.data::<EquippableData>().equippable_asset.get(asset_id) {
-            let uri = self.get_asset_uri(asset_id);
-            return Ok((uri, e))
+
+        if let Some(asset) = self
+            .data::<MultiAssetData>()
+            .collection_asset_entries
+            .get(asset_id)
+        {
+            return Ok(asset)
         } else {
             return Err(PSP34Error::Custom(String::from(
                 RmrkError::AssetIdNotFound.as_str(),

@@ -1,15 +1,12 @@
 //! Trait definitions for Equippable module
 use crate::impls::rmrk::types::*;
-use ink_prelude::vec::Vec;
+// use ink_prelude::vec::Vec;
 use openbrush::{
     contracts::psp34::{
         Id,
         PSP34Error,
     },
-    traits::{
-        AccountId,
-        String,
-    },
+    traits::AccountId,
 };
 
 #[openbrush::wrapper]
@@ -80,13 +77,13 @@ pub trait Equippable {
     ///  * `asset_id` ID of the asset being extended
     ///  * `equippableGroupId` ID of the equippable group
     ///  * `partIds` An array of IDs of fixed and slot parts to be included in the asset
-    #[ink(message)]
-    fn extend_equippable_asset(
-        &mut self,
-        asset_id: AssetId,
-        group_id: EquippableGroupId,
-        port_ids: Vec<PartId>,
-    ) -> Result<(), PSP34Error>;
+    // #[ink(message)]
+    // fn extend_equippable_asset(
+    //     &mut self,
+    //     asset_id: AssetId,
+    //     group_id: EquippableGroupId,
+    //     port_ids: Vec<PartId>,
+    // ) -> Result<(), PSP34Error>;
 
     /// Used to get the Equipment object equipped into the specified slot of the desired token.
     ///
@@ -108,7 +105,7 @@ pub trait Equippable {
         &self,
         token_id: Id,
         asset_id: AssetId,
-    ) -> Result<(Option<String>, EquippableAsset), PSP34Error>;
+    ) -> Result<Asset, PSP34Error>;
 }
 
 /// Trait definitions for Resource helper functions

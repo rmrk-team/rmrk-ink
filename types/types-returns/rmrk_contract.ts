@@ -48,9 +48,9 @@ export type AccountId = string | number[]
 export type Key = string | number[]
 
 export type Asset = {
-	assetId: number,
 	equippableGroupId: number,
-	assetUri: Array<number>
+	assetUri: Array<number>,
+	partIds: Array<number>
 }
 
 export type Part = {
@@ -71,11 +71,6 @@ export type Equipment = {
 	assetId: number,
 	childAssetId: number,
 	childNft: [AccountId, Id]
-}
-
-export type EquippableAsset = {
-	groupId: number,
-	portIds: Array<number>
 }
 
 export interface PSP34Error {
