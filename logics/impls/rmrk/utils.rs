@@ -24,6 +24,7 @@ use openbrush::{
     },
     modifiers,
     traits::{
+        AccountId,
         Balance,
         Storage,
         String,
@@ -93,6 +94,25 @@ where
         Self::env()
             .transfer(self.data::<ownable::Data>().owner(), current_balance)
             .map_err(|_| PSP34Error::Custom(String::from(RmrkError::WithdrawalFailed.as_str())))?;
+        Ok(())
+    }
+    /// Check if token is minted. Return the owner
+    default fn ensure_exists(&self, id: &Id) -> Result<AccountId, PSP34Error> {
+        let token_owner = self
+            .data::<psp34::Data<enumerable::Balances>>()
+            .owner_of(id.clone())
+            .ok_or(PSP34Error::TokenNotExists)?;
+        Ok(token_owner)
+    }
+
+    /// Ensure that the caller is the token owner
+    default fn ensure_token_owner(&self, token_owner: AccountId) -> Result<(), PSP34Error> {
+        let caller = Self::env().caller();
+        if caller != token_owner {
+            return Err(PSP34Error::Custom(String::from(
+                RmrkError::NotAuthorised.as_str(),
+            )))
+        }
         Ok(())
     }
 }

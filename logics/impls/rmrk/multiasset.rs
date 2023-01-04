@@ -4,10 +4,13 @@ use crate::impls::rmrk::{
     errors::RmrkError,
     types::*,
 };
-pub use crate::traits::multiasset::{
-    Internal,
-    MultiAsset,
-    MultiAssetEvents,
+pub use crate::traits::{
+    multiasset::{
+        Internal,
+        MultiAsset,
+        MultiAssetEvents,
+    },
+    utils::Utils,
 };
 use ink_prelude::vec::Vec;
 use openbrush::{
@@ -17,7 +20,6 @@ use openbrush::{
     },
     modifiers,
     traits::{
-        AccountId,
         Storage,
         String,
     },
@@ -26,28 +28,8 @@ use openbrush::{
 /// Implement internal helper trait for MultiAsset
 impl<T> Internal for T
 where
-    T: Storage<MultiAssetData> + Storage<psp34::Data<enumerable::Balances>>,
+    T: Storage<MultiAssetData> + Storage<psp34::Data<enumerable::Balances>> + Utils,
 {
-    /// Check if token is minted. Return the owner
-    default fn ensure_exists(&self, id: &Id) -> Result<AccountId, PSP34Error> {
-        let token_owner = self
-            .data::<psp34::Data<enumerable::Balances>>()
-            .owner_of(id.clone())
-            .ok_or(PSP34Error::TokenNotExists)?;
-        Ok(token_owner)
-    }
-
-    /// Ensure that the caller is the token owner
-    default fn ensure_token_owner(&self, token_owner: AccountId) -> Result<(), PSP34Error> {
-        let caller = Self::env().caller();
-        if caller != token_owner {
-            return Err(PSP34Error::Custom(String::from(
-                RmrkError::NotAuthorised.as_str(),
-            )))
-        }
-        Ok(())
-    }
-
     /// Check if asset is already accepted
     default fn ensure_not_accepted(
         &self,
@@ -202,7 +184,8 @@ impl<T> MultiAsset for T
 where
     T: Storage<MultiAssetData>
         + Storage<psp34::Data<enumerable::Balances>>
-        + Storage<ownable::Data>,
+        + Storage<ownable::Data>
+        + Utils,
 {
     /// Used to add a asset entry.
     #[modifiers(only_owner)]
@@ -230,7 +213,6 @@ where
     }
 
     /// Used to add an asset to a token.
-    #[modifiers(only_owner)]
     fn add_asset_to_token(
         &mut self,
         token_id: Id,

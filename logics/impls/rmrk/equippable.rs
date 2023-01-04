@@ -5,6 +5,7 @@ use crate::impls::rmrk::{
     types::*,
 };
 pub use crate::traits::{
+    base::Base,
     equippable::{
         Equippable,
         EquippableEvents,
@@ -14,6 +15,7 @@ pub use crate::traits::{
         Internal as MultiAssetInternal,
         MultiAsset,
     },
+    utils::Utils,
 };
 use ink_prelude::vec::Vec;
 use openbrush::{
@@ -21,7 +23,6 @@ use openbrush::{
         ownable::*,
         psp34::extensions::enumerable::*,
     },
-    modifiers,
     traits::{
         AccountId,
         Storage,
@@ -36,7 +37,9 @@ where
         + Storage<ownable::Data>
         + Storage<MultiAssetData>
         + MultiAsset
-        + MultiAssetInternal,
+        + MultiAssetInternal
+        + Storage<BaseData>
+        + Utils,
 {
     /// Check if slot is already used/equipped.
     default fn ensure_token_slot_free(
@@ -66,12 +69,20 @@ where
         // if (!found) revert RMRKTargetAssetCannotReceiveSlot();
         if let Some(equippable_asset) = self.data::<EquippableData>().equippable_asset.get(asset_id)
         {
+            println!("equippable_asset {:?}", equippable_asset.port_ids);
             if !equippable_asset.port_ids.contains(part_id) {
+                println!("TargetAssetCannotReceiveSlot");
                 return Err(PSP34Error::Custom(String::from(
                     RmrkError::TargetAssetCannotReceiveSlot.as_str(),
                 )))
             }
+        } else {
+            println!("AssetHasNoParts");
+            return Err(PSP34Error::Custom(String::from(
+                RmrkError::AssetHasNoParts.as_str(),
+            )))
         }
+        println!("OK");
         Ok(())
     }
 
@@ -140,7 +151,9 @@ where
         + Storage<ownable::Data>
         + Storage<MultiAssetData>
         + MultiAsset
-        + MultiAssetInternal,
+        + MultiAssetInternal
+        + Storage<BaseData>
+        + Utils,
 {
     /// Used to equip a child nft into a token.
     default fn equip(
@@ -151,58 +164,23 @@ where
         child_nft: ChildNft,
         child_asset_id: AssetId,
     ) -> Result<(), PSP34Error> {
-        // address baseAddress = _baseAddresses[data.assetId];
-        // uint64 slotPartId = data.slotPartId;
-        // if (
-        //     _equipments[data.tokenId][baseAddress][slotPartId]
-        //         .childEquippableAddress != address(0)
-        // ) revert RMRKSlotAlreadyUsed();
+        // TODO check token exist
+        let token_owner = self.ensure_exists(&token_id)?;
+        self.ensure_token_owner(token_owner)?;
+
+        self.ensure_asset_accepts_slot(&asset_id, &slot_part_id)?;
         self.ensure_token_slot_free(&token_id, &slot_part_id)?;
 
-        // // Check from parent's asset perspective:
-        // _checkAssetAcceptsSlot(data.assetId, slotPartId);
-        self.ensure_asset_accepts_slot(&asset_id, &slot_part_id)?;
-
-        // IRMRKNestable.Child memory child = IRMRKNestable(_nestableAddress)
-        //     .childOf(data.tokenId, data.childIndex);
-        // address childEquippable = IRMRKNestableExternalEquip(
-        //     child.contractAddress
-        // ).getEquippableAddress();
-
-        // // Check from child perspective intention to be used in part
-        // if (
-        //     !IRMRKEquippable(childEquippable)
-        //         .canTokenBeEquippedWithAssetIntoSlot(
-        //             address(this),
-        //             child.tokenId,
-        //             data.childAssetId,
-        //             slotPartId
-        //         )
-        // ) revert RMRKTokenCannotBeEquippedWithAssetIntoSlot();
-
-        // TODO Cross contract call to check from child prespective
+        // TODO Cross contract call to check from child prespective. At the same time this will not work for PSP34 child
         // EquippableRef::ensure_token_can_be_equipped_with_asset_into_slot(child_nft.0, Self::env().account_id(),
         //     child_nft.1,
         //     child_asset_id,
         //     slot_part_id)?;
 
-        // // Check from base perspective
-        // if (
-        //     !IRMRKBaseStorage(baseAddress).checkIsEquippable(
-        //         slotPartId,
-        //         childEquippable
-        //     )
-        // ) revert RMRKEquippableEquipNotAllowedByBase();
+        // Check from base perspective
+        self.ensure_equippable(slot_part_id, child_nft.0)?;
 
-        // Equipment memory newEquip = Equipment({
-        //     assetId: data.assetId,
-        //     childAssetId: data.childAssetId,
-        //     childId: child.tokenId,
-        //     childEquippableAddress: childEquippable
-        // });
-
-        // _beforeEquip(data);
-        // _equipments[data.tokenId][baseAddress][slotPartId] = newEquip;
+        // insert equipment
         let equipment = Equipment {
             asset_id,
             child_asset_id,
@@ -212,18 +190,6 @@ where
             .equipment
             .insert((token_id.clone(), slot_part_id), &equipment);
 
-        // _equipCountPerChild[data.tokenId][child.contractAddress][
-        //     child.tokenId
-        // ] += 1;
-
-        // emit ChildAssetEquipped(
-        //     data.tokenId,
-        //     data.assetId,
-        //     slotPartId,
-        //     child.tokenId,
-        //     child.contractAddress,
-        //     data.childAssetId
-        // );
         self._emit_child_asset_equipped(
             token_id,
             asset_id,

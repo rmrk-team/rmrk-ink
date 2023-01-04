@@ -3,7 +3,6 @@
 
 #[openbrush::contract]
 pub mod rmrk_contract {
-    use ink_env;
     use ink_lang::codegen::{
         EmitEvent,
         Env,
@@ -219,10 +218,6 @@ pub mod rmrk_contract {
             _royalty_receiver: AccountId,
             _royalty: u8,
         ) -> Self {
-            ink_env::debug_println!(
-                "####### initializing {:?} contract",
-                String::to_owned(&symbol)
-            );
             ink_lang::codegen::initialize_contract(|instance: &mut Rmrk| {
                 instance._init_with_owner(instance.env().caller());
                 let collection_id = instance.collection_id();
@@ -733,11 +728,6 @@ pub mod rmrk_contract {
             test::set_value_transferred::<ink_env::DefaultEnvironment>(PRICE as u128);
             assert!(rmrk.mint(accounts.bob, 1).is_ok());
             assert_eq!(5, ink_env::test::recorded_events().count());
-            set_sender(accounts.bob);
-            assert_eq!(
-                rmrk.add_asset_to_token(TOKEN_ID2, ASSET_ID, None),
-                Err(PSP34Error::Custom(String::from("O::CallerIsNotOwner")))
-            );
 
             // Add asset by alice and reject asset by Bob to test asset_reject
             set_sender(accounts.alice);
@@ -896,9 +886,15 @@ pub mod rmrk_contract {
             );
 
             // verify array of equippable addresses
-            assert!(rmrk.is_equippable(PART_ID0, EQUIPABLE_ADDRESS1.into()));
-            assert!(rmrk.is_equippable(PART_ID0, EQUIPABLE_ADDRESS2.into()));
-            assert!(!rmrk.is_equippable(PART_ID1, EQUIPABLE_ADDRESS2.into()));
+            assert!(rmrk
+                .ensure_equippable(PART_ID0, EQUIPABLE_ADDRESS1.into())
+                .is_ok());
+            assert!(rmrk
+                .ensure_equippable(PART_ID0, EQUIPABLE_ADDRESS2.into())
+                .is_ok());
+            assert!(!rmrk
+                .ensure_equippable(PART_ID1, EQUIPABLE_ADDRESS2.into())
+                .is_ok());
 
             assert!(!rmrk.is_equippable_by_all(PART_ID0));
             assert!(rmrk.set_equippable_by_all(PART_ID0).is_ok());
@@ -907,14 +903,18 @@ pub mod rmrk_contract {
 
             assert!(rmrk.reset_equippable_addresses(PART_ID0).is_ok());
             assert!(!rmrk.is_equippable_by_all(PART_ID0));
-            assert!(!rmrk.is_equippable(PART_ID0, EQUIPABLE_ADDRESS1.into()));
+            assert!(!rmrk
+                .ensure_equippable(PART_ID0, EQUIPABLE_ADDRESS1.into())
+                .is_ok());
             assert!(rmrk
                 .add_equippable_addresses(
                     PART_ID0,
                     vec![EQUIPABLE_ADDRESS1.into(), EQUIPABLE_ADDRESS2.into()]
                 )
                 .is_ok());
-            assert!(rmrk.is_equippable(PART_ID0, EQUIPABLE_ADDRESS1.into()));
+            assert!(rmrk
+                .ensure_equippable(PART_ID0, EQUIPABLE_ADDRESS1.into())
+                .is_ok());
             assert_eq!(
                 rmrk.add_equippable_addresses(PART_ID1, vec![EQUIPABLE_ADDRESS1.into()]),
                 Err(PSP34Error::Custom(RmrkError::PartIsNotSlot.as_str()))
@@ -936,7 +936,9 @@ pub mod rmrk_contract {
                 Err(PSP34Error::Custom(RmrkError::BadConfig.as_str()))
             );
 
-            assert!(!rmrk.is_equippable(PART_ID0, EQUIPABLE_ADDRESS3.into()));
+            assert!(!rmrk
+                .ensure_equippable(PART_ID0, EQUIPABLE_ADDRESS3.into())
+                .is_ok());
 
             // verify set/get base metadata
             assert_eq!(rmrk.get_base_metadata(), "");
@@ -954,9 +956,7 @@ pub mod rmrk_contract {
             const ASSET_ID: AssetId = 1;
             const TOKEN_ID1: Id = Id::U64(1);
             const TOKEN_ID2: Id = Id::U64(2);
-            const EQUIPABLE_ADDRESS1: [u8; 32] = [1; 32];
-            const EQUIPABLE_ADDRESS2: [u8; 32] = [2; 32];
-            const EQUIPABLE_ADDRESS3: [u8; 32] = [3; 32];
+            const NOT_EQUIPABLE_ADDRESS: [u8; 32] = [1; 32];
             const CHILD_COLLECTION_ADDRESS: [u8; 32] = [10; 32];
             const CHILD_TOKEN_ID: Id = Id::U64(2);
             const CHILD_ASSET_ID: AssetId = 2;
@@ -969,7 +969,7 @@ pub mod rmrk_contract {
                 Part {
                     part_type: PartType::Slot,
                     z: 0,
-                    equippable: vec![EQUIPABLE_ADDRESS1.into(), EQUIPABLE_ADDRESS2.into()],
+                    equippable: vec![CHILD_COLLECTION_ADDRESS.into()],
                     metadata_uri: String::from("ipfs://backgrounds/1.svg"),
                     is_equippable_by_all: false,
                 },
@@ -986,15 +986,81 @@ pub mod rmrk_contract {
             let accounts = default_accounts();
             let mut kanaria = init();
 
+            // Base setup
             assert!(kanaria.add_part_list(part_list.clone()).is_ok());
+
+            // Add asset to kanaria collection
             assert!(kanaria
-                .add_asset_entry(ASSET_ID, 1, String::from(ASSET_URI))
+                .add_asset_entry(ASSET_ID, EQUIPPABLE_GROUP_ID, String::from(ASSET_URI))
                 .is_ok());
 
-            // mint kanaria and equip it
+            // equip fails, token does not exist. Not minted yet
+            // TODO
+
+            // Bob mints kanaria
             set_sender(accounts.bob);
             test::set_value_transferred::<ink_env::DefaultEnvironment>(PRICE);
             assert!(kanaria.mint_next().is_ok());
+
+            // equip fails, caller not token owner
+            set_sender(accounts.alice);
+            assert_eq!(
+                kanaria.equip(
+                    TOKEN_ID1,
+                    ASSET_ID,
+                    PART_ID0,
+                    (CHILD_COLLECTION_ADDRESS.into(), CHILD_TOKEN_ID),
+                    CHILD_ASSET_ID,
+                ),
+                Err(PSP34Error::Custom(RmrkError::NotAuthorised.as_str()))
+            );
+
+            // equip fails since there are no valid parts added. Asset is not extended to be equipped
+            set_sender(accounts.bob);
+            assert_eq!(
+                kanaria.equip(
+                    TOKEN_ID1,
+                    ASSET_ID,
+                    PART_ID0,
+                    (CHILD_COLLECTION_ADDRESS.into(), CHILD_TOKEN_ID),
+                    CHILD_ASSET_ID,
+                ),
+                Err(PSP34Error::Custom(RmrkError::AssetHasNoParts.as_str()))
+            );
+
+            // add asset to kanaria token
+            assert!(kanaria
+                .add_asset_to_token(TOKEN_ID1, ASSET_ID, None)
+                .is_ok());
+
+            // extend asset with equipping capability
+            assert!(kanaria
+                .extend_equippable_asset(ASSET_ID, EQUIPPABLE_GROUP_ID, vec![PART_ID0])
+                .is_ok());
+            assert_eq!(
+                kanaria.get_asset_and_equippable_data(TOKEN_ID1, ASSET_ID),
+                Ok((
+                    Some(String::from(ASSET_URI)),
+                    EquippableAsset {
+                        group_id: EQUIPPABLE_GROUP_ID,
+                        port_ids: vec![PART_ID0]
+                    }
+                ))
+            );
+            // equip fails, AddressNotEquippable
+            assert_eq!(
+                kanaria.equip(
+                    TOKEN_ID1,
+                    ASSET_ID,
+                    PART_ID0,
+                    (NOT_EQUIPABLE_ADDRESS.into(), CHILD_TOKEN_ID),
+                    CHILD_ASSET_ID,
+                ),
+                Err(PSP34Error::Custom(RmrkError::AddressNotEquippable.as_str()))
+            );
+            // add child address to asset
+
+            // equip works
             assert!(kanaria
                 .equip(
                     TOKEN_ID1,
@@ -1004,16 +1070,43 @@ pub mod rmrk_contract {
                     CHILD_ASSET_ID,
                 )
                 .is_ok());
+
             assert_eq!(
                 kanaria.get_equipment(TOKEN_ID1, PART_ID0),
                 Ok(Equipment {
-                    asset_id: 1,
-                    child_asset_id: 2,
+                    asset_id: ASSET_ID,
+                    child_asset_id: CHILD_ASSET_ID,
                     child_nft: (CHILD_COLLECTION_ADDRESS.into(), CHILD_TOKEN_ID)
                 })
             );
 
-            // extend asset to be used as equipment
+            // equip fails, TargetAssetCannotReceiveSlot
+            assert_eq!(
+                kanaria.equip(
+                    TOKEN_ID1,
+                    ASSET_ID,
+                    PART_ID1,
+                    (CHILD_COLLECTION_ADDRESS.into(), CHILD_TOKEN_ID),
+                    CHILD_ASSET_ID,
+                ),
+                Err(PSP34Error::Custom(
+                    RmrkError::TargetAssetCannotReceiveSlot.as_str()
+                ))
+            );
+
+            // equip fails, SlotAlreayUsed
+            assert_eq!(
+                kanaria.equip(
+                    TOKEN_ID1,
+                    ASSET_ID,
+                    PART_ID0,
+                    (CHILD_COLLECTION_ADDRESS.into(), CHILD_TOKEN_ID),
+                    CHILD_ASSET_ID,
+                ),
+                Err(PSP34Error::Custom(RmrkError::SlotAlreayUsed.as_str()))
+            );
+
+            // extend asset with one more part
             assert!(kanaria
                 .extend_equippable_asset(ASSET_ID, EQUIPPABLE_GROUP_ID, vec![PART_ID0, PART_ID1])
                 .is_ok());
@@ -1022,7 +1115,7 @@ pub mod rmrk_contract {
                 Ok((
                     Some(String::from(ASSET_URI)),
                     EquippableAsset {
-                        group_id: 1,
+                        group_id: EQUIPPABLE_GROUP_ID,
                         port_ids: vec![PART_ID0, PART_ID1]
                     }
                 ))

@@ -67,6 +67,17 @@ export enum PartType {
 	fixed = 'Fixed'
 }
 
+export type Equipment = {
+	assetId: number,
+	childAssetId: number,
+	childNft: [AccountId, Id]
+}
+
+export type EquippableAsset = {
+	groupId: number,
+	portIds: Array<number>
+}
+
 export interface PSP34Error {
 	custom ? : Array<number>,
 	selfApprove ? : null,

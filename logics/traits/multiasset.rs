@@ -120,12 +120,6 @@ pub trait MultiAsset {
 /// Trait definitions for MultiAsset helper functions
 #[openbrush::trait_definition]
 pub trait Internal {
-    /// TODO duplicated. find common module for this method
-    fn ensure_exists(&self, id: &Id) -> Result<AccountId, PSP34Error>;
-
-    /// Ensure that the caller is the token owner
-    fn ensure_token_owner(&self, token_owner: AccountId) -> Result<(), PSP34Error>;
-
     /// Check if asset is already accepted. Return error if it is
     fn ensure_not_accepted(&self, token_id: &Id, asset_id: &AssetId) -> Result<(), PSP34Error>;
 

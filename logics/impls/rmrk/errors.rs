@@ -24,12 +24,14 @@ pub enum RmrkError {
     UnknownPartId,
     PartIsNotSlot,
     SlotAlreayUsed,
+    AddressNotEquippable,
     TargetAssetCannotReceiveSlot,
     UnknownPart,
     BadConfig,
     EquipmentNotFound,
     UnknownEquippableAsset,
     NotEquipped,
+    AssetHasNoParts,
 }
 
 impl RmrkError {
@@ -55,6 +57,8 @@ impl RmrkError {
             RmrkError::PartIsNotSlot => String::from("PartIsNotSlot"),
             RmrkError::TargetAssetCannotReceiveSlot => String::from("TargetAssetCannotReceiveSlot"),
             RmrkError::SlotAlreayUsed => String::from("SlotAlreayUsed"),
+            RmrkError::AddressNotEquippable => String::from("AddressNotEquippable"),
+            RmrkError::AssetHasNoParts => String::from("AssetHasNoParts"),
             RmrkError::BadConfig => String::from("BadConfig"),
             RmrkError::EquipmentNotFound => String::from("EquipmentNotFound"),
             RmrkError::UnknownPart => String::from("UnknownPart"),
