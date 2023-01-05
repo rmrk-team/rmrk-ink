@@ -214,20 +214,6 @@ where
         Ok(())
     }
 
-    /// Used to extend already added Asset with details needed to support equipping.
-    // default fn extend_equippable_asset(
-    //     &mut self,
-    //     asset_id: AssetId,
-    //     group_id: EquippableGroupId,
-    //     port_ids: Vec<PartId>,
-    // ) -> Result<(), PSP34Error> {
-    //     ensure_asset_id_exists(asset_id)?;
-    //     self.data::<EquippableData>()
-    //         .equippable_asset
-    //         .insert(&asset_id, &EquippableAsset { group_id, port_ids });
-    //     Ok(())
-    // }
-
     /// Used to get the Equipment object equipped into the specified slot of the desired token.
     default fn get_equipment(
         &self,
