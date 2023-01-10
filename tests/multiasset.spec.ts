@@ -129,10 +129,10 @@ describe('RMRK Multi Asset tests', () => {
     expect((await kanaria.withSigner(deployer).query.totalAssets())?.value.toString()).to.be.equal("2");
     
     // add both assets to token 1
-    const assetAddGas = (await kanaria.withSigner(deployer).query.addAssetToToken({ u64: 1 }, assetDefaultId, { u64: 1 })).gasRequired;
-    const addAssetTokenResult = await kanaria.withSigner(deployer).tx.addAssetToToken({ u64: 1 }, assetDefaultId, { u64: 1 }, { gasLimit: assetAddGas * 2n });
+    const assetAddGas = (await kanaria.withSigner(deployer).query.addAssetToToken({ u64: 1 }, assetDefaultId, 1)).gasRequired;
+    const addAssetTokenResult = await kanaria.withSigner(deployer).tx.addAssetToToken({ u64: 1 }, assetDefaultId, 1, { gasLimit: assetAddGas * 2n });
     emit(addAssetTokenResult, 'AssetAddedToToken', { token: { u64: 1 }, asset: 1, replaces: null });
-    await kanaria.withSigner(deployer).tx.addAssetToToken({ u64: 1 }, assetComposedId, { u64: 1 }, { gasLimit: assetAddGas * 2n });
+    await kanaria.withSigner(deployer).tx.addAssetToToken({ u64: 1 }, assetComposedId, 1, { gasLimit: assetAddGas * 2n });
     expect((await kanaria.query.totalTokenAssets({ u64: 1 }))?.value.ok.toString()).to.be.equal("0,2");
 
     // bob accepts both assets
@@ -160,18 +160,18 @@ describe('RMRK Multi Asset tests', () => {
 
     // We add assets of type A to gem 1 and 2, and type Bto gem 3. Both are nested into the first kanaria
     // This means gems 1 and 2 will have the same asset, which is totally valid.
-    await gem.withSigner(deployer).tx.addAssetToToken({ u64: 1 }, 1, { u64: 0 }, { gasLimit: assetAddGas * 2n });
-    await gem.withSigner(deployer).tx.addAssetToToken({ u64: 1 }, 2, { u64: 0 }, { gasLimit: assetAddGas * 2n });
-    await gem.withSigner(deployer).tx.addAssetToToken({ u64: 1 }, 3, { u64: 0 }, { gasLimit: assetAddGas * 2n });
-    await gem.withSigner(deployer).tx.addAssetToToken({ u64: 1 }, 4, { u64: 0 }, { gasLimit: assetAddGas * 2n });
-    await gem.withSigner(deployer).tx.addAssetToToken({ u64: 2 }, 1, { u64: 0 }, { gasLimit: assetAddGas * 2n });
-    await gem.withSigner(deployer).tx.addAssetToToken({ u64: 2 }, 2, { u64: 0 }, { gasLimit: assetAddGas * 2n });
-    await gem.withSigner(deployer).tx.addAssetToToken({ u64: 2 }, 3, { u64: 0 }, { gasLimit: assetAddGas * 2n });
-    await gem.withSigner(deployer).tx.addAssetToToken({ u64: 2 }, 4, { u64: 0 }, { gasLimit: assetAddGas * 2n });
-    await gem.withSigner(deployer).tx.addAssetToToken({ u64: 3 }, 5, { u64: 0 }, { gasLimit: assetAddGas * 2n });
-    await gem.withSigner(deployer).tx.addAssetToToken({ u64: 3 }, 6, { u64: 0 }, { gasLimit: assetAddGas * 2n });
-    await gem.withSigner(deployer).tx.addAssetToToken({ u64: 3 }, 7, { u64: 0 }, { gasLimit: assetAddGas * 2n });
-    await gem.withSigner(deployer).tx.addAssetToToken({ u64: 3 }, 8, { u64: 0 }, { gasLimit: assetAddGas * 2n });
+    await gem.withSigner(deployer).tx.addAssetToToken({ u64: 1 }, 1, null, { gasLimit: assetAddGas * 2n });
+    await gem.withSigner(deployer).tx.addAssetToToken({ u64: 1 }, 2, null, { gasLimit: assetAddGas * 2n });
+    await gem.withSigner(deployer).tx.addAssetToToken({ u64: 1 }, 3, null, { gasLimit: assetAddGas * 2n });
+    await gem.withSigner(deployer).tx.addAssetToToken({ u64: 1 }, 4, null, { gasLimit: assetAddGas * 2n });
+    await gem.withSigner(deployer).tx.addAssetToToken({ u64: 2 }, 1, null, { gasLimit: assetAddGas * 2n });
+    await gem.withSigner(deployer).tx.addAssetToToken({ u64: 2 }, 2, null, { gasLimit: assetAddGas * 2n });
+    await gem.withSigner(deployer).tx.addAssetToToken({ u64: 2 }, 3, null, { gasLimit: assetAddGas * 2n });
+    await gem.withSigner(deployer).tx.addAssetToToken({ u64: 2 }, 4, null, { gasLimit: assetAddGas * 2n });
+    await gem.withSigner(deployer).tx.addAssetToToken({ u64: 3 }, 5, null, { gasLimit: assetAddGas * 2n });
+    await gem.withSigner(deployer).tx.addAssetToToken({ u64: 3 }, 6, null, { gasLimit: assetAddGas * 2n });
+    await gem.withSigner(deployer).tx.addAssetToToken({ u64: 3 }, 7, null, { gasLimit: assetAddGas * 2n });
+    await gem.withSigner(deployer).tx.addAssetToToken({ u64: 3 }, 8, null, { gasLimit: assetAddGas * 2n });
     expect((await gem.query.totalTokenAssets({ u64: 1 }))?.value.ok.toString()).to.be.equal("0,4");
     expect((await gem.query.totalTokenAssets({ u64: 2 }))?.value.ok.toString()).to.be.equal("0,4");
     expect((await gem.query.totalTokenAssets({ u64: 3 }))?.value.ok.toString()).to.be.equal("0,4");

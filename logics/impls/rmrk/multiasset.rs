@@ -178,7 +178,28 @@ where
 
         Ok(())
     }
+
+    default fn replace_asset(&mut self, asset_id: &AssetId, replace_with_id: &AssetId) -> Result<(), PSP34Error> {
+        // let replace_with_asset = self.data::<MultiAssetData>().collection_asset_entries.get(replace_with_id);
+
+        // if let Some (asset) = replace_with_asset {
+        //     self.data::<MultiAssetData>().collection_asset_entries.insert(asset_id, &asset)    
+        // }
+
+        match self.data::<MultiAssetData>().collection_asset_entries.get(replace_with_id) {
+            Some(asset) => {
+                self.data::<MultiAssetData>().collection_asset_entries.insert(asset_id, &asset);
+                Ok(())
+            },
+            None => Err(PSP34Error::Custom(String::from(
+                RmrkError::InvalidAssetId.as_str(),
+            )))
+        }
+
+    }    
 }
+
+
 
 impl<T> MultiAsset for T
 where
@@ -226,19 +247,26 @@ where
         &mut self,
         token_id: Id,
         asset_id: AssetId,
-        _replaces_asset_with_id: Option<Id>, // TODO implement replacement
+        replaces_asset_with_id: Option<AssetId>,
     ) -> Result<(), PSP34Error> {
         self.ensure_asset_id_exists(asset_id)?;
         let token_owner = self.ensure_exists(&token_id)?;
         self.ensure_not_accepted(&token_id, &asset_id)?;
         self.ensure_not_pending(&token_id, &asset_id)?;
 
-        self._emit_asset_added_to_token_event(&token_id, &asset_id, None);
-        let caller = Self::env().caller();
-        if caller == token_owner {
-            self.add_to_accepted_assets(&token_id, &asset_id);
+        self._emit_asset_added_to_token_event(&token_id, &asset_id, &replaces_asset_with_id);
+
+
+        if let Some(replace_with_id) = replaces_asset_with_id {
+            ink_env::debug_println!("replaces_asset_with_id {:?}", &replaces_asset_with_id);
+            return self.replace_asset(&asset_id, &replace_with_id);
         } else {
-            self.add_to_pending_assets(&token_id, &asset_id);
+            let caller = Self::env().caller();
+            if caller == token_owner {
+                self.add_to_accepted_assets(&token_id, &asset_id);
+            } else {
+                self.add_to_pending_assets(&token_id, &asset_id);
+            }
         }
 
         Ok(())
@@ -400,7 +428,7 @@ where
         &self,
         _token_id: &Id,
         _asset_id: &AssetId,
-        _replaces_id: Option<Id>,
+        _replaces_id: &Option<AssetId>,
     ) {
     }
 

@@ -123,7 +123,7 @@ pub mod rmrk_contract {
         #[ink(topic)]
         asset: AssetId,
         #[ink(topic)]
-        replaces: Option<Id>,
+        replaces: Option<AssetId>,
     }
 
     /// Event emitted when the asset is accepted.
@@ -356,12 +356,12 @@ pub mod rmrk_contract {
             &self,
             token_id: &Id,
             asset_id: &AssetId,
-            replaces_id: Option<Id>,
+            replaces_id: &Option<AssetId>,
         ) {
             self.env().emit_event(AssetAddedToToken {
                 token: token_id.clone(),
                 asset: *asset_id,
-                replaces: replaces_id,
+                replaces: *replaces_id,
             });
         }
 
