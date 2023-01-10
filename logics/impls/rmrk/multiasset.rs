@@ -180,12 +180,6 @@ where
     }
 
     default fn replace_asset(&mut self, asset_id: &AssetId, replace_with_id: &AssetId) -> Result<(), PSP34Error> {
-        // let replace_with_asset = self.data::<MultiAssetData>().collection_asset_entries.get(replace_with_id);
-
-        // if let Some (asset) = replace_with_asset {
-        //     self.data::<MultiAssetData>().collection_asset_entries.insert(asset_id, &asset)    
-        // }
-
         match self.data::<MultiAssetData>().collection_asset_entries.get(replace_with_id) {
             Some(asset) => {
                 self.data::<MultiAssetData>().collection_asset_entries.insert(asset_id, &asset);
@@ -195,7 +189,6 @@ where
                 RmrkError::InvalidAssetId.as_str(),
             )))
         }
-
     }    
 }
 
