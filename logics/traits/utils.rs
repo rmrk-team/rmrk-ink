@@ -6,7 +6,10 @@ use openbrush::{
         Id,
         PSP34Error,
     },
-    traits::Balance,
+    traits::{
+        AccountId,
+        Balance,
+    },
 };
 
 /// Trait definitions for Utils internal functions.
@@ -37,4 +40,10 @@ pub trait Utils {
     /// Withdraw contract's balance.
     #[ink(message)]
     fn withdraw(&mut self) -> Result<(), PSP34Error>;
+
+    /// Ensure that token exists
+    fn ensure_exists(&self, id: &Id) -> Result<AccountId, PSP34Error>;
+
+    /// Ensure that the caller is the token owner
+    fn ensure_token_owner(&self, token_owner: AccountId) -> Result<(), PSP34Error>;
 }

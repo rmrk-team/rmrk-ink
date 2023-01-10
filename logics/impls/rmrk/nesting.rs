@@ -4,10 +4,13 @@ use crate::impls::rmrk::{
     errors::RmrkError,
     types::*,
 };
-pub use crate::traits::nesting::{
-    Internal,
-    Nesting,
-    NestingEvents,
+pub use crate::traits::{
+    nesting::{
+        Internal,
+        Nesting,
+        NestingEvents,
+    },
+    utils::Utils,
 };
 use ink_env::CallFlags;
 use ink_prelude::vec::Vec;
@@ -155,15 +158,6 @@ where
         Ok(())
     }
 
-    /// Check if token is minted. Return the owner
-    default fn ensure_exists(&self, id: &Id) -> Result<AccountId, PSP34Error> {
-        let token_owner = self
-            .data::<psp34::Data<enumerable::Balances>>()
-            .owner_of(id.clone())
-            .ok_or(PSP34Error::TokenNotExists)?;
-        Ok(token_owner)
-    }
-
     /// Check if caller is the owner of this parent token
     default fn is_caller_parent_owner(
         &self,
@@ -176,7 +170,7 @@ where
         {
             if token_owner != caller {
                 return Err(PSP34Error::Custom(String::from(
-                    RmrkError::NotAuthorised.as_str(),
+                    RmrkError::NotTokenOwner.as_str(),
                 )))
             }
         }
@@ -197,7 +191,6 @@ where
             .call_flags(CallFlags::default().set_allow_reentry(true))
             .fire()
             .unwrap()?;
-        ink_env::debug_println!("####### transfer  executed!!!!");
 
         Ok(())
     }
@@ -205,7 +198,7 @@ where
 
 impl<T> Nesting for T
 where
-    T: Storage<NestingData> + Storage<psp34::Data<enumerable::Balances>>,
+    T: Storage<NestingData> + Storage<psp34::Data<enumerable::Balances>> + Utils,
 {
     /// Add a child NFT (from different collection) to the NFT in this collection
     /// The status of the added child is `Pending` if caller is not owner of child NFT

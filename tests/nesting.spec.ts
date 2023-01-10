@@ -113,7 +113,7 @@ describe('RMRK Nesting tests', () => {
 
     // since bob is owner of parent, dave can't accept child
     const failResult = await parent.withSigner(dave).query.acceptChild({ u64: 1 }, [child.address, { u64: 1 }]);
-    expect(hex2a(failResult.value.err.custom)).to.be.equal('NotAuthorised');
+    expect(hex2a(failResult.value.err.custom)).to.be.equal('NotTokenOwner');
 
     // bob accepts child
     const acceptChildGas = (await parent.withSigner(bob).query.acceptChild({ u64: 1 }, [child.address, { u64: 1 }])).gasRequired;
@@ -127,7 +127,7 @@ describe('RMRK Nesting tests', () => {
 
     // dave fails to remove child (not owner)
     const failRemoveChild = await parent.withSigner(dave).query.removeChild({ u64: 1 }, [child.address, { u64: 1 }]);
-    expect(hex2a(failRemoveChild.value.err.custom)).to.be.equal('NotAuthorised');
+    expect(hex2a(failRemoveChild.value.err.custom)).to.be.equal('NotTokenOwner');
 
     // bob removes child
     const removeChildGas = (await parent.withSigner(bob).query.removeChild({ u64: 1 }, [child.address, { u64: 1 }])).gasRequired;
@@ -163,11 +163,11 @@ describe('RMRK Nesting tests', () => {
 
     // since bob is owner of parent, dave can't accept child
     const failAcceptResult = await parent.withSigner(dave).query.acceptChild({ u64: 1 }, [child.address, { u64: 1 }]);
-    expect(hex2a(failAcceptResult.value.err.custom)).to.be.equal('NotAuthorised');
+    expect(hex2a(failAcceptResult.value.err.custom)).to.be.equal('NotTokenOwner');
 
     // since bob is owner of parent, dave fails to reject child
     const failRejectResult = await parent.withSigner(dave).query.rejectChild({ u64: 1 }, [child.address, { u64: 1 }]);
-    expect(hex2a(failRejectResult.value.err.custom)).to.be.equal('NotAuthorised');
+    expect(hex2a(failRejectResult.value.err.custom)).to.be.equal('NotTokenOwner');
 
     // bob rejects child
     const rejectChildGas = (await parent.withSigner(bob).query.rejectChild({ u64: 1 }, [child.address, { u64: 1 }])).gasRequired;

@@ -6,10 +6,7 @@ use openbrush::{
         Id,
         PSP34Error,
     },
-    traits::{
-        AccountId,
-        String,
-    },
+    traits::String,
 };
 
 #[openbrush::wrapper]
@@ -29,6 +26,7 @@ pub trait MultiAsset {
         id: AssetId,
         equippable_group_id: EquippableGroupId,
         asset_uri: String,
+        part_ids: Vec<PartId>,
     ) -> Result<(), PSP34Error>;
 
     /// Used to add an asset to a token.
@@ -112,20 +110,14 @@ pub trait MultiAsset {
     /// Remove the assets for the list of token assets
     #[ink(message)]
     fn remove_asset(&mut self, token_id: Id, asset_id: AssetId) -> Result<(), PSP34Error>;
+
+    /// Check that asset id does not already exist.
+    fn ensure_asset_id_is_available(&self, asset_id: AssetId) -> Result<(), PSP34Error>;
 }
 
-/// Trait definitions for Resource helper functions
+/// Trait definitions for MultiAsset helper functions
 #[openbrush::trait_definition]
 pub trait Internal {
-    /// Check if asset is already added.
-    fn asset_id_exists(&self, asset_id: AssetId) -> Option<String>;
-
-    /// TODO duplicated. find common module for this method
-    fn ensure_exists(&self, id: &Id) -> Result<AccountId, PSP34Error>;
-
-    /// Ensure that the caller is the token owner
-    fn ensure_token_owner(&self, token_owner: AccountId) -> Result<(), PSP34Error>;
-
     /// Check if asset is already accepted. Return error if it is
     fn ensure_not_accepted(&self, token_id: &Id, asset_id: &AssetId) -> Result<(), PSP34Error>;
 
@@ -136,7 +128,7 @@ pub trait Internal {
     fn ensure_pending(&self, token_id: &Id, asset_id: &AssetId) -> Result<(), PSP34Error>;
 
     /// Check if asset is already accepted
-    fn ensure_accepted(&self, token_id: &Id, asset_id: &AssetId) -> Result<(), PSP34Error>;
+    fn ensure_asset_accepted(&self, token_id: &Id, asset_id: &AssetId) -> Result<(), PSP34Error>;
 
     /// Add the asset to the list of accepted assets
     fn add_to_accepted_assets(&mut self, token_id: &Id, asset_id: &AssetId);
@@ -159,7 +151,7 @@ pub trait Internal {
     ) -> Result<(), PSP34Error>;
 }
 
-/// Trait definitions for Resource ink events
+/// Trait definitions for MultiAsset ink events
 #[openbrush::trait_definition]
 pub trait MultiAssetEvents {
     /// Used to notify listeners that an asset object is initialized at `assetId`.

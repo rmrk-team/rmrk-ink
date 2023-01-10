@@ -8,6 +8,7 @@ pub use crate::traits::minting::{
     Internal,
     Minting,
 };
+use ink_prelude::string::String as PreludeString;
 use openbrush::{
     contracts::{
         ownable::*,
@@ -71,6 +72,31 @@ where
         }
 
         Ok(())
+    }
+
+    /// Mint next available token with specific metadata
+    #[modifiers(only_owner)]
+    default fn mint_with_metadata(
+        &mut self,
+        metadata: PreludeString,
+        to: AccountId,
+    ) -> Result<(), PSP34Error> {
+        let token_id = self
+            .data::<MintingData>()
+            .last_token_id
+            .checked_add(1)
+            .ok_or(PSP34Error::Custom(String::from(
+                RmrkError::CollectionIsFull.as_str(),
+            )))?;
+        self.data::<psp34::Data<enumerable::Balances>>()
+            ._mint_to(to, Id::U64(token_id))?;
+        self.data::<MintingData>()
+            .nft_metadata
+            .insert(Id::U64(token_id), &String::from(metadata));
+        self.data::<MintingData>().last_token_id += 1;
+
+        self._emit_transfer_event(None, Some(to), Id::U64(token_id));
+        return Ok(())
     }
 }
 
