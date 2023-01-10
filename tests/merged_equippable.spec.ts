@@ -74,16 +74,10 @@ describe('RMRK Merged Equippable', () => {
 
   it('Merged Equippable user journey', async () => {
     await setup();
-    // This test follows MergesEquippable user story, but without Equipalble tests.
+    // This test follows MergedEquippable user story.
     // https://github.com/rmrk-team/evm-sample-contracts/tree/master/contracts/MergedEquippable
-    // The scenarrio is different only when it comes to procedure of nesting child tokens,
+    // The scenario is different only when it comes to procedure of nesting child tokens,
     // but the end result is the same.
-
-    // First Bob mints tokens from kanaria and gem contracts.
-    // After Deployer (contract owner) adds new assets to gem and kanaria contracts, the same deployer will
-    // add those assets to the tokens.
-    // Bob accepts new assets on all of his tokens (both kanaria and gem tokens) 
-    // Bob addds gem tokens (children) to kanaria tokens (parent)
 
     const mintingKanariaCnt = 5;
 

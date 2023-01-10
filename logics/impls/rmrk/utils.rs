@@ -56,20 +56,23 @@ where
     default fn token_uri(&self, token_id: u64) -> Result<PreludeString, PSP34Error> {
         self.ensure_exists(&Id::U64(token_id))?;
         let uri: PreludeString;
-        if let Some(token_uri) = self
+        match self
             .data::<MintingData>()
             .nft_metadata
             .get(Id::U64(token_id))
         {
-            uri = PreludeString::from_utf8(token_uri).unwrap();
-        } else {
-            let value = self.get_attribute(
-                self.data::<psp34::Data<enumerable::Balances>>()
-                    .collection_id(),
-                String::from("baseUri"),
-            );
-            let token_uri = PreludeString::from_utf8(value.unwrap()).unwrap();
-            uri = token_uri + &token_id.to_string() + &PreludeString::from(".json");
+            Some(token_uri) => {
+                uri = PreludeString::from_utf8(token_uri).unwrap();
+            }
+            None => {
+                let value = self.get_attribute(
+                    self.data::<psp34::Data<enumerable::Balances>>()
+                        .collection_id(),
+                    String::from("baseUri"),
+                );
+                let token_uri = PreludeString::from_utf8(value.unwrap()).unwrap();
+                uri = token_uri + &token_id.to_string() + &PreludeString::from(".json");
+            }
         }
         Ok(uri)
     }
@@ -110,7 +113,7 @@ where
         let caller = Self::env().caller();
         if caller != token_owner {
             return Err(PSP34Error::Custom(String::from(
-                RmrkError::NotAuthorised.as_str(),
+                RmrkError::NotTokenOwner.as_str(),
             )))
         }
         Ok(())

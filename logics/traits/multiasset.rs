@@ -111,11 +111,8 @@ pub trait MultiAsset {
     #[ink(message)]
     fn remove_asset(&mut self, token_id: Id, asset_id: AssetId) -> Result<(), PSP34Error>;
 
-    /// Check if asset is already added.
-    fn ensure_asset_id_exists(&self, asset_id: AssetId) -> Result<(), PSP34Error>;
-
     /// Check that asset id does not already exist.
-    fn ensure_new_asset(&self, asset_id: AssetId) -> Result<(), PSP34Error>;
+    fn ensure_asset_id_is_available(&self, asset_id: AssetId) -> Result<(), PSP34Error>;
 }
 
 /// Trait definitions for MultiAsset helper functions

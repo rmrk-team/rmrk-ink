@@ -91,7 +91,7 @@ pub trait Equippable {
     ///  * `token_id` ID of the token for which we are retrieving the equipped object
     ///  * `slot_part_id` ID of the `Slot` part that we are checking for equipped objects
     #[ink(message)]
-    fn get_equipment(&self, token_id: Id, slot_part_id: PartId) -> Result<Equipment, PSP34Error>;
+    fn get_equipment(&self, token_id: Id, slot_part_id: PartId) -> Option<Equipment>;
 
     /// Used to get the asset and equippable data associated with given `asset_id`.
     /// # Arguments:
