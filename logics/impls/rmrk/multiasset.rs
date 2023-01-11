@@ -185,46 +185,27 @@ where
         asset_id: &AssetId,
         replace_with_id: &AssetId,
     ) -> Result<(), PSP34Error> {
-        if let Some(mut accepted_list) = self.data::<MultiAssetData>().accepted_assets.get(token_id)
-        {
-            let res_index = accepted_list.iter().position(|x| x == replace_with_id);
-            if let Some(index) = res_index {
-                accepted_list[index] = *asset_id;
-                self.data::<MultiAssetData>()
-                    .accepted_assets
-                    .insert(&token_id, &accepted_list);
-                return Ok(())
-            } else {
-                return Err(PSP34Error::Custom(String::from(
-                    RmrkError::InvalidAssetId.as_str(),
-                )))
-            }
-        } else {
-            return Err(PSP34Error::Custom(String::from(
+        let mut accepted_list = self
+            .data::<MultiAssetData>()
+            .accepted_assets
+            .get(token_id)
+            .ok_or(PSP34Error::Custom(String::from(
                 RmrkError::AcceptedAssetsMissing.as_str(),
-            )))
-        }
+            )))?;
 
-        // match self.data::<MultiAssetData>().accepted_assets.get(token_id) {
-        //     Some(mut accepted_list) => {
-        //         match accepted_list.iter().position(|x| x == replace_with_id) {
-        //             Some(index) => {
-        //                 accepted_list[index] = *asset_id;
-        //                 Ok(())
-        //             }
-        //             None => {
-        //                 Err(PSP34Error::Custom(String::from(
-        //                     RmrkError::InvalidAssetId.as_str(), // TODO: update error
-        //                 )))
-        //             }
-        //         }
-        //     }
-        //     None => {
-        //         Err(PSP34Error::Custom(String::from(
-        //             RmrkError::InvalidAssetId.as_str(), // TODO: update error
-        //         )))
-        //     }
-        // }
+        let asset_index = accepted_list
+            .iter()
+            .position(|x| x == replace_with_id)
+            .ok_or(PSP34Error::Custom(String::from(
+                RmrkError::InvalidAssetId.as_str(),
+            )))?;
+
+        accepted_list[asset_index] = *asset_id;
+        self.data::<MultiAssetData>()
+            .accepted_assets
+            .insert(&token_id, &accepted_list);
+
+        Ok(())
     }
 }
 
