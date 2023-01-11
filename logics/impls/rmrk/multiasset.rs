@@ -179,20 +179,54 @@ where
         Ok(())
     }
 
-    default fn replace_asset(&mut self, asset_id: &AssetId, replace_with_id: &AssetId) -> Result<(), PSP34Error> {
-        match self.data::<MultiAssetData>().collection_asset_entries.get(replace_with_id) {
-            Some(asset) => {
-                self.data::<MultiAssetData>().collection_asset_entries.insert(asset_id, &asset);
-                Ok(())
-            },
-            None => Err(PSP34Error::Custom(String::from(
-                RmrkError::InvalidAssetId.as_str(),
+    default fn replace_asset(
+        &mut self,
+        token_id: &Id,
+        asset_id: &AssetId,
+        replace_with_id: &AssetId,
+    ) -> Result<(), PSP34Error> {
+        if let Some(mut accepted_list) = self.data::<MultiAssetData>().accepted_assets.get(token_id)
+        {
+            let res_index = accepted_list.iter().position(|x| x == replace_with_id);
+            if let Some(index) = res_index {
+                accepted_list[index] = *asset_id;
+                self.data::<MultiAssetData>()
+                    .accepted_assets
+                    .insert(&token_id, &accepted_list);
+                return Ok(())
+            } else {
+                return Err(PSP34Error::Custom(String::from(
+                    RmrkError::InvalidAssetId.as_str(),
+                )))
+            }
+        } else {
+            return Err(PSP34Error::Custom(String::from(
+                RmrkError::AcceptedAssetsMissing.as_str(),
             )))
         }
-    }    
+
+        // match self.data::<MultiAssetData>().accepted_assets.get(token_id) {
+        //     Some(mut accepted_list) => {
+        //         match accepted_list.iter().position(|x| x == replace_with_id) {
+        //             Some(index) => {
+        //                 accepted_list[index] = *asset_id;
+        //                 Ok(())
+        //             }
+        //             None => {
+        //                 Err(PSP34Error::Custom(String::from(
+        //                     RmrkError::InvalidAssetId.as_str(), // TODO: update error
+        //                 )))
+        //             }
+        //         }
+        //     }
+        //     None => {
+        //         Err(PSP34Error::Custom(String::from(
+        //             RmrkError::InvalidAssetId.as_str(), // TODO: update error
+        //         )))
+        //     }
+        // }
+    }
 }
-
-
 
 impl<T> MultiAsset for T
 where
@@ -236,6 +270,9 @@ where
     }
 
     /// Used to add an asset to a token.
+    /// tokenId - ID of the token to add the asset to
+    /// assetId - ID of the asset to add to the token
+    /// replacesAssetWithId - ID of the asset to replace from the token's list of active assets
     fn add_asset_to_token(
         &mut self,
         token_id: Id,
@@ -244,17 +281,17 @@ where
     ) -> Result<(), PSP34Error> {
         self.ensure_asset_id_exists(asset_id)?;
         let token_owner = self.ensure_exists(&token_id)?;
+        // If the given asset is already added to the token, the execution will be reverted.
         self.ensure_not_accepted(&token_id, &asset_id)?;
         self.ensure_not_pending(&token_id, &asset_id)?;
-
         self._emit_asset_added_to_token_event(&token_id, &asset_id, &replaces_asset_with_id);
-
 
         if let Some(replace_with_id) = replaces_asset_with_id {
             ink_env::debug_println!("replaces_asset_with_id {:?}", &replaces_asset_with_id);
-            return self.replace_asset(&asset_id, &replace_with_id);
+            return self.replace_asset(&token_id, &asset_id, &replace_with_id)
         } else {
             let caller = Self::env().caller();
+            // If the asset is being added by the current root owner of the token, the asset will be automatically accepted.
             if caller == token_owner {
                 self.add_to_accepted_assets(&token_id, &asset_id);
             } else {

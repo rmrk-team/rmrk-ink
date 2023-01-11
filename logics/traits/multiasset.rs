@@ -140,7 +140,12 @@ pub trait Internal {
     fn add_to_pending_assets(&mut self, token_id: &Id, asset_id: &AssetId);
 
     /// Replace asset by another AssetId
-    fn replace_asset(&mut self, asset_id: &AssetId, replace_with_id: &AssetId) -> Result<(), PSP34Error>;
+    fn replace_asset(
+        &mut self,
+        token_id: &Id,
+        asset_id: &AssetId,
+        replace_with_id: &AssetId,
+    ) -> Result<(), PSP34Error>;
 
     /// Remove the asset to the list of pending assets
     fn remove_from_pending_assets(
