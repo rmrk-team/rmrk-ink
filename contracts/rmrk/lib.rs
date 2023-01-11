@@ -416,7 +416,7 @@ pub mod rmrk_contract {
             });
         }
 
-        /// Used to notify listeners that an asset object at `asset_id` is added to token's pending asset
+        /// Used to notify listeners that a child's asset has been un-equipped from one of its parent assets.
         fn emit_child_asset_unequipped(
             &self,
             token_id: Id,
@@ -881,7 +881,7 @@ pub mod rmrk_contract {
             set_sender(accounts.alice);
             assert_eq!(
                 rmrk.remove_asset(TOKEN_ID2, ASSET_ID),
-                Err(PSP34Error::Custom(RmrkError::NotAuthorised.as_str()))
+                Err(PSP34Error::Custom(RmrkError::NotTokenOwner.as_str()))
             );
 
             // Remove accepted asset
@@ -1112,7 +1112,16 @@ pub mod rmrk_contract {
             assert_eq!(1, ink_env::test::recorded_events().count());
 
             // equip fails, token does not exist. Not minted yet
-            // TODO
+            assert_eq!(
+                kanaria.equip(
+                    TOKEN_ID1,
+                    ASSET_ID,
+                    PART_ID0,
+                    (CHILD_COLLECTION_ADDRESS.into(), CHILD_TOKEN_ID),
+                    CHILD_ASSET_ID,
+                ),
+                Err(PSP34Error::TokenNotExists)
+            );
 
             // Bob mints kanaria
             set_sender(accounts.bob);
@@ -1130,7 +1139,7 @@ pub mod rmrk_contract {
                     (CHILD_COLLECTION_ADDRESS.into(), CHILD_TOKEN_ID),
                     CHILD_ASSET_ID,
                 ),
-                Err(PSP34Error::Custom(RmrkError::NotAuthorised.as_str()))
+                Err(PSP34Error::Custom(RmrkError::NotTokenOwner.as_str()))
             );
 
             // add asset to kanaria token
@@ -1147,19 +1156,19 @@ pub mod rmrk_contract {
             assert!(asset.part_ids[0] == PART_ID0);
 
             // equip fails, AddressNotEquippable
-            // assert_eq!(
-            //     kanaria.equip(
-            //         TOKEN_ID1,
-            //         ASSET_ID,
-            //         PART_ID0,
-            //         (NOT_EQUIPABLE_ADDRESS.into(), CHILD_TOKEN_ID),
-            //         CHILD_ASSET_ID,
-            //     ),
-            //     Err(PSP34Error::Custom(RmrkError::AddressNotEquippable.as_str()))
-            // );
+            set_sender(accounts.bob);
+            assert_eq!(
+                kanaria.equip(
+                    TOKEN_ID1,
+                    ASSET_ID,
+                    PART_ID0,
+                    (NOT_EQUIPABLE_ADDRESS.into(), CHILD_TOKEN_ID),
+                    CHILD_ASSET_ID,
+                ),
+                Err(PSP34Error::Custom(RmrkError::AddressNotEquippable.as_str()))
+            );
 
             // equip works
-            set_sender(accounts.bob);
             assert_eq!(3, ink_env::test::recorded_events().count());
             assert!(kanaria
                 .equip(
@@ -1173,7 +1182,7 @@ pub mod rmrk_contract {
 
             assert_eq!(
                 kanaria.get_equipment(TOKEN_ID1, PART_ID0),
-                Ok(Equipment {
+                Some(Equipment {
                     asset_id: ASSET_ID,
                     child_asset_id: CHILD_ASSET_ID,
                     child_nft: (CHILD_COLLECTION_ADDRESS.into(), CHILD_TOKEN_ID)
@@ -1211,10 +1220,7 @@ pub mod rmrk_contract {
 
             // un-equip token
             assert!(kanaria.unequip(TOKEN_ID1, PART_ID0).is_ok());
-            assert_eq!(
-                kanaria.get_equipment(TOKEN_ID1, PART_ID0),
-                Err(PSP34Error::Custom(RmrkError::EquipmentNotFound.as_str()))
-            );
+            assert_eq!(kanaria.get_equipment(TOKEN_ID1, PART_ID0), None);
 
             // check AssetEquipped event is emitted
             // assert_eq!(6, ink_env::test::recorded_events().count());

@@ -225,7 +225,7 @@ where
         asset_uri: String,
         part_ids: Vec<PartId>,
     ) -> Result<(), PSP34Error> {
-        self.ensure_new_asset(asset_id)?;
+        self.ensure_asset_id_is_available(asset_id)?;
         self.data::<MultiAssetData>()
             .collection_asset_entries
             .insert(
@@ -236,12 +236,6 @@ where
                     part_ids: part_ids.clone(),
                 },
             );
-        ink_env::debug_println!(
-            "##################### add_asset_entry asset {:?}, adding parts {:?} group {:?}",
-            asset_id,
-            part_ids,
-            equippable_group_id
-        );
         self.data::<MultiAssetData>()
             .collection_asset_ids
             .push(asset_id);
@@ -260,7 +254,13 @@ where
         asset_id: AssetId,
         replaces_asset_with_id: Option<AssetId>,
     ) -> Result<(), PSP34Error> {
-        self.ensure_asset_id_exists(asset_id)?;
+        // Check if asset id is valid
+        self.data::<MultiAssetData>()
+            .collection_asset_entries
+            .get(asset_id)
+            .ok_or(PSP34Error::Custom(String::from(
+                RmrkError::AssetIdNotFound.as_str(),
+            )))?;
         let token_owner = self.ensure_exists(&token_id)?;
         // If the given asset is already added to the token, the execution will be reverted.
         self.ensure_not_accepted(&token_id, &asset_id)?;
@@ -293,7 +293,7 @@ where
             self.add_to_accepted_assets(&token_id, &asset_id);
         } else {
             return Err(PSP34Error::Custom(String::from(
-                RmrkError::NotAuthorised.as_str(),
+                RmrkError::NotTokenOwner.as_str(),
             )))
         }
         Ok(())
@@ -377,23 +377,8 @@ where
         Ok((accepted_assets_on_token, pending_assets_on_token))
     }
 
-    /// Check if asset id is valid. Return the token uri
-    default fn ensure_asset_id_exists(&self, asset_id: AssetId) -> Result<(), PSP34Error> {
-        if self
-            .data::<MultiAssetData>()
-            .collection_asset_entries
-            .get(asset_id)
-            .is_none()
-        {
-            return Err(PSP34Error::Custom(String::from(
-                RmrkError::AssetIdNotFound.as_str(),
-            )))
-        }
-        return Ok(())
-    }
-
     /// Check that asset id does not already exist.
-    default fn ensure_new_asset(&self, asset_id: AssetId) -> Result<(), PSP34Error> {
+    default fn ensure_asset_id_is_available(&self, asset_id: AssetId) -> Result<(), PSP34Error> {
         if self
             .data::<MultiAssetData>()
             .collection_asset_entries

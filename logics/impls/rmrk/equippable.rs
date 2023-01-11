@@ -64,19 +64,17 @@ where
         asset_id: &AssetId,
         part_id: &PartId,
     ) -> Result<(), PSP34Error> {
-        if let Some(asset) = self
+        let asset = self
             .data::<MultiAssetData>()
             .collection_asset_entries
             .get(asset_id)
-        {
-            if !asset.part_ids.contains(part_id) {
-                return Err(PSP34Error::Custom(String::from(
-                    RmrkError::TargetAssetCannotReceiveSlot.as_str(),
-                )))
-            }
-        } else {
-            return Err(PSP34Error::Custom(String::from(
+            .ok_or(PSP34Error::Custom(String::from(
                 RmrkError::AssetHasNoParts.as_str(),
+            )))?;
+
+        if !asset.part_ids.contains(part_id) {
+            return Err(PSP34Error::Custom(String::from(
+                RmrkError::TargetAssetCannotReceiveSlot.as_str(),
             )))
         }
         Ok(())
@@ -90,29 +88,27 @@ where
         asset_id: AssetId,
         _part_slot_id: PartId,
     ) -> Result<(), PSP34Error> {
-        if let Some(asset) = self
+        let asset = self
             .data::<MultiAssetData>()
             .collection_asset_entries
             .get(asset_id)
+            .ok_or(PSP34Error::Custom(String::from(
+                RmrkError::UnknownEquippableAsset.as_str(),
+            )))?;
+
+        if self
+            .data::<EquippableData>()
+            .valid_parent_slot
+            .get((asset.equippable_group_id, parent_address))
+            .is_some()
         {
-            let equippable_group_id = asset.equippable_group_id;
-            if self
-                .data::<EquippableData>()
-                .valid_parent_slot
-                .get((equippable_group_id, parent_address))
-                .is_some()
-            {
-                self.ensure_asset_accepted(&token_id, &asset_id)?;
-            } else {
-                return Err(PSP34Error::Custom(String::from(
-                    RmrkError::UnknownPart.as_str(),
-                )))
-            }
+            self.ensure_asset_accepted(&token_id, &asset_id)?;
         } else {
             return Err(PSP34Error::Custom(String::from(
-                RmrkError::UnknownEquippableAsset.as_str(),
+                RmrkError::UnknownPart.as_str(),
             )))
         }
+
         Ok(())
     }
 
@@ -160,7 +156,7 @@ where
         self.ensure_asset_accepts_slot(&asset_id, &slot_part_id)?;
         self.ensure_token_slot_free(&token_id, &slot_part_id)?;
 
-        // TODO Cross contract call to check from child prespective. At the same time this will not work for PSP34 child
+        // TODO Cross contract call to check from child prespective. Implement as issue#33
         // EquippableRef::ensure_token_can_be_equipped_with_asset_into_slot(child_nft.0, Self::env().account_id(),
         //     child_nft.1,
         //     child_asset_id,
@@ -188,13 +184,12 @@ where
         let token_owner = self.ensure_exists(&token_id)?;
         self.ensure_token_owner(token_owner)?;
         let equipment = self.ensure_equipped(&token_id, &slot_part_id)?;
-        let asset_id = equipment.asset_id;
 
         self.data::<EquippableData>()
             .equipment
             .remove((token_id.clone(), slot_part_id));
 
-        self.emit_child_asset_unequipped(token_id, asset_id, slot_part_id);
+        self.emit_child_asset_unequipped(token_id, equipment.asset_id, slot_part_id);
         Ok(())
     }
 
@@ -215,17 +210,10 @@ where
     }
 
     /// Used to get the Equipment object equipped into the specified slot of the desired token.
-    default fn get_equipment(
-        &self,
-        token_id: Id,
-        slot_part_id: PartId,
-    ) -> Result<Equipment, PSP34Error> {
+    default fn get_equipment(&self, token_id: Id, slot_part_id: PartId) -> Option<Equipment> {
         self.data::<EquippableData>()
             .equipment
             .get((token_id, slot_part_id))
-            .ok_or(PSP34Error::Custom(String::from(
-                RmrkError::EquipmentNotFound.as_str(),
-            )))
     }
 
     /// Used to get the asset and equippable data associated with given `asset_id`.

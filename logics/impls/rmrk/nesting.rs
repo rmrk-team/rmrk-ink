@@ -170,7 +170,7 @@ where
         {
             if token_owner != caller {
                 return Err(PSP34Error::Custom(String::from(
-                    RmrkError::NotAuthorised.as_str(),
+                    RmrkError::NotTokenOwner.as_str(),
                 )))
             }
         }
