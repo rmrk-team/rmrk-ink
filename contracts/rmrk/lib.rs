@@ -920,6 +920,14 @@ pub mod rmrk_contract {
             // mint token and add asset to it. Should be accepted without approval
             test::set_value_transferred::<ink_env::DefaultEnvironment>(PRICE as u128);
             assert!(rmrk.mint(accounts.alice, 1).is_ok());
+
+            assert_eq!(
+                rmrk.add_asset_to_token(TOKEN_ID, ASSET_ID3, Some(ASSET_ID1)),
+                Err(PSP34Error::Custom(
+                    RmrkError::AcceptedAssetsMissing.as_str()
+                ))
+            );
+
             assert!(rmrk.add_asset_to_token(TOKEN_ID, ASSET_ID1, None).is_ok());
             assert!(rmrk.add_asset_to_token(TOKEN_ID, ASSET_ID2, None).is_ok());
 
