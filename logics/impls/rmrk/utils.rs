@@ -54,7 +54,7 @@ where
 
     /// Get URI for the token Id
     default fn token_uri(&self, token_id: u64) -> Result<PreludeString, PSP34Error> {
-        self.ensure_exists(&Id::U64(token_id))?;
+        self.ensure_exists_and_get_owner(&Id::U64(token_id))?;
         let uri: PreludeString;
         match self
             .data::<MintingData>()
@@ -100,7 +100,7 @@ where
         Ok(())
     }
     /// Check if token is minted. Return the owner
-    default fn ensure_exists(&self, id: &Id) -> Result<AccountId, PSP34Error> {
+    default fn ensure_exists_and_get_owner(&self, id: &Id) -> Result<AccountId, PSP34Error> {
         let token_owner = self
             .data::<psp34::Data<enumerable::Balances>>()
             .owner_of(id.clone())

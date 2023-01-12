@@ -136,7 +136,7 @@ pub trait Internal {
         slot_part_id: PartId,
     ) -> Result<(), PSP34Error>;
 
-    /// Used to ensure a token is not equipped and can be un-equipped.
+    /// Used to ensure a token is equipped and can be un-equipped.
     fn ensure_equipped(
         &self,
         token_id: &Id,

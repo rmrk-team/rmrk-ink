@@ -42,7 +42,7 @@ pub trait Utils {
     fn withdraw(&mut self) -> Result<(), PSP34Error>;
 
     /// Ensure that token exists
-    fn ensure_exists(&self, id: &Id) -> Result<AccountId, PSP34Error>;
+    fn ensure_exists_and_get_owner(&self, id: &Id) -> Result<AccountId, PSP34Error>;
 
     /// Ensure that the caller is the token owner
     fn ensure_token_owner(&self, token_owner: AccountId) -> Result<(), PSP34Error>;
