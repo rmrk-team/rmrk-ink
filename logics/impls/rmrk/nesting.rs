@@ -226,7 +226,7 @@ where
         to_parent_token_id: Id,
         child_nft: ChildNft,
     ) -> Result<(), PSP34Error> {
-        let parent_owner = self.ensure_exists(&to_parent_token_id)?;
+        let parent_owner = self.ensure_exists_and_get_owner(&to_parent_token_id)?;
         self.accepted(&to_parent_token_id, &child_nft)?;
         self.pending(&to_parent_token_id, &child_nft)?;
 
@@ -265,7 +265,7 @@ where
         parent_token_id: Id,
         child_nft: ChildNft,
     ) -> Result<(), PSP34Error> {
-        self.ensure_exists(&parent_token_id)?;
+        self.ensure_exists_and_get_owner(&parent_token_id)?;
         let caller = Self::env().caller();
         self.is_caller_parent_owner(caller, &parent_token_id)?;
 
@@ -274,7 +274,7 @@ where
 
         // Transfer child ownership from this contract to parent_token owner.
         // This call will fail if this contract is not child owner
-        let token_owner = self.ensure_exists(&parent_token_id)?;
+        let token_owner = self.ensure_exists_and_get_owner(&parent_token_id)?;
         self.transfer_child_ownership(token_owner, child_nft)?;
 
         Ok(())
@@ -297,7 +297,7 @@ where
         parent_token_id: Id,
         child_nft: ChildNft,
     ) -> Result<(), PSP34Error> {
-        self.ensure_exists(&parent_token_id)?;
+        self.ensure_exists_and_get_owner(&parent_token_id)?;
         let caller = Self::env().caller();
         self.is_caller_parent_owner(caller, &parent_token_id)?;
         self.accepted(&parent_token_id, &child_nft)?;
@@ -325,7 +325,7 @@ where
         parent_token_id: Id,
         child_nft: ChildNft,
     ) -> Result<(), PSP34Error> {
-        self.ensure_exists(&parent_token_id)?;
+        self.ensure_exists_and_get_owner(&parent_token_id)?;
         let caller = Self::env().caller();
         self.is_caller_parent_owner(caller, &parent_token_id)?;
         self.accepted(&parent_token_id, &child_nft)?;
@@ -356,8 +356,8 @@ where
         new_parent: Id,
         child_nft: ChildNft,
     ) -> Result<(), PSP34Error> {
-        let current_parent_owner = self.ensure_exists(&current_parent)?;
-        let new_parent_owner = self.ensure_exists(&new_parent)?;
+        let current_parent_owner = self.ensure_exists_and_get_owner(&current_parent)?;
+        let new_parent_owner = self.ensure_exists_and_get_owner(&new_parent)?;
         self.remove_accepted(&current_parent, &child_nft)?;
 
         self._emit_added_child_event(&new_parent, &child_nft.0, &child_nft.1);
@@ -377,7 +377,7 @@ where
     /// # Result:
     /// Returns the tupple of `(accepted_children, pending_children)` count
     fn children_balance(&self, parent_token_id: Id) -> Result<(u64, u64), PSP34Error> {
-        self.ensure_exists(&parent_token_id)?;
+        self.ensure_exists_and_get_owner(&parent_token_id)?;
         let parents_with_accepted_children = match self
             .data::<NestingData>()
             .accepted_children
