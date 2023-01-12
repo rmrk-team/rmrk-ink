@@ -132,14 +132,20 @@ where
     }
 
     /// Check whether the given address is allowed to equip the desired `PartId`.
-    default fn is_equippable(&self, part_id: PartId, target_address: AccountId) -> bool {
+    default fn ensure_equippable(
+        &self,
+        part_id: PartId,
+        target_address: AccountId,
+    ) -> Result<(), PSP34Error> {
         if let Some(part) = self.data::<BaseData>().parts.get(part_id) {
-            if part.equippable.contains(&target_address) {
-                return true
+            if !part.equippable.contains(&target_address) {
+                return Err(PSP34Error::Custom(String::from(
+                    RmrkError::AddressNotEquippable.as_str(),
+                )))
             }
         }
 
-        return false
+        Ok(())
     }
 
     /// Checks if the given `PartId` can be equipped by any collection

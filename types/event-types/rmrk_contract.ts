@@ -68,3 +68,22 @@ export interface AssetPrioritySet {
 	priorities: Array<number>;
 }
 
+export interface AssetEquipped {
+	token: ReturnTypes.Id;
+	asset: number;
+	child: ReturnTypes.Id;
+	childAsset: number;
+}
+
+export interface AssetUnEquipped {
+	token: ReturnTypes.Id;
+	asset: number;
+	slot: number;
+}
+
+export interface ParentEquippableGroupSet {
+	group: number;
+	slot: number;
+	parent: ReturnTypes.AccountId;
+}
+

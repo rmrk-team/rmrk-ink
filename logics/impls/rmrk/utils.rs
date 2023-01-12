@@ -24,6 +24,7 @@ use openbrush::{
     },
     modifiers,
     traits::{
+        AccountId,
         Balance,
         Storage,
         String,
@@ -53,15 +54,27 @@ where
 
     /// Get URI for the token Id
     default fn token_uri(&self, token_id: u64) -> Result<PreludeString, PSP34Error> {
-        self._token_exists(Id::U64(token_id))?;
-        let value = self.get_attribute(
-            self.data::<psp34::Data<enumerable::Balances>>()
-                .collection_id(),
-            String::from("baseUri"),
-        );
-        let mut token_uri = PreludeString::from_utf8(value.unwrap()).unwrap();
-        token_uri = token_uri + &token_id.to_string() + &PreludeString::from(".json");
-        Ok(token_uri)
+        self.ensure_exists_and_get_owner(&Id::U64(token_id))?;
+        let uri: PreludeString;
+        match self
+            .data::<MintingData>()
+            .nft_metadata
+            .get(Id::U64(token_id))
+        {
+            Some(token_uri) => {
+                uri = PreludeString::from_utf8(token_uri).unwrap();
+            }
+            None => {
+                let value = self.get_attribute(
+                    self.data::<psp34::Data<enumerable::Balances>>()
+                        .collection_id(),
+                    String::from("baseUri"),
+                );
+                let token_uri = PreludeString::from_utf8(value.unwrap()).unwrap();
+                uri = token_uri + &token_id.to_string() + &PreludeString::from(".json");
+            }
+        }
+        Ok(uri)
     }
 
     /// Get max supply of tokens
@@ -86,34 +99,23 @@ where
             .map_err(|_| PSP34Error::Custom(String::from(RmrkError::WithdrawalFailed.as_str())))?;
         Ok(())
     }
-}
-
-/// Helper trait for Psp34Custom
-impl<T> Internal for T
-where
-    T: Storage<MintingData> + Storage<psp34::Data<enumerable::Balances>>,
-{
-    /// Check if token is minted
-    default fn _token_exists(&self, id: Id) -> Result<(), PSP34Error> {
-        self.data::<psp34::Data<enumerable::Balances>>()
-            .owner_of(id)
+    /// Check if token is minted. Return the owner
+    default fn ensure_exists_and_get_owner(&self, id: &Id) -> Result<AccountId, PSP34Error> {
+        let token_owner = self
+            .data::<psp34::Data<enumerable::Balances>>()
+            .owner_of(id.clone())
             .ok_or(PSP34Error::TokenNotExists)?;
-        Ok(())
+        Ok(token_owner)
     }
-}
 
-//---------------------- T E S T ---------------------------------------------
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn check_value_overflow_ok2() {
-        struct testing {};
-        impl Psp34Custom for testing {}
-        assert_eq!(
-            testing._check_value(transferred_value, mint_amount),
-            Err(PSP34Error::Custom(RmrkError::BadMintValue.as_str()))
-        );
+    /// Ensure that the caller is the token owner
+    default fn ensure_token_owner(&self, token_owner: AccountId) -> Result<(), PSP34Error> {
+        let caller = Self::env().caller();
+        if caller != token_owner {
+            return Err(PSP34Error::Custom(String::from(
+                RmrkError::NotTokenOwner.as_str(),
+            )))
+        }
+        Ok(())
     }
 }

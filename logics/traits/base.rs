@@ -58,7 +58,11 @@ pub trait Base {
 
     /// Check whether the given address is allowed to equip the desired `PartId`.
     #[ink(message)]
-    fn is_equippable(&self, part_id: PartId, target_address: AccountId) -> bool;
+    fn ensure_equippable(
+        &self,
+        part_id: PartId,
+        target_address: AccountId,
+    ) -> Result<(), PSP34Error>;
 
     /// Checks if the given `PartId` can be equipped by any collection
     #[ink(message)]

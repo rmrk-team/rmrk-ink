@@ -1,16 +1,9 @@
 //! Types definition for RMRK contract
 
 use ink_prelude::vec::Vec;
-use ink_primitives::{
-    Key,
-    KeyPtr,
-};
 use ink_storage::{
     traits::{
-        ExtKeyPtr,
-        PackedAllocate,
         PackedLayout,
-        SpreadAllocate,
         SpreadLayout,
     },
     Mapping,
@@ -60,15 +53,19 @@ pub struct MintingData {
     pub last_token_id: u64,
     pub max_supply: u64,
     pub price_per_mint: Balance,
+    pub nft_metadata: Mapping<Id, String>,
 }
 
-pub const STORAGE_MUSLTIASSET_KEY: u32 = openbrush::storage_unique_key!(MultiAssetData);
+pub const STORAGE_MULTIASSET_KEY: u32 = openbrush::storage_unique_key!(MultiAssetData);
 
 #[derive(Default, Debug)]
-#[openbrush::upgradeable_storage(STORAGE_MUSLTIASSET_KEY)]
+#[openbrush::upgradeable_storage(STORAGE_MULTIASSET_KEY)]
 pub struct MultiAssetData {
-    /// List of available asset entries for this collection
-    pub collection_asset_entries: Vec<Asset>,
+    /// Mapping of available asset entries for this collection
+    pub collection_asset_entries: Mapping<AssetId, Asset>,
+
+    /// Collection asset id list
+    pub collection_asset_ids: Vec<AssetId>,
 
     /// Mapping of tokenId to an array of active assets
     pub accepted_assets: Mapping<Id, Vec<AssetId>>,
@@ -84,22 +81,14 @@ pub struct MultiAssetData {
     derive(scale_info::TypeInfo, ink_storage::traits::StorageLayout)
 )]
 pub struct Asset {
-    pub asset_id: AssetId,
+    /// Only used for assets meant to equip into others
     pub equippable_group_id: EquippableGroupId,
+
+    /// metadata URI for Asset
     pub asset_uri: String,
-}
 
-impl ink_storage::traits::PackedAllocate for Asset {
-    fn allocate_packed(&mut self, at: &Key) {
-        PackedAllocate::allocate_packed(&mut *self, at)
-    }
-}
-
-impl SpreadAllocate for Asset {
-    fn allocate_spread(ptr: &mut KeyPtr) -> Self {
-        ptr.next_for::<Asset>();
-        Asset::default()
-    }
+    /// list of parts for this asset
+    pub part_ids: Vec<PartId>,
 }
 
 pub const STORAGE_BASE_KEY: u32 = openbrush::storage_unique_key!(BaseData);
@@ -154,4 +143,31 @@ pub enum PartType {
     None,
     Slot,
     Fixed,
+}
+
+pub const STORAGE_EQUIPMENT_KEY: u32 = openbrush::storage_unique_key!(EquipmentData);
+
+/// Used to link tokens with Equipment
+#[derive(Default, Debug)]
+#[openbrush::upgradeable_storage(STORAGE_EQUIPMENT_KEY)]
+pub struct EquippableData {
+    pub equipment: Mapping<(Id, PartId), Equipment>,
+    pub valid_parent_slot: Mapping<(EquippableGroupId, AccountId), PartId>,
+}
+
+/// Used to define Equipment
+#[derive(scale::Encode, scale::Decode, SpreadLayout, PackedLayout, Debug, Clone, PartialEq)]
+#[cfg_attr(
+    feature = "std",
+    derive(scale_info::TypeInfo, ink_storage::traits::StorageLayout)
+)]
+pub struct Equipment {
+    // asset_id: The ID of the asset being equipped by child
+    pub asset_id: AssetId,
+
+    // child_asset_id: The ID of the asset used as equipment
+    pub child_asset_id: AssetId,
+
+    // child_id: The (Address of the collection, token ID) of token that is equipped
+    pub child_nft: ChildNft,
 }

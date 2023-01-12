@@ -1,5 +1,6 @@
 //! RMRK minting traits
 
+use ink_prelude::string::String as PreludeString;
 use openbrush::{
     contracts::psp34::PSP34Error,
     traits::AccountId,
@@ -27,4 +28,12 @@ pub trait Minting {
     /// Mint one or more tokens.
     #[ink(message, payable)]
     fn mint(&mut self, to: AccountId, mint_amount: u64) -> Result<(), PSP34Error>;
+
+    /// Mint next available token with specific metadata
+    #[ink(message)]
+    fn mint_with_metadata(
+        &mut self,
+        metadata: PreludeString,
+        to: AccountId,
+    ) -> Result<(), PSP34Error>;
 }

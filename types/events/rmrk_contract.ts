@@ -184,6 +184,48 @@ export default class EventsClass {
 		return this.__subscribeOnEvent(callbackWrapper, (eventName : string) => eventName == 'AssetPrioritySet');
 	}
 
+	public subscribeOnAssetEquippedEvent(callback : (event : EventTypes.AssetEquipped) => void) {
+		const callbackWrapper = (args: any[], event: any) => {
+			let _event: Record < string, any > = {};
+
+			for (let i = 0; i < args.length; i++) {
+				_event[event.args[i]!.name] = args[i]!.toJSON();
+			}
+
+			callback(handleEventReturn(_event, getEventTypeDescription('AssetEquipped', 'rmrk_contract')) as EventTypes.AssetEquipped);
+		};
+
+		return this.__subscribeOnEvent(callbackWrapper, (eventName : string) => eventName == 'AssetEquipped');
+	}
+
+	public subscribeOnAssetUnEquippedEvent(callback : (event : EventTypes.AssetUnEquipped) => void) {
+		const callbackWrapper = (args: any[], event: any) => {
+			let _event: Record < string, any > = {};
+
+			for (let i = 0; i < args.length; i++) {
+				_event[event.args[i]!.name] = args[i]!.toJSON();
+			}
+
+			callback(handleEventReturn(_event, getEventTypeDescription('AssetUnEquipped', 'rmrk_contract')) as EventTypes.AssetUnEquipped);
+		};
+
+		return this.__subscribeOnEvent(callbackWrapper, (eventName : string) => eventName == 'AssetUnEquipped');
+	}
+
+	public subscribeOnParentEquippableGroupSetEvent(callback : (event : EventTypes.ParentEquippableGroupSet) => void) {
+		const callbackWrapper = (args: any[], event: any) => {
+			let _event: Record < string, any > = {};
+
+			for (let i = 0; i < args.length; i++) {
+				_event[event.args[i]!.name] = args[i]!.toJSON();
+			}
+
+			callback(handleEventReturn(_event, getEventTypeDescription('ParentEquippableGroupSet', 'rmrk_contract')) as EventTypes.ParentEquippableGroupSet);
+		};
+
+		return this.__subscribeOnEvent(callbackWrapper, (eventName : string) => eventName == 'ParentEquippableGroupSet');
+	}
+
 
 	private __subscribeOnEvent(
 		callback : (args: any[], event: any) => void,
