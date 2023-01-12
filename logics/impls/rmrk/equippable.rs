@@ -151,7 +151,7 @@ where
         child_nft: ChildNft,
         child_asset_id: AssetId,
     ) -> Result<(), PSP34Error> {
-        let token_owner = self.ensure_exists(&token_id)?;
+        let token_owner = self.ensure_exists_and_get_owner(&token_id)?;
         self.ensure_token_owner(token_owner)?;
         self.ensure_asset_accepts_slot(&asset_id, &slot_part_id)?;
         self.ensure_token_slot_free(&token_id, &slot_part_id)?;
@@ -181,7 +181,7 @@ where
 
     /// Used to unequip child from parent token.
     default fn unequip(&mut self, token_id: Id, slot_part_id: PartId) -> Result<(), PSP34Error> {
-        let token_owner = self.ensure_exists(&token_id)?;
+        let token_owner = self.ensure_exists_and_get_owner(&token_id)?;
         self.ensure_token_owner(token_owner)?;
         let equipment = self.ensure_equipped(&token_id, &slot_part_id)?;
 
