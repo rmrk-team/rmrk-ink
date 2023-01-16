@@ -95,7 +95,7 @@ pub mod rmrk_contract {
         #[ink(topic)]
         collection: AccountId,
         #[ink(topic)]
-        child_token_id: Id,
+        child: Id,
     }
 
     /// Event emitted when a child is rejected.
@@ -106,7 +106,7 @@ pub mod rmrk_contract {
         #[ink(topic)]
         collection: AccountId,
         #[ink(topic)]
-        child_token_id: Id,
+        child: Id,
     }
 
     /// Event emitted when new asset is set for the collection.
@@ -327,7 +327,7 @@ pub mod rmrk_contract {
             self.env().emit_event(ChildRemoved {
                 parent: parent.clone(),
                 collection: *child_collection,
-                child_token_id: child_token_id.clone(),
+                child: child_token_id.clone(),
             });
         }
 
@@ -341,7 +341,7 @@ pub mod rmrk_contract {
             self.env().emit_event(ChildRejected {
                 parent: parent.clone(),
                 collection: *child_collection,
-                child_token_id: child_token_id.clone(),
+                child: child_token_id.clone(),
             });
         }
     }
