@@ -179,6 +179,9 @@ where
         Ok(())
     }
 
+    // TODO:
+    // * add replace pending storage ( ie collection issuer might suggest asset replace on a token with different owner )
+    // * add "upsert" operation ( if replace failed add as a new asset )
     default fn replace_asset(
         &mut self,
         token_id: &Id,
