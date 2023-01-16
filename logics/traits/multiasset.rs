@@ -47,7 +47,7 @@ pub trait MultiAsset {
         &mut self,
         token_id: Id,
         asset_id: AssetId,
-        replaces_asset_with_id: Option<Id>,
+        replaces_asset_with_id: Option<AssetId>,
     ) -> Result<(), PSP34Error>;
 
     /// Accepts an asset at from the pending array of given token.
@@ -136,6 +136,14 @@ pub trait Internal {
     /// Add the asset to the list of pending assets
     fn add_to_pending_assets(&mut self, token_id: &Id, asset_id: &AssetId);
 
+    /// Replace asset by another AssetId
+    fn replace_asset(
+        &mut self,
+        token_id: &Id,
+        asset_id: &AssetId,
+        replace_with_id: &AssetId,
+    ) -> Result<(), PSP34Error>;
+
     /// Remove the asset to the list of pending assets
     fn remove_from_pending_assets(
         &mut self,
@@ -169,7 +177,7 @@ pub trait MultiAssetEvents {
         &self,
         token_id: &Id,
         asset_id: &AssetId,
-        replaces_id: Option<Id>,
+        replaces_id: &Option<AssetId>,
     );
 
     /// Used to notify listeners that an asset object at `assetId` is accepted by the token and migrated

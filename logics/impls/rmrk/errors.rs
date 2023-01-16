@@ -5,6 +5,7 @@ use openbrush::traits::String;
 #[derive(Debug, PartialEq, Eq, scale::Encode, scale::Decode)]
 #[cfg_attr(feature = "std", derive(scale_info::TypeInfo))]
 pub enum RmrkError {
+    AcceptedAssetsMissing,
     AddingPendingAsset,
     AddingPendingChild,
     AddressNotEquippable,
@@ -36,6 +37,7 @@ pub enum RmrkError {
 impl RmrkError {
     pub fn as_str(&self) -> String {
         match self {
+            RmrkError::AcceptedAssetsMissing => String::from("AcceptedAssetsMissing"),
             RmrkError::AddingPendingAsset => String::from("AddingPendingAsset"),
             RmrkError::AddingPendingChild => String::from("AddingPendingChild"),
             RmrkError::AddressNotEquippable => String::from("AddressNotEquippable"),

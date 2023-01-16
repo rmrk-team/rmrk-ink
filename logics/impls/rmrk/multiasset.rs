@@ -178,6 +178,38 @@ where
 
         Ok(())
     }
+
+    // TODO:
+    // * add replace pending storage ( ie collection issuer might suggest asset replace on a token with different owner )
+    // * add "upsert" operation ( if replace failed add as a new asset )
+    default fn replace_asset(
+        &mut self,
+        token_id: &Id,
+        asset_id: &AssetId,
+        replace_with_id: &AssetId,
+    ) -> Result<(), PSP34Error> {
+        let mut accepted_list = self
+            .data::<MultiAssetData>()
+            .accepted_assets
+            .get(token_id)
+            .ok_or(PSP34Error::Custom(String::from(
+                RmrkError::AcceptedAssetsMissing.as_str(),
+            )))?;
+
+        let asset_index = accepted_list
+            .iter()
+            .position(|x| x == replace_with_id)
+            .ok_or(PSP34Error::Custom(String::from(
+                RmrkError::InvalidAssetId.as_str(),
+            )))?;
+
+        accepted_list[asset_index] = *asset_id;
+        self.data::<MultiAssetData>()
+            .accepted_assets
+            .insert(&token_id, &accepted_list);
+
+        Ok(())
+    }
 }
 
 impl<T> MultiAsset for T
@@ -216,11 +248,14 @@ where
     }
 
     /// Used to add an asset to a token.
+    /// tokenId - ID of the token to add the asset to
+    /// assetId - ID of the asset to add to the token
+    /// replacesAssetWithId - ID of the asset to replace from the token's list of active assets
     fn add_asset_to_token(
         &mut self,
         token_id: Id,
         asset_id: AssetId,
-        _replaces_asset_with_id: Option<Id>, // TODO implement replacement
+        replaces_asset_with_id: Option<AssetId>,
     ) -> Result<(), PSP34Error> {
         // Check if asset id is valid
         self.data::<MultiAssetData>()
@@ -232,13 +267,19 @@ where
         let token_owner = self.ensure_exists_and_get_owner(&token_id)?;
         self.ensure_not_accepted(&token_id, &asset_id)?;
         self.ensure_not_pending(&token_id, &asset_id)?;
+        self._emit_asset_added_to_token_event(&token_id, &asset_id, &replaces_asset_with_id);
 
-        self._emit_asset_added_to_token_event(&token_id, &asset_id, None);
-        let caller = Self::env().caller();
-        if caller == token_owner {
-            self.add_to_accepted_assets(&token_id, &asset_id);
+        if let Some(replace_with_id) = replaces_asset_with_id {
+            ink_env::debug_println!("replaces_asset_with_id {:?}", &replaces_asset_with_id);
+            return self.replace_asset(&token_id, &asset_id, &replace_with_id)
         } else {
-            self.add_to_pending_assets(&token_id, &asset_id);
+            let caller = Self::env().caller();
+            // If the asset is being added by the current root owner of the token, the asset will be automatically accepted.
+            if caller == token_owner {
+                self.add_to_accepted_assets(&token_id, &asset_id);
+            } else {
+                self.add_to_pending_assets(&token_id, &asset_id);
+            }
         }
 
         Ok(())
@@ -385,7 +426,7 @@ where
         &self,
         _token_id: &Id,
         _asset_id: &AssetId,
-        _replaces_id: Option<Id>,
+        _replaces_id: &Option<AssetId>,
     ) {
     }
 

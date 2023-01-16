@@ -123,7 +123,7 @@ pub mod rmrk_contract {
         #[ink(topic)]
         asset: AssetId,
         #[ink(topic)]
-        replaces: Option<Id>,
+        replaces: Option<AssetId>,
     }
 
     /// Event emitted when the asset is accepted.
@@ -357,12 +357,12 @@ pub mod rmrk_contract {
             &self,
             token_id: &Id,
             asset_id: &AssetId,
-            replaces_id: Option<Id>,
+            replaces_id: &Option<AssetId>,
         ) {
             self.env().emit_event(AssetAddedToToken {
                 token: token_id.clone(),
                 asset: *asset_id,
-                replaces: replaces_id,
+                replaces: *replaces_id,
             });
         }
 
@@ -891,6 +891,59 @@ pub mod rmrk_contract {
             assert_eq!(10, ink_env::test::recorded_events().count());
             assert_eq!(rmrk.get_accepted_token_assets(TOKEN_ID2), Ok(Some(vec![])));
             assert_eq!(rmrk.total_token_assets(TOKEN_ID2), Ok((0, 0)));
+        }
+
+        #[ink::test]
+        fn add_asset_to_token_with_replace_works() {
+            let accounts = default_accounts();
+            const ASSET_URI1: &str = "asset_uri/1";
+            const ASSET_URI2: &str = "asset_uri/2";
+            const ASSET_URI3: &str = "asset_uri/3";
+            const ASSET_ID1: AssetId = 1;
+            const ASSET_ID2: AssetId = 2;
+            const ASSET_ID3: AssetId = 3;
+            const TOKEN_ID: Id = Id::U64(1);
+
+            let mut rmrk = init();
+            // Add new asset entry
+            assert!(rmrk
+                .add_asset_entry(ASSET_ID1, 0, String::from(ASSET_URI1), vec![])
+                .is_ok());
+            assert!(rmrk
+                .add_asset_entry(ASSET_ID2, 0, String::from(ASSET_URI2), vec![])
+                .is_ok());
+            assert!(rmrk
+                .add_asset_entry(ASSET_ID3, 0, String::from(ASSET_URI3), vec![])
+                .is_ok());
+
+            assert_eq!(rmrk.total_assets(), 3);
+
+            // mint token and add asset to it. Should be accepted without approval
+            test::set_value_transferred::<ink_env::DefaultEnvironment>(PRICE as u128);
+            assert!(rmrk.mint(accounts.alice, 1).is_ok());
+
+            assert_eq!(
+                rmrk.add_asset_to_token(TOKEN_ID, ASSET_ID3, Some(ASSET_ID1)),
+                Err(PSP34Error::Custom(
+                    RmrkError::AcceptedAssetsMissing.as_str()
+                ))
+            );
+
+            assert!(rmrk.add_asset_to_token(TOKEN_ID, ASSET_ID1, None).is_ok());
+            assert!(rmrk.add_asset_to_token(TOKEN_ID, ASSET_ID2, None).is_ok());
+
+            assert_eq!(
+                rmrk.get_accepted_token_assets(TOKEN_ID),
+                Ok(Some(vec![1, 2]))
+            );
+            // replace previously accepted ASSET_ID1 with ASSET_ID3
+            assert!(rmrk
+                .add_asset_to_token(TOKEN_ID, ASSET_ID3, Some(ASSET_ID1))
+                .is_ok());
+            assert_eq!(
+                rmrk.get_accepted_token_assets(TOKEN_ID),
+                Ok(Some(vec![3, 2]))
+            );
         }
 
         #[ink::test]

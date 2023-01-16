@@ -45,7 +45,7 @@ export interface AssetSet {
 export interface AssetAddedToToken {
 	token: ReturnTypes.Id;
 	asset: number;
-	replaces: ReturnTypes.Id | null;
+	replaces: number | null;
 }
 
 export interface AssetAccepted {
