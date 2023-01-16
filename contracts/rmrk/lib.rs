@@ -69,7 +69,7 @@ pub mod rmrk_contract {
     #[ink(event)]
     pub struct ChildAdded {
         #[ink(topic)]
-        to: Id,
+        parent: Id,
         #[ink(topic)]
         collection: AccountId,
         #[ink(topic)]
@@ -302,7 +302,7 @@ pub mod rmrk_contract {
         /// Emit ChildAdded event
         fn _emit_added_child_event(&self, to: &Id, collection: &AccountId, child: &Id) {
             self.env().emit_event(ChildAdded {
-                to: to.clone(),
+                parent: to.clone(),
                 collection: *collection,
                 child: child.clone(),
             });
