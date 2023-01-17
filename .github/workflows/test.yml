@@ -1,0 +1,40 @@
+name: Test
+
+on:
+  pull_request:
+    branches:
+    - main
+  push:
+    branches:
+    - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Cache cargo
+      uses: actions/cache@v2
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          target
+        key: ${{ runner.os }}-cargo
+
+    - name: Set-Up
+      run: sudo apt install -y git clang curl libssl-dev llvm libudev-dev protobuf-compiler
+
+    - name: Install toolchain
+      # hacky way to install rust. Rustup is pre-installed on runners. Calling rustup show will detect the rust-toolchain.toml, and subsequently
+      # download the needed toolchain and components.
+      run: |
+        rustup show
+    - name: Check
+      run: cargo check
+
+    - name: Test
+      run: cargo test
+
+    - name: Lint
+      run: cargo clippy
