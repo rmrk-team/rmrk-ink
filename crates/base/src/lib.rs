@@ -2,12 +2,11 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 #![feature(min_specialization)]
 
+pub mod internal;
 pub mod traits;
 
-use traits::{
-    Base,
-    Internal,
-};
+use internal::Internal;
+use traits::Base;
 
 use rmrk_common::{
     errors::RmrkError,
@@ -52,26 +51,6 @@ pub struct BaseData {
     pub base_metadata_uri: String,
 }
 
-/// Implement internal helper trait for Base
-impl<T> Internal for T
-where
-    T: Storage<BaseData>,
-{
-    default fn ensure_only_slot(&self, part_id: PartId) -> Result<Part, PSP34Error> {
-        if let Some(part) = self.data::<BaseData>().parts.get(part_id) {
-            if part.part_type != PartType::Slot {
-                return Err(PSP34Error::Custom(String::from(
-                    RmrkError::PartIsNotSlot.as_str(),
-                )))
-            }
-            return Ok(part)
-        } else {
-            return Err(PSP34Error::Custom(String::from(
-                RmrkError::UnknownPartId.as_str(),
-            )))
-        }
-    }
-}
 impl<T> Base for T
 where
     T: Storage<BaseData> + Storage<ownable::Data>,

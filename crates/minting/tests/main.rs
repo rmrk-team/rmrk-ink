@@ -62,7 +62,7 @@ pub mod rmrk_contract_minting {
         use super::*;
         use ink_lang as ink;
         use rmrk_common::errors::RmrkError;
-        use rmrk_minting::traits::Internal;
+        use rmrk_minting::internal::Internal;
 
         #[ink::test]
         fn check_supply_overflow_ok() {

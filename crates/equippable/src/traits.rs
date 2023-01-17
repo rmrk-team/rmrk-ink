@@ -108,42 +108,6 @@ pub trait Equippable {
     ) -> Result<Asset, PSP34Error>;
 }
 
-/// Trait definitions for Resource helper functions
-#[openbrush::trait_definition]
-pub trait Internal {
-    /// Check if slot is already used/equipped.
-    fn ensure_token_slot_free(&self, token_id: &Id, part_id: &PartId) -> Result<(), PSP34Error>;
-
-    /// Check if asset is already added.
-    fn ensure_asset_accepts_slot(
-        &self,
-        asset_id: &AssetId,
-        part_id: &PartId,
-    ) -> Result<(), PSP34Error>;
-
-    /// Used to ensure a token can be equipped into a given parent's slot.
-    /// # Arguments:
-    ///  * parent Address of the parent token's smart contract
-    ///  * tokenId ID of the token we want to equip
-    ///  * asset_id ID of the asset associated with the token we want to equip
-    ///  * slotId ID of the slot that we want to equip the token into
-    /// * @return bool The boolean indicating whether the token with the given asset can be equipped into the desired
-    fn ensure_token_can_be_equipped_with_asset_into_slot(
-        &self,
-        parent_address: AccountId,
-        parent_token_id: Id,
-        asset_id: AssetId,
-        slot_part_id: PartId,
-    ) -> Result<(), PSP34Error>;
-
-    /// Used to ensure a token is equipped and can be un-equipped.
-    fn ensure_equipped(
-        &self,
-        token_id: &Id,
-        slot_part_id: &PartId,
-    ) -> Result<Equipment, PSP34Error>;
-}
-
 /// Trait definitions for Resource ink events
 #[openbrush::trait_definition]
 pub trait EquippableEvents {

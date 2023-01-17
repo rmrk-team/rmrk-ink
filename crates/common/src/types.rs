@@ -25,14 +25,6 @@ pub type PartId = u32;
 pub type AssetId = u32;
 pub type EquippableGroupId = u32;
 
-// pub const STORAGE_PSP34_KEY: u32 = openbrush::storage_unique_key!(UtilsData);
-
-// #[derive(Default, Debug)]
-// #[openbrush::upgradeable_storage(STORAGE_PSP34_KEY)]
-// pub struct UtilsData {
-//     pub collection_id: u32,
-// }
-
 /// Part's details
 #[derive(scale::Encode, scale::Decode, SpreadLayout, PackedLayout, Default, Debug)]
 #[cfg_attr(

@@ -21,11 +21,6 @@ use openbrush::{
     },
 };
 
-/// Trait definitions for Utils internal functions.
-pub trait Internal {
-    /// Check if token is minted.
-    fn _token_exists(&self, id: Id) -> Result<(), PSP34Error>;
-}
 
 /// Trait definitions for Utils functions
 #[openbrush::trait_definition]

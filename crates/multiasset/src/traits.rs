@@ -116,50 +116,6 @@ pub trait MultiAsset {
     fn ensure_asset_id_is_available(&self, asset_id: AssetId) -> Result<(), PSP34Error>;
 }
 
-/// Trait definitions for MultiAsset helper functions
-#[openbrush::trait_definition]
-pub trait Internal {
-    /// Check if asset is already accepted. Return error if it is
-    fn ensure_not_accepted(&self, token_id: &Id, asset_id: &AssetId) -> Result<(), PSP34Error>;
-
-    /// Check if asset is already pending. Return error if it is
-    fn ensure_not_pending(&self, token_id: &Id, asset_id: &AssetId) -> Result<(), PSP34Error>;
-
-    /// Check if asset is already pending. Return OK if it is
-    fn ensure_pending(&self, token_id: &Id, asset_id: &AssetId) -> Result<(), PSP34Error>;
-
-    /// Check if asset is already accepted
-    fn ensure_asset_accepted(&self, token_id: &Id, asset_id: &AssetId) -> Result<(), PSP34Error>;
-
-    /// Add the asset to the list of accepted assets
-    fn add_to_accepted_assets(&mut self, token_id: &Id, asset_id: &AssetId);
-
-    /// Add the asset to the list of pending assets
-    fn add_to_pending_assets(&mut self, token_id: &Id, asset_id: &AssetId);
-
-    /// Replace asset by another AssetId
-    fn replace_asset(
-        &mut self,
-        token_id: &Id,
-        asset_id: &AssetId,
-        replace_with_id: &AssetId,
-    ) -> Result<(), PSP34Error>;
-
-    /// Remove the asset to the list of pending assets
-    fn remove_from_pending_assets(
-        &mut self,
-        token_id: &Id,
-        asset_id: &AssetId,
-    ) -> Result<(), PSP34Error>;
-
-    /// Remove the asset to the list of accepted assets
-    fn remove_from_accepted_assets(
-        &mut self,
-        token_id: &Id,
-        asset_id: &AssetId,
-    ) -> Result<(), PSP34Error>;
-}
-
 /// Trait definitions for MultiAsset ink events
 #[openbrush::trait_definition]
 pub trait MultiAssetEvents {

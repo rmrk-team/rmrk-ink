@@ -12,15 +12,6 @@ use openbrush::{
 #[openbrush::wrapper]
 pub type MintingRef = dyn Minting;
 
-/// Trait definitions for Minting internal functions.
-pub trait Internal {
-    /// Check if the transferred mint values is as expected.
-    fn _check_value(&self, transfered_value: u128, mint_amount: u64) -> Result<(), PSP34Error>;
-
-    /// Check amount of tokens to be minted.
-    fn _check_amount(&self, mint_amount: u64) -> Result<(), PSP34Error>;
-}
-
 /// Trait definitions for Minting functions
 #[openbrush::trait_definition]
 pub trait Minting {
