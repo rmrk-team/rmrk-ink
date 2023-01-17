@@ -1,8 +1,11 @@
 [workspace]
 members = [
-    "contracts/**",
-]
-
-exclude = [
-    "logics",
+    "crates/base",
+    "crates/common",
+    "crates/equippable",
+    "crates/minting",
+    "crates/multiasset",
+    "crates/nesting",
+    "crates/rmrk",
+    "examples/*",
 ]

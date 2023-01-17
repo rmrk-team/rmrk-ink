@@ -2,12 +2,12 @@ import { expect, use } from "chai";
 import chaiAsPromised from "chai-as-promised";
 import { encodeAddress } from "@polkadot/keyring";
 import BN from "bn.js";
-import Rmrk_factory from "../types/constructors/rmrk_contract";
-import Rmrk from "../types/contracts/rmrk_contract";
+import Rmrk_factory from "../types/constructors/rmrk_example_simple";
+import Rmrk from "../types/contracts/rmrk_example_simple";
 
 import { ApiPromise, WsProvider, Keyring } from "@polkadot/api";
 import { KeyringPair } from "@polkadot/keyring/types";
-// import { AccountId } from '../types/types-arguments/rmrk_contract';
+// import { AccountId } from '../types/types-arguments/rmrk_example_simple';
 import { ReturnNumber } from "@supercolony/typechain-types";
 
 use(chaiAsPromised);
