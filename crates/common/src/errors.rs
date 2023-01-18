@@ -1,13 +1,16 @@
 //! Error definition for RMRK contract
 
-use ink_prelude::string::ToString;
+use ink_prelude::string::{
+    String,
+    ToString,
+};
 use openbrush::contracts::{
     ownable::OwnableError,
     psp34::PSP34Error,
     reentrancy_guard::ReentrancyGuardError,
 };
 
-pub type Result<T> = std::result::Result<T, Error>;
+pub type Result<T> = core::result::Result<T, Error>;
 
 #[derive(Debug, PartialEq, Eq, scale::Encode, scale::Decode)]
 #[cfg_attr(feature = "std", derive(scale_info::TypeInfo))]
@@ -39,6 +42,25 @@ impl From<OwnableError> for Error {
 impl From<ReentrancyGuardError> for Error {
     fn from(err: ReentrancyGuardError) -> Self {
         Self::Reentrancy(err)
+    }
+}
+
+// Flatten errors to a common PSP34Error type containing a String representation
+impl From<Error> for PSP34Error {
+    fn from(err: Error) -> Self {
+        match err {
+            Error::PSP34(err) => err,
+            Error::Rmrk(err) => PSP34Error::Custom(err.to_string().into()),
+            Error::Ownable(OwnableError::CallerIsNotOwner) => {
+                PSP34Error::Custom(String::from("CallerIsNotOwner").into())
+            }
+            Error::Ownable(OwnableError::NewOwnerIsZero) => {
+                PSP34Error::Custom(String::from("NewOwnerIsZero").into())
+            }
+            Error::Reentrancy(ReentrancyGuardError::ReentrantCall) => {
+                PSP34Error::Custom(String::from("ReentrantCall").into())
+            }
+        }
     }
 }
 
