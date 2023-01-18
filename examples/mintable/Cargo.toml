@@ -1,5 +1,5 @@
 [package]
-name = "rmrk_example_simple"
+name = "rmrk_example_mintable"
 version = "0.6.0"
 authors = ["Stake Technologies <devops@stake.co.jp>"]
 edition = "2021"
@@ -16,11 +16,11 @@ scale = { package = "parity-scale-codec", version = "3", default-features = fals
 scale-info = { version = "2", default-features = false, features = ["derive"], optional = true }
 
 openbrush = { tag = "v2.3.0", git = "https://github.com/Supercolony-net/openbrush-contracts", default-features = false, features = ["ownable", "psp34", "reentrancy_guard"] }
-rmrk = { path = "../../crates/rmrk", default-features = false }
+rmrk = { path = "../../crates/rmrk", default-features = false, features = ["mintable"] }
 
 
 [lib]
-name = "rmrk_example_simple"
+name = "rmrk_example_mintable"
 path = "lib.rs"
 crate-type = [
 	# Used for normal contract Wasm blobs.

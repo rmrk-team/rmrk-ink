@@ -45,10 +45,7 @@ pub trait Config<T> {
 impl<T> Config<T> for T
 where
     T: openbrush::traits::DefaultEnv
-        + Storage<rmrk_base::BaseData>
         + Storage<rmrk_minting::MintingData>
-        + Storage<rmrk_multiasset::MultiAssetData>
-        + Storage<rmrk_nesting::NestingData>
         + Storage<psp34::Data<enumerable::Balances>>
         + Storage<ownable::Data>
         + Storage<metadata::Data>

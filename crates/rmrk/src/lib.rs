@@ -1,7 +1,9 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
+#[cfg(feature="mintable")]
 mod config;
 
+#[cfg(feature="mintable")]
 pub use config::Config;
 
 pub mod errors {
@@ -12,22 +14,34 @@ pub mod types {
     pub use rmrk_common::types::*;
 }
 
+pub mod utils {
+    pub use rmrk_common::utils::*;
+}
+
 pub mod storage {
-    pub use rmrk_base::*;
-    pub use rmrk_equippable::*;
+    #[cfg(feature="mintable")]
     pub use rmrk_minting::*;
+    #[cfg(feature="equippable")]
+    pub use rmrk_base::*;
+    #[cfg(feature="equippable")]
+    pub use rmrk_equippable::*;
+    #[cfg(feature="equippable")]
     pub use rmrk_multiasset::*;
+    #[cfg(feature="equippable")]
     pub use rmrk_nesting::*;
 }
 
 pub mod traits {
-    pub use rmrk_base::traits::*;
-    pub use rmrk_equippable::traits::*;
+    #[cfg(feature="mintable")]
     pub use rmrk_minting::traits::*;
+    #[cfg(feature="equippable")]
+    pub use rmrk_base::traits::*;
+    #[cfg(feature="equippable")]
+    pub use rmrk_equippable::traits::*;
+    #[cfg(feature="equippable")]
     pub use rmrk_multiasset::traits::*;
+    #[cfg(feature="equippable")]
     pub use rmrk_nesting::traits::*;
 }
 
-pub mod utils {
-    pub use rmrk_common::utils::*;
-}
+

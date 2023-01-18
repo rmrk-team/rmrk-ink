@@ -2,7 +2,7 @@
 #![feature(min_specialization)]
 
 #[openbrush::contract]
-pub mod rmrk_example_simple {
+pub mod rmrk_example_equippable {
     use ink_lang::codegen::{
         EmitEvent,
         Env,
@@ -428,10 +428,11 @@ pub mod rmrk_example_simple {
             });
         }
     }
+    
     #[cfg(test)]
     mod tests {
         use super::*;
-        use crate::rmrk_example_simple::PSP34Error::*;
+        use crate::rmrk_example_equippable::PSP34Error::*;
         use ink_env::{
             pay_with_call,
             test,
