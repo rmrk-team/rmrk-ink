@@ -13,7 +13,10 @@ use rmrk_base::{
 };
 
 use rmrk_common::{
-    errors::RmrkError,
+    errors::{
+        Result,
+        RmrkError,
+    },
     types::*,
     utils::Utils,
 };
@@ -72,7 +75,7 @@ where
         slot_part_id: PartId,
         child_nft: ChildNft,
         child_asset_id: AssetId,
-    ) -> Result<(), PSP34Error> {
+    ) -> Result<()> {
         let token_owner = self.ensure_exists_and_get_owner(&token_id)?;
         self.ensure_token_owner(token_owner)?;
         self.ensure_asset_accepts_slot(&asset_id, &slot_part_id)?;
@@ -102,7 +105,7 @@ where
     }
 
     /// Used to unequip child from parent token.
-    default fn unequip(&mut self, token_id: Id, slot_part_id: PartId) -> Result<(), PSP34Error> {
+    default fn unequip(&mut self, token_id: Id, slot_part_id: PartId) -> Result<()> {
         let token_owner = self.ensure_exists_and_get_owner(&token_id)?;
         self.ensure_token_owner(token_owner)?;
         let equipment = self.ensure_equipped(&token_id, &slot_part_id)?;
@@ -122,7 +125,7 @@ where
         equippable_group_id: EquippableGroupId,
         parent_address: AccountId,
         part_id: PartId,
-    ) -> Result<(), PSP34Error> {
+    ) -> Result<()> {
         self.data::<EquippableData>()
             .valid_parent_slot
             .insert((equippable_group_id, parent_address), &part_id);
@@ -143,7 +146,7 @@ where
         &self,
         token_id: Id,
         asset_id: AssetId,
-    ) -> Result<Asset, PSP34Error> {
+    ) -> Result<Asset> {
         self.ensure_asset_accepted(&token_id, &asset_id)?;
 
         if let Some(asset) = self
@@ -153,9 +156,7 @@ where
         {
             return Ok(asset)
         } else {
-            return Err(PSP34Error::Custom(String::from(
-                RmrkError::AssetIdNotFound.as_str(),
-            )))
+            return Err(RmrkError::AssetIdNotFound.into())
         }
     }
 }

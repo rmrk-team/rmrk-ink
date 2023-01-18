@@ -7,6 +7,7 @@ pub mod internal;
 pub mod traits;
 
 use rmrk_common::{
+    errors::Result,
     types::*,
     utils::Utils,
 };
@@ -63,11 +64,7 @@ where
     /// Ownership of child NFT will be transferred to this contract (cross contract call)
     /// On success emitts `RmrkEvent::ChildAdded`
     /// On success emitts `RmrkEvent::ChildAccepted` - only if caller is already owner of child NFT
-    default fn add_child(
-        &mut self,
-        to_parent_token_id: Id,
-        child_nft: ChildNft,
-    ) -> Result<(), PSP34Error> {
+    default fn add_child(&mut self, to_parent_token_id: Id, child_nft: ChildNft) -> Result<()> {
         let parent_owner = self.ensure_exists_and_get_owner(&to_parent_token_id)?;
         self.accepted(&to_parent_token_id, &child_nft)?;
         self.pending(&to_parent_token_id, &child_nft)?;
@@ -102,11 +99,7 @@ where
     /// # Result:
     /// Ownership of child NFT will be transferred to parent NFT owner (cross contract call)
     /// On success emitts `RmrkEvent::ChildRemoved`
-    default fn remove_child(
-        &mut self,
-        parent_token_id: Id,
-        child_nft: ChildNft,
-    ) -> Result<(), PSP34Error> {
+    default fn remove_child(&mut self, parent_token_id: Id, child_nft: ChildNft) -> Result<()> {
         self.ensure_exists_and_get_owner(&parent_token_id)?;
         let caller = Self::env().caller();
         self.is_caller_parent_owner(caller, &parent_token_id)?;
@@ -134,11 +127,7 @@ where
     /// # Result:
     /// Child Nft is moved from pending to accepted
     /// On success emitts `RmrkEvent::ChildAccepted`
-    default fn accept_child(
-        &mut self,
-        parent_token_id: Id,
-        child_nft: ChildNft,
-    ) -> Result<(), PSP34Error> {
+    default fn accept_child(&mut self, parent_token_id: Id, child_nft: ChildNft) -> Result<()> {
         self.ensure_exists_and_get_owner(&parent_token_id)?;
         let caller = Self::env().caller();
         self.is_caller_parent_owner(caller, &parent_token_id)?;
@@ -162,11 +151,7 @@ where
     /// # Result:
     /// Child Nft is removed from pending
     /// On success emitts `RmrkEvent::ChildRejected`
-    default fn reject_child(
-        &mut self,
-        parent_token_id: Id,
-        child_nft: ChildNft,
-    ) -> Result<(), PSP34Error> {
+    default fn reject_child(&mut self, parent_token_id: Id, child_nft: ChildNft) -> Result<()> {
         self.ensure_exists_and_get_owner(&parent_token_id)?;
         let caller = Self::env().caller();
         self.is_caller_parent_owner(caller, &parent_token_id)?;
@@ -197,7 +182,7 @@ where
         current_parent: Id,
         new_parent: Id,
         child_nft: ChildNft,
-    ) -> Result<(), PSP34Error> {
+    ) -> Result<()> {
         let current_parent_owner = self.ensure_exists_and_get_owner(&current_parent)?;
         let new_parent_owner = self.ensure_exists_and_get_owner(&new_parent)?;
         self.remove_accepted(&current_parent, &child_nft)?;
@@ -218,7 +203,7 @@ where
     ///
     /// # Result:
     /// Returns the tupple of `(accepted_children, pending_children)` count
-    fn children_balance(&self, parent_token_id: Id) -> Result<(u64, u64), PSP34Error> {
+    fn children_balance(&self, parent_token_id: Id) -> Result<(u64, u64)> {
         self.ensure_exists_and_get_owner(&parent_token_id)?;
         let parents_with_accepted_children = match self
             .data::<NestingData>()

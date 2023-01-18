@@ -428,7 +428,7 @@ pub mod rmrk_example_equippable {
             });
         }
     }
-    
+
     #[cfg(test)]
     mod tests {
         use super::*;
@@ -438,6 +438,13 @@ pub mod rmrk_example_equippable {
             test,
             AccountId,
         };
+
+        use openbrush::contracts::{
+            ownable::OwnableError,
+            psp34::PSP34Error,
+            reentrancy_guard::ReentrancyGuardError,
+        };
+
         use ink_lang as ink;
         use ink_prelude::string::String as PreludeString;
         use rmrk::{
@@ -540,7 +547,7 @@ pub mod rmrk_example_equippable {
             set_sender(accounts.bob);
             assert_eq!(
                 rmrk.mint_with_metadata(RMRK_METADATA.into(), accounts.bob),
-                Err(PSP34Error::Custom(String::from("O::CallerIsNotOwner")))
+                Err(OwnableError::CallerIsNotOwner.into())
             );
 
             // owner mints
@@ -584,7 +591,7 @@ pub mod rmrk_example_equippable {
             );
             assert_eq!(
                 rmrk.mint(accounts.bob, num_of_mints),
-                Err(PSP34Error::Custom(RmrkError::CollectionIsFull.as_str()))
+                Err(RmrkError::CollectionIsFull.into())
             );
         }
 
@@ -601,15 +608,12 @@ pub mod rmrk_example_equippable {
             );
             assert_eq!(
                 rmrk.mint(accounts.bob, num_of_mints),
-                Err(PSP34Error::Custom(RmrkError::BadMintValue.as_str()))
+                Err(RmrkError::BadMintValue.into())
             );
             test::set_value_transferred::<ink_env::DefaultEnvironment>(
                 PRICE * num_of_mints as u128 - 1,
             );
-            assert_eq!(
-                rmrk.mint_next(),
-                Err(PSP34Error::Custom(RmrkError::BadMintValue.as_str()))
-            );
+            assert_eq!(rmrk.mint_next(), Err(RmrkError::BadMintValue.into()));
             assert_eq!(rmrk.total_supply(), 0);
         }
 
@@ -644,14 +648,14 @@ pub mod rmrk_example_equippable {
             test::set_value_transferred::<ink_env::DefaultEnvironment>(PRICE);
             assert!(rmrk.mint_next().is_ok());
             // return error if request is for not yet minted token
-            assert_eq!(rmrk.token_uri(42), Err(TokenNotExists));
+            assert_eq!(rmrk.token_uri(42), Err(TokenNotExists.into()));
             assert_eq!(
                 rmrk.token_uri(1),
                 Ok(PreludeString::from(BASE_URI.to_owned() + "1.json"))
             );
 
             // return error if request is for not yet minted token
-            assert_eq!(rmrk.token_uri(42), Err(TokenNotExists));
+            assert_eq!(rmrk.token_uri(42), Err(TokenNotExists.into()));
 
             // verify token_uri when baseUri is empty
             set_sender(accounts.alice);
@@ -685,7 +689,7 @@ pub mod rmrk_example_equippable {
             set_sender(accounts.bob);
             assert_eq!(
                 rmrk.set_base_uri(NEW_BASE_URI.into()),
-                Err(PSP34Error::Custom(String::from("O::CallerIsNotOwner")))
+                Err(OwnableError::CallerIsNotOwner.into())
             );
         }
 
@@ -717,7 +721,7 @@ pub mod rmrk_example_equippable {
             // reject adding asset with same asset_id
             assert_eq!(
                 rmrk.add_asset_entry(ASSET_ID1, 1, String::from(ASSET_URI1), vec![]),
-                Err(PSP34Error::Custom(RmrkError::AssetIdAlreadyExists.as_str()))
+                Err(RmrkError::AssetIdAlreadyExists.into())
             );
 
             // add one more asset
@@ -758,11 +762,11 @@ pub mod rmrk_example_equippable {
             // error cases
             assert_eq!(
                 rmrk.add_asset_to_token(TOKEN_ID1, ASSET_ID, None),
-                Err(PSP34Error::Custom(RmrkError::AlreadyAddedAsset.as_str()))
+                Err(RmrkError::AlreadyAddedAsset.into())
             );
             assert_eq!(
                 rmrk.add_asset_to_token(TOKEN_ID1, 42, None),
-                Err(PSP34Error::Custom(RmrkError::AssetIdNotFound.as_str()))
+                Err(RmrkError::AssetIdNotFound.into())
             );
 
             // mint second token to non owner (Bob)
@@ -796,23 +800,26 @@ pub mod rmrk_example_equippable {
             set_sender(accounts.alice);
             assert_eq!(
                 rmrk.add_asset_to_token(Id::U64(3), ASSET_ID, None),
-                Err(TokenNotExists)
+                Err(TokenNotExists.into())
             );
 
             // Try removing not added asset fails
             assert_eq!(
                 rmrk.remove_asset(TOKEN_ID2, 42),
-                Err(PSP34Error::Custom(RmrkError::AssetIdNotFound.as_str()))
+                Err(RmrkError::AssetIdNotFound.into())
             );
 
             // Try removing asset for not minted token fails
-            assert_eq!(rmrk.remove_asset(Id::U64(3), ASSET_ID), Err(TokenNotExists));
+            assert_eq!(
+                rmrk.remove_asset(Id::U64(3), ASSET_ID),
+                Err(TokenNotExists.into())
+            );
 
             // Try removing asset by collection owner fails
             set_sender(accounts.alice);
             assert_eq!(
                 rmrk.remove_asset(TOKEN_ID2, ASSET_ID),
-                Err(PSP34Error::Custom(RmrkError::NotTokenOwner.as_str()))
+                Err(RmrkError::NotTokenOwner.into())
             );
 
             // Remove accepted asset
@@ -854,9 +861,7 @@ pub mod rmrk_example_equippable {
 
             assert_eq!(
                 rmrk.add_asset_to_token(TOKEN_ID, ASSET_ID3, Some(ASSET_ID1)),
-                Err(PSP34Error::Custom(
-                    RmrkError::AcceptedAssetsMissing.as_str()
-                ))
+                Err(RmrkError::AcceptedAssetsMissing.into())
             );
 
             assert!(rmrk.add_asset_to_token(TOKEN_ID, ASSET_ID1, None).is_ok());
@@ -915,11 +920,11 @@ pub mod rmrk_example_equippable {
             // error cases
             assert_eq!(
                 rmrk.set_priority(TOKEN_ID1, vec![ASSET_ID2]),
-                Err(PSP34Error::Custom(RmrkError::BadPriorityLength.as_str()))
+                Err(RmrkError::BadPriorityLength.into())
             );
             assert_eq!(
                 rmrk.set_priority(TOKEN_ID1, vec![ASSET_ID2, 42]),
-                Err(PSP34Error::Custom(RmrkError::AssetIdNotFound.as_str()))
+                Err(RmrkError::AssetIdNotFound.into())
             );
         }
 
@@ -1012,23 +1017,23 @@ pub mod rmrk_example_equippable {
                 .is_ok());
             assert_eq!(
                 rmrk.add_equippable_addresses(PART_ID1, vec![EQUIPABLE_ADDRESS1.into()]),
-                Err(PSP34Error::Custom(RmrkError::PartIsNotSlot.as_str()))
+                Err(RmrkError::PartIsNotSlot.into())
             );
             assert_eq!(
                 rmrk.reset_equippable_addresses(PART_ID1),
-                Err(PSP34Error::Custom(RmrkError::PartIsNotSlot.as_str()))
+                Err(RmrkError::PartIsNotSlot.into())
             );
             assert_eq!(
                 rmrk.set_equippable_by_all(PART_ID1),
-                Err(PSP34Error::Custom(RmrkError::PartIsNotSlot.as_str()))
+                Err(RmrkError::PartIsNotSlot.into())
             );
             assert_eq!(
                 rmrk.add_part_list(bad_part_list1.clone()),
-                Err(PSP34Error::Custom(RmrkError::BadConfig.as_str()))
+                Err(RmrkError::BadConfig.into())
             );
             assert_eq!(
                 rmrk.add_part_list(bad_part_list2.clone()),
-                Err(PSP34Error::Custom(RmrkError::BadConfig.as_str()))
+                Err(RmrkError::BadConfig.into())
             );
 
             assert!(!rmrk
@@ -1104,7 +1109,7 @@ pub mod rmrk_example_equippable {
                     (CHILD_COLLECTION_ADDRESS.into(), CHILD_TOKEN_ID),
                     CHILD_ASSET_ID,
                 ),
-                Err(PSP34Error::TokenNotExists)
+                Err(PSP34Error::TokenNotExists.into())
             );
 
             // Bob mints kanaria
@@ -1123,7 +1128,7 @@ pub mod rmrk_example_equippable {
                     (CHILD_COLLECTION_ADDRESS.into(), CHILD_TOKEN_ID),
                     CHILD_ASSET_ID,
                 ),
-                Err(PSP34Error::Custom(RmrkError::NotTokenOwner.as_str()))
+                Err(RmrkError::NotTokenOwner.into())
             );
 
             // add asset to kanaria token
@@ -1149,7 +1154,7 @@ pub mod rmrk_example_equippable {
                     (NOT_EQUIPABLE_ADDRESS.into(), CHILD_TOKEN_ID),
                     CHILD_ASSET_ID,
                 ),
-                Err(PSP34Error::Custom(RmrkError::AddressNotEquippable.as_str()))
+                Err(RmrkError::AddressNotEquippable.into())
             );
 
             // equip works
@@ -1185,9 +1190,7 @@ pub mod rmrk_example_equippable {
                     (CHILD_COLLECTION_ADDRESS.into(), CHILD_TOKEN_ID),
                     CHILD_ASSET_ID,
                 ),
-                Err(PSP34Error::Custom(
-                    RmrkError::TargetAssetCannotReceiveSlot.as_str()
-                ))
+                Err(RmrkError::TargetAssetCannotReceiveSlot.into())
             );
 
             // equip fails, SlotAlreayUsed
@@ -1199,7 +1202,7 @@ pub mod rmrk_example_equippable {
                     (CHILD_COLLECTION_ADDRESS.into(), CHILD_TOKEN_ID),
                     CHILD_ASSET_ID,
                 ),
-                Err(PSP34Error::Custom(RmrkError::SlotAlreayUsed.as_str()))
+                Err(RmrkError::SlotAlreayUsed.into())
             );
 
             // un-equip token
