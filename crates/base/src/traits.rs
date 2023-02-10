@@ -1,17 +1,17 @@
 //! RMRK Base traits
 
-use rmrk_common::types::*;
+use rmrk_common::{
+    errors::Result,
+    types::*,
+};
 
 use ink_prelude::{
     string::String as PreludeString,
     vec::Vec,
 };
-use openbrush::{
-    contracts::psp34::PSP34Error,
-    traits::{
-        AccountId,
-        String,
-    },
+use openbrush::traits::{
+    AccountId,
+    String,
 };
 
 #[openbrush::wrapper]
@@ -22,7 +22,7 @@ pub type BaseRef = dyn Base;
 pub trait Base {
     /// Add one or more parts to the base
     #[ink(message)]
-    fn add_part_list(&mut self, parts: Vec<Part>) -> Result<(), PSP34Error>;
+    fn add_part_list(&mut self, parts: Vec<Part>) -> Result<()>;
 
     /// Add collection address(es) that can be used to equip given `PartId`.
     #[ink(message)]
@@ -30,19 +30,19 @@ pub trait Base {
         &mut self,
         part_id: PartId,
         equippable_address: Vec<AccountId>,
-    ) -> Result<(), PSP34Error>;
+    ) -> Result<()>;
 
     /// Remove list of equippable addresses for given Part
     #[ink(message)]
-    fn reset_equippable_addresses(&mut self, part_id: PartId) -> Result<(), PSP34Error>;
+    fn reset_equippable_addresses(&mut self, part_id: PartId) -> Result<()>;
 
     /// Sets the is_equippable_by_all flag to true, meaning that any collection may be equipped into the `PartId`
     #[ink(message)]
-    fn set_equippable_by_all(&mut self, part_id: PartId) -> Result<(), PSP34Error>;
+    fn set_equippable_by_all(&mut self, part_id: PartId) -> Result<()>;
 
     //// Set the Base metadataURI.
     #[ink(message)]
-    fn setup_base(&mut self, base_metadata: String) -> Result<(), PSP34Error>;
+    fn setup_base(&mut self, base_metadata: String) -> Result<()>;
 
     //// Get the Base metadataURI.
     #[ink(message)]
@@ -58,11 +58,7 @@ pub trait Base {
 
     /// Check whether the given address is allowed to equip the desired `PartId`.
     #[ink(message)]
-    fn ensure_equippable(
-        &self,
-        part_id: PartId,
-        target_address: AccountId,
-    ) -> Result<(), PSP34Error>;
+    fn ensure_equippable(&self, part_id: PartId, target_address: AccountId) -> Result<()>;
 
     /// Checks if the given `PartId` can be equipped by any collection
     #[ink(message)]

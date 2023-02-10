@@ -73,13 +73,13 @@ pub mod rmrk_contract_minting {
             // check case when last_token_id.add(mint_amount) if more than u64::MAX
             assert_eq!(
                 rmrk._check_amount(3),
-                Err(PSP34Error::Custom(RmrkError::CollectionIsFull.as_str()))
+                Err(RmrkError::CollectionIsFull.into())
             );
 
             // check case when mint_amount is 0
             assert_eq!(
                 rmrk._check_amount(0),
-                Err(PSP34Error::Custom(RmrkError::CannotMintZeroTokens.as_str()))
+                Err(RmrkError::CannotMintZeroTokens.into())
             );
         }
 
@@ -90,7 +90,7 @@ pub mod rmrk_contract_minting {
             let mint_amount = u64::MAX;
             assert_eq!(
                 rmrk._check_value(transferred_value, mint_amount),
-                Err(PSP34Error::Custom(RmrkError::BadMintValue.as_str()))
+                Err(RmrkError::BadMintValue.into())
             );
         }
     }

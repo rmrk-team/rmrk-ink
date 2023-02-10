@@ -1,7 +1,10 @@
 use rmrk_base::BaseData;
 
 use rmrk_common::{
-    errors::RmrkError,
+    errors::{
+        Result,
+        RmrkError,
+    },
     types::*,
     utils::Utils,
 };
@@ -29,14 +32,10 @@ use openbrush::{
 /// Trait definitions for Resource helper functions
 pub trait Internal {
     /// Check if slot is already used/equipped.
-    fn ensure_token_slot_free(&self, token_id: &Id, part_id: &PartId) -> Result<(), PSP34Error>;
+    fn ensure_token_slot_free(&self, token_id: &Id, part_id: &PartId) -> Result<()>;
 
     /// Check if asset is already added.
-    fn ensure_asset_accepts_slot(
-        &self,
-        asset_id: &AssetId,
-        part_id: &PartId,
-    ) -> Result<(), PSP34Error>;
+    fn ensure_asset_accepts_slot(&self, asset_id: &AssetId, part_id: &PartId) -> Result<()>;
 
     /// Used to ensure a token can be equipped into a given parent's slot.
     /// # Arguments:
@@ -51,14 +50,10 @@ pub trait Internal {
         parent_token_id: Id,
         asset_id: AssetId,
         slot_part_id: PartId,
-    ) -> Result<(), PSP34Error>;
+    ) -> Result<()>;
 
     /// Used to ensure a token is equipped and can be un-equipped.
-    fn ensure_equipped(
-        &self,
-        token_id: &Id,
-        slot_part_id: &PartId,
-    ) -> Result<Equipment, PSP34Error>;
+    fn ensure_equipped(&self, token_id: &Id, slot_part_id: &PartId) -> Result<Equipment>;
 }
 
 /// Implement internal helper trait for Equippable
@@ -73,20 +68,14 @@ where
         + Utils,
 {
     /// Check if slot is already used/equipped.
-    default fn ensure_token_slot_free(
-        &self,
-        token_id: &Id,
-        part_id: &PartId,
-    ) -> Result<(), PSP34Error> {
+    default fn ensure_token_slot_free(&self, token_id: &Id, part_id: &PartId) -> Result<()> {
         if (self
             .data::<EquippableData>()
             .equipment
             .get((token_id, part_id)))
         .is_some()
         {
-            return Err(PSP34Error::Custom(String::from(
-                RmrkError::SlotAlreayUsed.as_str(),
-            )))
+            return Err(RmrkError::SlotAlreayUsed.into())
         }
         Ok(())
     }
@@ -95,19 +84,15 @@ where
         &self,
         asset_id: &AssetId,
         part_id: &PartId,
-    ) -> Result<(), PSP34Error> {
+    ) -> Result<()> {
         let asset = self
             .data::<MultiAssetData>()
             .collection_asset_entries
             .get(asset_id)
-            .ok_or(PSP34Error::Custom(String::from(
-                RmrkError::AssetHasNoParts.as_str(),
-            )))?;
+            .ok_or(RmrkError::AssetHasNoParts)?;
 
         if !asset.part_ids.contains(part_id) {
-            return Err(PSP34Error::Custom(String::from(
-                RmrkError::TargetAssetCannotReceiveSlot.as_str(),
-            )))
+            return Err(RmrkError::TargetAssetCannotReceiveSlot.into())
         }
         Ok(())
     }
@@ -119,14 +104,12 @@ where
         token_id: Id,
         asset_id: AssetId,
         _part_slot_id: PartId,
-    ) -> Result<(), PSP34Error> {
+    ) -> Result<()> {
         let asset = self
             .data::<MultiAssetData>()
             .collection_asset_entries
             .get(asset_id)
-            .ok_or(PSP34Error::Custom(String::from(
-                RmrkError::UnknownEquippableAsset.as_str(),
-            )))?;
+            .ok_or(RmrkError::UnknownEquippableAsset)?;
 
         if self
             .data::<EquippableData>()
@@ -136,20 +119,14 @@ where
         {
             self.ensure_asset_accepted(&token_id, &asset_id)?;
         } else {
-            return Err(PSP34Error::Custom(String::from(
-                RmrkError::UnknownPart.as_str(),
-            )))
+            return Err(RmrkError::UnknownPart.into())
         }
 
         Ok(())
     }
 
     /// Used to ensure a token is not equipped and can be un-equipped.
-    fn ensure_equipped(
-        &self,
-        token_id: &Id,
-        slot_part_id: &PartId,
-    ) -> Result<Equipment, PSP34Error> {
+    fn ensure_equipped(&self, token_id: &Id, slot_part_id: &PartId) -> Result<Equipment> {
         if let Some(equipment) = self
             .data::<EquippableData>()
             .equipment
@@ -157,9 +134,7 @@ where
         {
             return Ok(equipment)
         } else {
-            return Err(PSP34Error::Custom(String::from(
-                RmrkError::NotEquipped.as_str(),
-            )))
+            return Err(RmrkError::NotEquipped.into())
         }
     }
 }

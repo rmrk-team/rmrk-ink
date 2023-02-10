@@ -9,7 +9,10 @@ pub mod traits;
 use internal::Internal;
 
 use rmrk_common::{
-    errors::RmrkError,
+    errors::{
+        Result,
+        RmrkError,
+    },
     utils::Utils,
 };
 
@@ -62,16 +65,14 @@ where
         + Utils,
 {
     /// Mint next available token for the caller
-    default fn mint_next(&mut self) -> Result<(), PSP34Error> {
+    default fn mint_next(&mut self) -> Result<()> {
         self._check_value(Self::env().transferred_value(), 1)?;
         let caller = Self::env().caller();
         let token_id = self
             .data::<MintingData>()
             .last_token_id
             .checked_add(1)
-            .ok_or(PSP34Error::Custom(String::from(
-                RmrkError::CollectionIsFull.as_str(),
-            )))?;
+            .ok_or(RmrkError::CollectionIsFull)?;
         self.data::<psp34::Data<enumerable::Balances>>()
             ._mint_to(caller, Id::U64(token_id))?;
         self.data::<MintingData>().last_token_id += 1;
@@ -82,7 +83,7 @@ where
 
     /// Mint one or more tokens
     #[modifiers(non_reentrant)]
-    default fn mint(&mut self, to: AccountId, mint_amount: u64) -> Result<(), PSP34Error> {
+    default fn mint(&mut self, to: AccountId, mint_amount: u64) -> Result<()> {
         self._check_value(Self::env().transferred_value(), mint_amount)?;
         self._check_amount(mint_amount)?;
 
@@ -101,18 +102,12 @@ where
 
     /// Mint next available token with specific metadata
     #[modifiers(only_owner)]
-    default fn mint_with_metadata(
-        &mut self,
-        metadata: PreludeString,
-        to: AccountId,
-    ) -> Result<(), PSP34Error> {
+    default fn mint_with_metadata(&mut self, metadata: PreludeString, to: AccountId) -> Result<()> {
         let token_id = self
             .data::<MintingData>()
             .last_token_id
             .checked_add(1)
-            .ok_or(PSP34Error::Custom(String::from(
-                RmrkError::CollectionIsFull.as_str(),
-            )))?;
+            .ok_or(RmrkError::CollectionIsFull)?;
         self.data::<psp34::Data<enumerable::Balances>>()
             ._mint_to(to, Id::U64(token_id))?;
         self.data::<MintingData>()
@@ -135,7 +130,7 @@ where
     }
 
     /// Get URI for the token Id
-    default fn token_uri(&self, token_id: u64) -> Result<PreludeString, PSP34Error> {
+    default fn token_uri(&self, token_id: u64) -> Result<PreludeString> {
         self.ensure_exists_and_get_owner(&Id::U64(token_id))?;
         let uri: PreludeString;
         match self

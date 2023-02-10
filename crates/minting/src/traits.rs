@@ -1,12 +1,11 @@
 //! RMRK minting traits
 
+use rmrk_common::errors::Result;
+
 use ink_prelude::string::String as PreludeString;
-use openbrush::{
-    contracts::psp34::PSP34Error,
-    traits::{
-        AccountId,
-        Balance,
-    },
+use openbrush::traits::{
+    AccountId,
+    Balance,
 };
 
 #[openbrush::wrapper]
@@ -17,19 +16,15 @@ pub type MintingRef = dyn Minting;
 pub trait Minting {
     /// Mint next available token for the caller.
     #[ink(message, payable)]
-    fn mint_next(&mut self) -> Result<(), PSP34Error>;
+    fn mint_next(&mut self) -> Result<()>;
 
     /// Mint one or more tokens.
     #[ink(message, payable)]
-    fn mint(&mut self, to: AccountId, mint_amount: u64) -> Result<(), PSP34Error>;
+    fn mint(&mut self, to: AccountId, mint_amount: u64) -> Result<()>;
 
     /// Mint next available token with specific metadata
     #[ink(message)]
-    fn mint_with_metadata(
-        &mut self,
-        metadata: PreludeString,
-        to: AccountId,
-    ) -> Result<(), PSP34Error>;
+    fn mint_with_metadata(&mut self, metadata: PreludeString, to: AccountId) -> Result<()>;
 
     /// Get max supply of tokens.
     #[ink(message)]
@@ -41,5 +36,5 @@ pub trait Minting {
 
     /// Get URI for the token Id.
     #[ink(message)]
-    fn token_uri(&self, token_id: u64) -> Result<PreludeString, PSP34Error>;
+    fn token_uri(&self, token_id: u64) -> Result<PreludeString>;
 }

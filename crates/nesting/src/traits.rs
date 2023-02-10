@@ -1,5 +1,8 @@
 //! Trait definitions for Nesting module
-use rmrk_common::types::*;
+use rmrk_common::{
+    errors::Result,
+    types::*,
+};
 
 use openbrush::{
     contracts::psp34::{
@@ -37,7 +40,7 @@ pub trait Nesting {
     /// On success emitts `RmrkEvent::ChildAdded`
     /// On success emitts `RmrkEvent::ChildAccepted` - only if caller is already owner of child NFT
     #[ink(message)]
-    fn add_child(&mut self, parent_token_id: Id, child_nft: ChildNft) -> Result<(), PSP34Error>;
+    fn add_child(&mut self, parent_token_id: Id, child_nft: ChildNft) -> Result<()>;
 
     /// Remove a child NFT (from different collection) from token_id in this collection.
     /// The status of added child is `Pending` if caller is not owner of child NFT
@@ -54,7 +57,7 @@ pub trait Nesting {
     /// Ownership of child NFT will be transferred to parent NFT owner (cross contract call)
     /// On success emitts `RmrkEvent::ChildRemoved`
     #[ink(message)]
-    fn remove_child(&mut self, parent_token_id: Id, child_nft: ChildNft) -> Result<(), PSP34Error>;
+    fn remove_child(&mut self, parent_token_id: Id, child_nft: ChildNft) -> Result<()>;
 
     /// Accept a child NFT (from different collection) to be owned by parent token.
     ///
@@ -69,7 +72,7 @@ pub trait Nesting {
     /// Child Nft is moved from pending to accepted
     /// On success emitts `RmrkEvent::ChildAccepted`
     #[ink(message)]
-    fn accept_child(&mut self, parent_token_id: Id, child_nft: ChildNft) -> Result<(), PSP34Error>;
+    fn accept_child(&mut self, parent_token_id: Id, child_nft: ChildNft) -> Result<()>;
 
     /// Reject a child NFT (from different collection).
     ///
@@ -84,7 +87,7 @@ pub trait Nesting {
     /// Child Nft is removed from pending
     /// On success emitts `RmrkEvent::ChildRejected`
     #[ink(message)]
-    fn reject_child(&mut self, parent_token_id: Id, child_nft: ChildNft) -> Result<(), PSP34Error>;
+    fn reject_child(&mut self, parent_token_id: Id, child_nft: ChildNft) -> Result<()>;
 
     /// Transfer the child NFT from one parent to another (in this collection).
     ///
@@ -101,7 +104,7 @@ pub trait Nesting {
     /// On success emitts `RmrkEvent::ChildAdded`
     /// On success emitts `RmrkEvent::ChildAccepted` - only if caller is already owner of child NFT
     #[ink(message)]
-    fn transfer_child(&mut self, from: Id, to: Id, child_nft: ChildNft) -> Result<(), PSP34Error>;
+    fn transfer_child(&mut self, from: Id, to: Id, child_nft: ChildNft) -> Result<()>;
 
     /// Read the number of children on the parent token.
     /// # Arguments:
@@ -110,7 +113,7 @@ pub trait Nesting {
     /// # Result:
     /// Returns the tupple of `(accepted_children, pending_children)` count
     #[ink(message)]
-    fn children_balance(&self, parent_token_id: Id) -> Result<(u64, u64), PSP34Error>;
+    fn children_balance(&self, parent_token_id: Id) -> Result<(u64, u64)>;
 }
 
 /// Trait definitions for Nesting ink events

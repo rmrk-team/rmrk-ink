@@ -2,7 +2,10 @@
 
 use ink_prelude::string::String as PreludeString;
 
-use crate::errors::RmrkError;
+use crate::errors::{
+    Result,
+    RmrkError,
+};
 
 use openbrush::{
     contracts::{
@@ -21,23 +24,22 @@ use openbrush::{
     },
 };
 
-
 /// Trait definitions for Utils functions
 #[openbrush::trait_definition]
 pub trait Utils {
     /// Set new value for the baseUri.
     #[ink(message)]
-    fn set_base_uri(&mut self, uri: PreludeString) -> Result<(), PSP34Error>;
+    fn set_base_uri(&mut self, uri: PreludeString) -> Result<()>;
 
     /// Withdraw contract's balance.
     #[ink(message)]
-    fn withdraw(&mut self) -> Result<(), PSP34Error>;
+    fn withdraw(&mut self) -> Result<()>;
 
     /// Ensure that token exists
-    fn ensure_exists_and_get_owner(&self, id: &Id) -> Result<AccountId, PSP34Error>;
+    fn ensure_exists_and_get_owner(&self, id: &Id) -> Result<AccountId>;
 
     /// Ensure that the caller is the token owner
-    fn ensure_token_owner(&self, token_owner: AccountId) -> Result<(), PSP34Error>;
+    fn ensure_token_owner(&self, token_owner: AccountId) -> Result<()>;
 }
 
 impl<T> Utils for T
@@ -51,7 +53,7 @@ where
 {
     /// Set new value for the baseUri
     #[modifiers(only_owner)]
-    default fn set_base_uri(&mut self, uri: PreludeString) -> Result<(), PSP34Error> {
+    default fn set_base_uri(&mut self, uri: PreludeString) -> Result<()> {
         let id = self
             .data::<psp34::Data<enumerable::Balances>>()
             .collection_id();
@@ -62,18 +64,18 @@ where
 
     /// Withdraw contract's balance
     #[modifiers(only_owner)]
-    default fn withdraw(&mut self) -> Result<(), PSP34Error> {
+    default fn withdraw(&mut self) -> Result<()> {
         let balance = Self::env().balance();
         let current_balance = balance
             .checked_sub(Self::env().minimum_balance())
             .unwrap_or_default();
         Self::env()
             .transfer(self.data::<ownable::Data>().owner(), current_balance)
-            .map_err(|_| PSP34Error::Custom(String::from(RmrkError::WithdrawalFailed.as_str())))?;
+            .map_err(|_| RmrkError::WithdrawalFailed)?;
         Ok(())
     }
     /// Check if token is minted. Return the owner
-    default fn ensure_exists_and_get_owner(&self, id: &Id) -> Result<AccountId, PSP34Error> {
+    default fn ensure_exists_and_get_owner(&self, id: &Id) -> Result<AccountId> {
         let token_owner = self
             .data::<psp34::Data<enumerable::Balances>>()
             .owner_of(id.clone())
@@ -82,12 +84,10 @@ where
     }
 
     /// Ensure that the caller is the token owner
-    default fn ensure_token_owner(&self, token_owner: AccountId) -> Result<(), PSP34Error> {
+    default fn ensure_token_owner(&self, token_owner: AccountId) -> Result<()> {
         let caller = Self::env().caller();
         if caller != token_owner {
-            return Err(PSP34Error::Custom(String::from(
-                RmrkError::NotTokenOwner.as_str(),
-            )))
+            return Err(RmrkError::NotTokenOwner.into())
         }
         Ok(())
     }

@@ -1,5 +1,8 @@
 //! Trait definitions for Equippable module
-use rmrk_common::types::*;
+use rmrk_common::{
+    errors::Result,
+    types::*,
+};
 // use ink_prelude::vec::Vec;
 use openbrush::{
     contracts::psp34::{
@@ -37,7 +40,7 @@ pub trait Equippable {
         slot_part_id: PartId,
         child_nft: ChildNft,
         child_asset_id: AssetId,
-    ) -> Result<(), PSP34Error>;
+    ) -> Result<()>;
 
     /// Used to unequip child from parent token.
     /// # Requirements
@@ -52,7 +55,7 @@ pub trait Equippable {
     ///  * `child_asset_id` ID of the asset associated with the token we are unequipping
     /// Emits an {ChildAssetUnequipped} event.
     #[ink(message)]
-    fn unequip(&mut self, token_id: Id, slot_part_id: PartId) -> Result<(), PSP34Error>;
+    fn unequip(&mut self, token_id: Id, slot_part_id: PartId) -> Result<()>;
 
     /// Used to declare that the assets belonging to a given `equippableGroupId` are equippable into the `Slot`
     /// associated with the `partId` of the collection at the specified `parentAddress`
@@ -69,7 +72,7 @@ pub trait Equippable {
         equippable_group_id: EquippableGroupId,
         parent_address: AccountId,
         part_id: PartId,
-    ) -> Result<(), PSP34Error>;
+    ) -> Result<()>;
 
     /// Used to extend already added Asset with details needed to support equipping.
     /// These details are not present in MultiAsset trait to avoid dependencies on Equippable trait.
@@ -83,7 +86,7 @@ pub trait Equippable {
     //     asset_id: AssetId,
     //     group_id: EquippableGroupId,
     //     port_ids: Vec<PartId>,
-    // ) -> Result<(), PSP34Error>;
+    // ) -> Result<()>;
 
     /// Used to get the Equipment object equipped into the specified slot of the desired token.
     ///
@@ -101,11 +104,7 @@ pub trait Equippable {
     ///    * asset_id metadataURI,
     ///    * EquippableAsset
     #[ink(message)]
-    fn get_asset_and_equippable_data(
-        &self,
-        token_id: Id,
-        asset_id: AssetId,
-    ) -> Result<Asset, PSP34Error>;
+    fn get_asset_and_equippable_data(&self, token_id: Id, asset_id: AssetId) -> Result<Asset>;
 }
 
 /// Trait definitions for Resource ink events

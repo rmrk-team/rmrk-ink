@@ -1,5 +1,8 @@
 //! Trait definitions for MultiAsset module
-use rmrk_common::types::*;
+use rmrk_common::{
+    errors::Result,
+    types::*,
+};
 
 use ink_prelude::vec::Vec;
 use openbrush::{
@@ -28,7 +31,7 @@ pub trait MultiAsset {
         equippable_group_id: EquippableGroupId,
         asset_uri: String,
         part_ids: Vec<PartId>,
-    ) -> Result<(), PSP34Error>;
+    ) -> Result<()>;
 
     /// Used to add an asset to a token.
     /// If the given asset is already added to the token, the execution will be reverted.
@@ -49,7 +52,7 @@ pub trait MultiAsset {
         token_id: Id,
         asset_id: AssetId,
         replaces_asset_with_id: Option<AssetId>,
-    ) -> Result<(), PSP34Error>;
+    ) -> Result<()>;
 
     /// Accepts an asset at from the pending array of given token.
     /// Migrates the asset from the token's pending asset array to the token's active asset array.
@@ -63,7 +66,7 @@ pub trait MultiAsset {
     ///  * assetId ID of the asset expected to be in the pending_asset list.
     /// Emits an {AssetAccepted} event.
     #[ink(message)]
-    fn accept_asset(&mut self, token_id: Id, asset_id: AssetId) -> Result<(), PSP34Error>;
+    fn accept_asset(&mut self, token_id: Id, asset_id: AssetId) -> Result<()>;
 
     /// Rejects an asset from the pending array of given token.
     /// Removes the asset from the token's pending asset array.
@@ -76,7 +79,7 @@ pub trait MultiAsset {
     ///  * assetId ID of the asset expected to be in the pending_asset list.
     /// Emits a {AssetRejected} event.
     #[ink(message)]
-    fn reject_asset(&mut self, token_id: Id, asset_id: AssetId) -> Result<(), PSP34Error>;
+    fn reject_asset(&mut self, token_id: Id, asset_id: AssetId) -> Result<()>;
 
     /// Used to specify the priorities for a given token's active assets.
     /// If the length of the priorities array doesn't match the length of the active assets array, the execution
@@ -88,7 +91,7 @@ pub trait MultiAsset {
     ///  * priorities Array of priorities for the assets
     /// Emits a {AssetPrioritySet} event.
     #[ink(message)]
-    fn set_priority(&mut self, token_id: Id, priorities: Vec<AssetId>) -> Result<(), PSP34Error>;
+    fn set_priority(&mut self, token_id: Id, priorities: Vec<AssetId>) -> Result<()>;
 
     /// Used to retrieve the total number of assets.
     /// # Returns
@@ -102,18 +105,18 @@ pub trait MultiAsset {
 
     /// Used to retrieve the total number of assets per token
     #[ink(message)]
-    fn total_token_assets(&self, token_id: Id) -> Result<(u64, u64), PSP34Error>;
+    fn total_token_assets(&self, token_id: Id) -> Result<(u64, u64)>;
 
     /// Fetch all accepted assets for the token_id
     #[ink(message)]
-    fn get_accepted_token_assets(&self, token_id: Id) -> Result<Option<Vec<AssetId>>, PSP34Error>;
+    fn get_accepted_token_assets(&self, token_id: Id) -> Result<Option<Vec<AssetId>>>;
 
     /// Remove the assets for the list of token assets
     #[ink(message)]
-    fn remove_asset(&mut self, token_id: Id, asset_id: AssetId) -> Result<(), PSP34Error>;
+    fn remove_asset(&mut self, token_id: Id, asset_id: AssetId) -> Result<()>;
 
     /// Check that asset id does not already exist.
-    fn ensure_asset_id_is_available(&self, asset_id: AssetId) -> Result<(), PSP34Error>;
+    fn ensure_asset_id_is_available(&self, asset_id: AssetId) -> Result<()>;
 }
 
 /// Trait definitions for MultiAsset ink events

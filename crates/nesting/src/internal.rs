@@ -4,7 +4,10 @@ use crate::{
 };
 
 use rmrk_common::{
-    errors::RmrkError,
+    errors::{
+        Result,
+        RmrkError,
+    },
     types::*,
 };
 
@@ -23,44 +26,28 @@ use openbrush::{
 /// Trait implementation for Internal Nesting functions.
 pub trait Internal {
     /// Check if child is already accepted.
-    fn accepted(&self, parent_token_id: &Id, child_nft: &ChildNft) -> Result<(), PSP34Error>;
+    fn accepted(&self, parent_token_id: &Id, child_nft: &ChildNft) -> Result<()>;
 
     /// Check if child is already pending.
-    fn pending(&self, parent_token_id: &Id, child_nft: &ChildNft) -> Result<(), PSP34Error>;
+    fn pending(&self, parent_token_id: &Id, child_nft: &ChildNft) -> Result<()>;
 
     /// Add the child to the list of accepted children.
     fn add_to_accepted(&mut self, parent_token_id: Id, child_nft: ChildNft);
 
     /// Remove the child to the list of accepted children.
-    fn remove_accepted(
-        &mut self,
-        parent_token_id: &Id,
-        child_nft: &ChildNft,
-    ) -> Result<(), PSP34Error>;
+    fn remove_accepted(&mut self, parent_token_id: &Id, child_nft: &ChildNft) -> Result<()>;
 
     /// Add the child to the list of pending children.
     fn add_to_pending(&mut self, parent_token_id: Id, child_nft: ChildNft);
 
     /// Remove the child to the list of pending children.
-    fn remove_from_pending(
-        &mut self,
-        parent_token_id: &Id,
-        child_nft: &ChildNft,
-    ) -> Result<(), PSP34Error>;
+    fn remove_from_pending(&mut self, parent_token_id: &Id, child_nft: &ChildNft) -> Result<()>;
 
     /// Check if caller is the owner of this parent token.
-    fn is_caller_parent_owner(
-        &self,
-        caller: AccountId,
-        parent_token_id: &Id,
-    ) -> Result<(), PSP34Error>;
+    fn is_caller_parent_owner(&self, caller: AccountId, parent_token_id: &Id) -> Result<()>;
 
     /// Cross contract call to transfer child nft ownership.
-    fn transfer_child_ownership(
-        &self,
-        to: AccountId,
-        child_nft: ChildNft,
-    ) -> Result<(), PSP34Error>;
+    fn transfer_child_ownership(&self, to: AccountId, child_nft: ChildNft) -> Result<()>;
 }
 
 /// Implement internal helper trait for Nesting
@@ -69,40 +56,28 @@ where
     T: Storage<NestingData> + Storage<psp34::Data<enumerable::Balances>>,
 {
     /// Check if child is already accepted
-    default fn accepted(
-        &self,
-        parent_token_id: &Id,
-        child_nft: &ChildNft,
-    ) -> Result<(), PSP34Error> {
+    default fn accepted(&self, parent_token_id: &Id, child_nft: &ChildNft) -> Result<()> {
         if let Some(children) = self
             .data::<NestingData>()
             .accepted_children
             .get(parent_token_id)
         {
             if children.contains(child_nft) {
-                return Err(PSP34Error::Custom(String::from(
-                    RmrkError::AlreadyAddedChild.as_str(),
-                )))
+                return Err(RmrkError::AlreadyAddedChild.into())
             }
         }
         Ok(())
     }
 
     /// Check if child is already pending
-    default fn pending(
-        &self,
-        parent_token_id: &Id,
-        child_nft: &ChildNft,
-    ) -> Result<(), PSP34Error> {
+    default fn pending(&self, parent_token_id: &Id, child_nft: &ChildNft) -> Result<()> {
         if let Some(children) = self
             .data::<NestingData>()
             .pending_children
             .get(parent_token_id)
         {
             if children.contains(child_nft) {
-                return Err(PSP34Error::Custom(String::from(
-                    RmrkError::AddingPendingChild.as_str(),
-                )))
+                return Err(RmrkError::AddingPendingChild.into())
             }
         }
         Ok(())
@@ -129,21 +104,17 @@ where
         &mut self,
         parent_token_id: &Id,
         child_nft: &ChildNft,
-    ) -> Result<(), PSP34Error> {
+    ) -> Result<()> {
         let mut child_nfts = self
             .data::<NestingData>()
             .accepted_children
             .get(&parent_token_id)
-            .ok_or(PSP34Error::Custom(String::from(
-                RmrkError::InvalidParentId.as_str(),
-            )))?;
+            .ok_or(RmrkError::InvalidParentId)?;
 
         let index = child_nfts
             .iter()
             .position(|x| x == child_nft)
-            .ok_or(PSP34Error::Custom(String::from(
-                RmrkError::ChildNotFound.as_str(),
-            )))?;
+            .ok_or(RmrkError::ChildNotFound)?;
         child_nfts.remove(index);
 
         self.data::<NestingData>()
@@ -174,21 +145,17 @@ where
         &mut self,
         parent_token_id: &Id,
         child_nft: &ChildNft,
-    ) -> Result<(), PSP34Error> {
+    ) -> Result<()> {
         let mut child_nfts = self
             .data::<NestingData>()
             .pending_children
             .get(&parent_token_id)
-            .ok_or(PSP34Error::Custom(String::from(
-                RmrkError::InvalidParentId.as_str(),
-            )))?;
+            .ok_or(RmrkError::InvalidParentId)?;
 
         let index = child_nfts
             .iter()
             .position(|x| x == child_nft)
-            .ok_or(PSP34Error::Custom(String::from(
-                RmrkError::ChildNotFound.as_str(),
-            )))?;
+            .ok_or(RmrkError::ChildNotFound)?;
         child_nfts.remove(index);
 
         self.data::<NestingData>()
@@ -203,26 +170,20 @@ where
         &self,
         caller: AccountId,
         parent_token_id: &Id,
-    ) -> Result<(), PSP34Error> {
+    ) -> Result<()> {
         if let Some(token_owner) = self
             .data::<psp34::Data<enumerable::Balances>>()
             .owner_of(parent_token_id.clone())
         {
             if token_owner != caller {
-                return Err(PSP34Error::Custom(String::from(
-                    RmrkError::NotTokenOwner.as_str(),
-                )))
+                return Err(RmrkError::NotTokenOwner.into())
             }
         }
         Ok(())
     }
 
     /// Cross contract call to transfer child nft ownership
-    default fn transfer_child_ownership(
-        &self,
-        to: AccountId,
-        child_nft: ChildNft,
-    ) -> Result<(), PSP34Error> {
+    default fn transfer_child_ownership(&self, to: AccountId, child_nft: ChildNft) -> Result<()> {
         // TODO check child collection is approved by this (parent) collection
         // let collection = self.get_collection(child_nft.0)
         //      .ok_or(RmrkError::ChildContractNotApproved)?;

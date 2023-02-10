@@ -1,6 +1,68 @@
 //! Error definition for RMRK contract
 
-use openbrush::traits::String;
+use ink_prelude::string::{
+    String,
+    ToString,
+};
+use openbrush::contracts::{
+    ownable::OwnableError,
+    psp34::PSP34Error,
+    reentrancy_guard::ReentrancyGuardError,
+};
+
+pub type Result<T> = core::result::Result<T, Error>;
+
+#[derive(Debug, PartialEq, Eq, scale::Encode, scale::Decode)]
+#[cfg_attr(feature = "std", derive(scale_info::TypeInfo))]
+pub enum Error {
+    Rmrk(RmrkError),
+    PSP34(PSP34Error),
+    Ownable(OwnableError),
+    Reentrancy(ReentrancyGuardError),
+}
+
+impl From<RmrkError> for Error {
+    fn from(err: RmrkError) -> Self {
+        Self::Rmrk(err)
+    }
+}
+
+impl From<PSP34Error> for Error {
+    fn from(err: PSP34Error) -> Self {
+        Self::PSP34(err)
+    }
+}
+
+impl From<OwnableError> for Error {
+    fn from(err: OwnableError) -> Self {
+        Self::Ownable(err)
+    }
+}
+
+impl From<ReentrancyGuardError> for Error {
+    fn from(err: ReentrancyGuardError) -> Self {
+        Self::Reentrancy(err)
+    }
+}
+
+// Flatten errors to a common PSP34Error type containing a String representation
+impl From<Error> for PSP34Error {
+    fn from(err: Error) -> Self {
+        match err {
+            Error::PSP34(err) => err,
+            Error::Rmrk(err) => PSP34Error::Custom(err.to_string().into()),
+            Error::Ownable(OwnableError::CallerIsNotOwner) => {
+                PSP34Error::Custom(String::from("CallerIsNotOwner").into())
+            }
+            Error::Ownable(OwnableError::NewOwnerIsZero) => {
+                PSP34Error::Custom(String::from("NewOwnerIsZero").into())
+            }
+            Error::Reentrancy(ReentrancyGuardError::ReentrantCall) => {
+                PSP34Error::Custom(String::from("ReentrantCall").into())
+            }
+        }
+    }
+}
 
 #[derive(Debug, PartialEq, Eq, scale::Encode, scale::Decode)]
 #[cfg_attr(feature = "std", derive(scale_info::TypeInfo))]
@@ -34,8 +96,8 @@ pub enum RmrkError {
     WithdrawalFailed,
 }
 
-impl RmrkError {
-    pub fn as_str(&self) -> String {
+impl ToString for RmrkError {
+    fn to_string(&self) -> String {
         match self {
             RmrkError::AcceptedAssetsMissing => String::from("AcceptedAssetsMissing"),
             RmrkError::AddingPendingAsset => String::from("AddingPendingAsset"),

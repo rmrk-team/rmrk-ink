@@ -10,7 +10,10 @@ use internal::Internal;
 use traits::Base;
 
 use rmrk_common::{
-    errors::RmrkError,
+    errors::{
+        Result,
+        RmrkError,
+    },
     types::*,
 };
 
@@ -58,16 +61,14 @@ where
 {
     /// Add one or more parts to the base
     #[modifiers(only_owner)]
-    default fn add_part_list(&mut self, parts: Vec<Part>) -> Result<(), PSP34Error> {
+    default fn add_part_list(&mut self, parts: Vec<Part>) -> Result<()> {
         for part in parts {
             let part_id = self.data::<BaseData>().next_part_id;
 
             if part.part_type == PartType::Fixed
                 && (part.equippable.len() != 0 || part.is_equippable_by_all)
             {
-                return Err(PSP34Error::Custom(String::from(
-                    RmrkError::BadConfig.as_str(),
-                )))
+                return Err(RmrkError::BadConfig.into())
             }
             self.data::<BaseData>().parts.insert(part_id, &part);
             self.data::<BaseData>().part_ids.push(part_id);
@@ -83,7 +84,7 @@ where
         &mut self,
         part_id: PartId,
         equippable_address: Vec<AccountId>,
-    ) -> Result<(), PSP34Error> {
+    ) -> Result<()> {
         let mut part = self.ensure_only_slot(part_id)?;
         part.equippable.extend(equippable_address);
         self.data::<BaseData>().parts.insert(part_id, &part);
@@ -93,7 +94,7 @@ where
 
     /// Remove list of equippable addresses for given Part
     #[modifiers(only_owner)]
-    default fn reset_equippable_addresses(&mut self, part_id: PartId) -> Result<(), PSP34Error> {
+    default fn reset_equippable_addresses(&mut self, part_id: PartId) -> Result<()> {
         let mut part = self.ensure_only_slot(part_id)?;
         part.is_equippable_by_all = false;
         part.equippable.clear();
@@ -104,7 +105,7 @@ where
 
     /// Sets the is_equippable_by_all flag to true, meaning that any collection may be equipped into the `PartId`
     #[modifiers(only_owner)]
-    default fn set_equippable_by_all(&mut self, part_id: PartId) -> Result<(), PSP34Error> {
+    default fn set_equippable_by_all(&mut self, part_id: PartId) -> Result<()> {
         let mut part = self.ensure_only_slot(part_id)?;
         part.is_equippable_by_all = true;
         self.data::<BaseData>().parts.insert(part_id, &part);
@@ -114,7 +115,7 @@ where
 
     /// Sets the metadata URI for Base
     #[modifiers(only_owner)]
-    default fn setup_base(&mut self, base_metadata: String) -> Result<(), PSP34Error> {
+    default fn setup_base(&mut self, base_metadata: String) -> Result<()> {
         self.data::<BaseData>().base_metadata_uri = base_metadata;
 
         Ok(())
@@ -139,16 +140,10 @@ where
     }
 
     /// Check whether the given address is allowed to equip the desired `PartId`.
-    default fn ensure_equippable(
-        &self,
-        part_id: PartId,
-        target_address: AccountId,
-    ) -> Result<(), PSP34Error> {
+    default fn ensure_equippable(&self, part_id: PartId, target_address: AccountId) -> Result<()> {
         if let Some(part) = self.data::<BaseData>().parts.get(part_id) {
             if !part.equippable.contains(&target_address) {
-                return Err(PSP34Error::Custom(String::from(
-                    RmrkError::AddressNotEquippable.as_str(),
-                )))
+                return Err(RmrkError::AddressNotEquippable.into())
             }
         }
 
