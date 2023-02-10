@@ -221,6 +221,8 @@ pub mod rmrk_example_equippable {
 
     impl Minting for Rmrk {}
 
+    impl MintingLazy for Rmrk {}
+
     impl Nesting for Rmrk {}
 
     impl MultiAsset for Rmrk {}
@@ -434,7 +436,6 @@ pub mod rmrk_example_equippable {
         use super::*;
         use crate::rmrk_example_equippable::PSP34Error::*;
         use ink_env::{
-            pay_with_call,
             test,
             AccountId,
         };
@@ -442,13 +443,13 @@ pub mod rmrk_example_equippable {
         use openbrush::contracts::{
             ownable::OwnableError,
             psp34::PSP34Error,
-            reentrancy_guard::ReentrancyGuardError,
         };
 
         use ink_lang as ink;
-        use ink_prelude::string::String as PreludeString;
+
         use rmrk::{
             errors::*,
+            traits::*,
             utils::Utils,
         };
 
@@ -488,182 +489,6 @@ pub mod rmrk_example_equippable {
                 accounts.eve,
                 0,
             )
-        }
-
-        #[ink::test]
-        fn mint_single_works() {
-            let mut rmrk = init();
-            let accounts = default_accounts();
-            assert_eq!(rmrk.owner(), accounts.alice);
-            set_sender(accounts.bob);
-
-            assert_eq!(rmrk.total_supply(), 0);
-            test::set_value_transferred::<ink_env::DefaultEnvironment>(PRICE);
-            assert!(rmrk.mint_next().is_ok());
-            assert_eq!(rmrk.total_supply(), 1);
-            assert_eq!(rmrk.owner_of(Id::U64(1)), Some(accounts.bob));
-            assert_eq!(rmrk.balance_of(accounts.bob), 1);
-
-            assert_eq!(rmrk.owners_token_by_index(accounts.bob, 0), Ok(Id::U64(1)));
-            assert_eq!(rmrk.minting.last_token_id, 1);
-            assert_eq!(1, ink_env::test::recorded_events().count());
-        }
-
-        #[ink::test]
-        fn mint_multiple_works() {
-            let mut rmrk = init();
-            let accounts = default_accounts();
-            set_sender(accounts.alice);
-            let num_of_mints: u64 = 5;
-
-            assert_eq!(rmrk.total_supply(), 0);
-            test::set_value_transferred::<ink_env::DefaultEnvironment>(
-                PRICE * num_of_mints as u128,
-            );
-            assert!(rmrk.mint(accounts.bob, num_of_mints).is_ok());
-            assert_eq!(rmrk.total_supply(), num_of_mints as u128);
-            assert_eq!(rmrk.balance_of(accounts.bob), 5);
-            assert_eq!(rmrk.owners_token_by_index(accounts.bob, 0), Ok(Id::U64(1)));
-            assert_eq!(rmrk.owners_token_by_index(accounts.bob, 1), Ok(Id::U64(2)));
-            assert_eq!(rmrk.owners_token_by_index(accounts.bob, 2), Ok(Id::U64(3)));
-            assert_eq!(rmrk.owners_token_by_index(accounts.bob, 3), Ok(Id::U64(4)));
-            assert_eq!(rmrk.owners_token_by_index(accounts.bob, 4), Ok(Id::U64(5)));
-            assert_eq!(5, ink_env::test::recorded_events().count());
-            assert_eq!(
-                rmrk.owners_token_by_index(accounts.bob, 5),
-                Err(TokenNotExists)
-            );
-        }
-
-        #[ink::test]
-        fn mint_with_metadata_works() {
-            const RMRK_METADATA: &str = "ipfs://rmrkIpfsUri/";
-
-            let mut rmrk = init();
-            let accounts = default_accounts();
-            assert_eq!(rmrk.owner(), accounts.alice);
-
-            // only owner is allowed to mint
-            set_sender(accounts.bob);
-            assert_eq!(
-                rmrk.mint_with_metadata(RMRK_METADATA.into(), accounts.bob),
-                Err(OwnableError::CallerIsNotOwner.into())
-            );
-
-            // owner mints
-            set_sender(accounts.alice);
-            assert_eq!(rmrk.total_supply(), 0);
-            assert!(rmrk
-                .mint_with_metadata(RMRK_METADATA.into(), accounts.bob)
-                .is_ok());
-            assert_eq!(rmrk.total_supply(), 1);
-            assert_eq!(rmrk.owner_of(Id::U64(1)), Some(accounts.bob));
-            assert_eq!(rmrk.balance_of(accounts.bob), 1);
-            assert_eq!(rmrk.owners_token_by_index(accounts.bob, 0), Ok(Id::U64(1)));
-            assert_eq!(1, ink_env::test::recorded_events().count());
-
-            // token_uri for rmrk mint works
-            assert_eq!(
-                rmrk.token_uri(1),
-                Ok(PreludeString::from(RMRK_METADATA.to_owned()))
-            );
-
-            // token_uri for mint_next work
-            set_sender(accounts.bob);
-            test::set_value_transferred::<ink_env::DefaultEnvironment>(PRICE);
-            assert!(rmrk.mint_next().is_ok());
-            assert_eq!(
-                rmrk.token_uri(2),
-                Ok(PreludeString::from(BASE_URI.to_owned() + "2.json"))
-            );
-        }
-
-        #[ink::test]
-        fn mint_above_limit_fails() {
-            let mut rmrk = init();
-            let accounts = default_accounts();
-            set_sender(accounts.alice);
-            let num_of_mints: u64 = MAX_SUPPLY + 1;
-
-            assert_eq!(rmrk.total_supply(), 0);
-            test::set_value_transferred::<ink_env::DefaultEnvironment>(
-                PRICE * num_of_mints as u128,
-            );
-            assert_eq!(
-                rmrk.mint(accounts.bob, num_of_mints),
-                Err(RmrkError::CollectionIsFull.into())
-            );
-        }
-
-        #[ink::test]
-        fn mint_low_value_fails() {
-            let mut rmrk = init();
-            let accounts = default_accounts();
-            set_sender(accounts.bob);
-            let num_of_mints = 1;
-
-            assert_eq!(rmrk.total_supply(), 0);
-            test::set_value_transferred::<ink_env::DefaultEnvironment>(
-                PRICE * num_of_mints as u128 - 1,
-            );
-            assert_eq!(
-                rmrk.mint(accounts.bob, num_of_mints),
-                Err(RmrkError::BadMintValue.into())
-            );
-            test::set_value_transferred::<ink_env::DefaultEnvironment>(
-                PRICE * num_of_mints as u128 - 1,
-            );
-            assert_eq!(rmrk.mint_next(), Err(RmrkError::BadMintValue.into()));
-            assert_eq!(rmrk.total_supply(), 0);
-        }
-
-        #[ink::test]
-        fn withdrawal_works() {
-            let mut rmrk = init();
-            let accounts = default_accounts();
-            set_balance(accounts.bob, PRICE);
-            set_sender(accounts.bob);
-
-            assert!(pay_with_call!(rmrk.mint_next(), PRICE).is_ok());
-            let expected_contract_balance = PRICE + rmrk.env().minimum_balance();
-            assert_eq!(rmrk.env().balance(), expected_contract_balance);
-
-            // Bob fails to withdraw
-            set_sender(accounts.bob);
-            assert!(rmrk.withdraw().is_err());
-            assert_eq!(rmrk.env().balance(), expected_contract_balance);
-
-            // Alice (contract owner) withdraws. Existential minimum is still set
-            set_sender(accounts.alice);
-            assert!(rmrk.withdraw().is_ok());
-            // assert_eq!(rmrk.env().balance(), rmrk.env().minimum_balance());
-        }
-
-        #[ink::test]
-        fn token_uri_works() {
-            let mut rmrk = init();
-            let accounts = default_accounts();
-            set_sender(accounts.alice);
-
-            test::set_value_transferred::<ink_env::DefaultEnvironment>(PRICE);
-            assert!(rmrk.mint_next().is_ok());
-            // return error if request is for not yet minted token
-            assert_eq!(rmrk.token_uri(42), Err(TokenNotExists.into()));
-            assert_eq!(
-                rmrk.token_uri(1),
-                Ok(PreludeString::from(BASE_URI.to_owned() + "1.json"))
-            );
-
-            // return error if request is for not yet minted token
-            assert_eq!(rmrk.token_uri(42), Err(TokenNotExists.into()));
-
-            // verify token_uri when baseUri is empty
-            set_sender(accounts.alice);
-            assert!(rmrk.set_base_uri(PreludeString::from("")).is_ok());
-            assert_eq!(
-                rmrk.token_uri(1),
-                Ok("".to_owned() + &PreludeString::from("1.json"))
-            );
         }
 
         #[ink::test]
@@ -752,8 +577,7 @@ pub mod rmrk_example_equippable {
             assert_eq!(1, ink_env::test::recorded_events().count());
 
             // mint token and add asset to it. Should be accepted without approval
-            test::set_value_transferred::<ink_env::DefaultEnvironment>(PRICE as u128);
-            assert!(rmrk.mint(accounts.alice, 1).is_ok());
+            assert!(rmrk.mint_many(accounts.alice, 1).is_ok());
             assert_eq!(2, ink_env::test::recorded_events().count());
             assert!(rmrk.add_asset_to_token(TOKEN_ID1, ASSET_ID, None).is_ok());
             assert_eq!(4, ink_env::test::recorded_events().count());
@@ -771,8 +595,7 @@ pub mod rmrk_example_equippable {
 
             // mint second token to non owner (Bob)
             set_sender(accounts.alice);
-            test::set_value_transferred::<ink_env::DefaultEnvironment>(PRICE as u128);
-            assert!(rmrk.mint(accounts.bob, 1).is_ok());
+            assert!(rmrk.mint_many(accounts.bob, 1).is_ok());
             assert_eq!(5, ink_env::test::recorded_events().count());
 
             // Add asset by alice and reject asset by Bob to test asset_reject
@@ -856,8 +679,7 @@ pub mod rmrk_example_equippable {
             assert_eq!(rmrk.total_assets(), 3);
 
             // mint token and add asset to it. Should be accepted without approval
-            test::set_value_transferred::<ink_env::DefaultEnvironment>(PRICE as u128);
-            assert!(rmrk.mint(accounts.alice, 1).is_ok());
+            assert!(rmrk.mint_many(accounts.alice, 1).is_ok());
 
             assert_eq!(
                 rmrk.add_asset_to_token(TOKEN_ID, ASSET_ID3, Some(ASSET_ID1)),
@@ -900,8 +722,7 @@ pub mod rmrk_example_equippable {
             assert_eq!(rmrk.total_assets(), 2);
 
             // mint token and add two assets to it. Should be accepted without approval
-            test::set_value_transferred::<ink_env::DefaultEnvironment>(PRICE * 2 as u128);
-            assert!(rmrk.mint(accounts.alice, 2).is_ok());
+            assert!(rmrk.mint_many(accounts.alice, 2).is_ok());
             assert!(rmrk.add_asset_to_token(TOKEN_ID1, ASSET_ID1, None).is_ok());
             assert!(rmrk.add_asset_to_token(TOKEN_ID1, ASSET_ID2, None).is_ok());
             assert_eq!(rmrk.total_token_assets(TOKEN_ID1), Ok((2, 0)));
@@ -1113,13 +934,12 @@ pub mod rmrk_example_equippable {
             );
 
             // Bob mints kanaria
-            set_sender(accounts.bob);
-            test::set_value_transferred::<ink_env::DefaultEnvironment>(PRICE);
-            assert!(kanaria.mint_next().is_ok());
+            // set_sender(accounts.bob);
+            assert!(kanaria.mint(accounts.bob).is_ok());
             assert_eq!(2, ink_env::test::recorded_events().count());
 
             // equip fails, caller not token owner
-            set_sender(accounts.alice);
+            // set_sender(accounts.alice);
             assert_eq!(
                 kanaria.equip(
                     TOKEN_ID1,
