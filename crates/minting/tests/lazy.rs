@@ -235,6 +235,20 @@ pub mod rmrk_contract_minting {
             );
         }
 
+        #[ink::test]
+        fn mint_above_limit_fails() {
+            let mut rmrk = init();
+            let accounts = default_accounts();
+            set_sender(accounts.alice);
+            let num_of_mints: u64 = MAX_SUPPLY + 1;
+
+            assert_eq!(rmrk.total_supply(), 0);
+            assert_eq!(
+                rmrk.mint_many(num_of_mints),
+                Err(RmrkError::CollectionIsFull.into())
+            );
+        }
+
         fn default_accounts() -> test::DefaultAccounts<ink_env::DefaultEnvironment> {
             test::default_accounts::<Environment>()
         }

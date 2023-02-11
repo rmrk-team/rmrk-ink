@@ -598,7 +598,7 @@ pub mod rmrk_example_equippable {
             assert_eq!(1, ink_env::test::recorded_events().count());
 
             // mint token and add asset to it. Should be accepted without approval
-            assert!(rmrk.mint_many(accounts.alice, 1).is_ok());
+            assert!(rmrk.mint(accounts.alice).is_ok());
             assert_eq!(2, ink_env::test::recorded_events().count());
             assert!(rmrk.add_asset_to_token(TOKEN_ID1, ASSET_ID, None).is_ok());
             assert_eq!(4, ink_env::test::recorded_events().count());
@@ -616,7 +616,7 @@ pub mod rmrk_example_equippable {
 
             // mint second token to non owner (Bob)
             set_sender(accounts.alice);
-            assert!(rmrk.mint_many(accounts.bob, 1).is_ok());
+            assert!(rmrk.mint(accounts.bob).is_ok());
             assert_eq!(5, ink_env::test::recorded_events().count());
 
             // Add asset by alice and reject asset by Bob to test asset_reject
@@ -700,7 +700,7 @@ pub mod rmrk_example_equippable {
             assert_eq!(rmrk.total_assets(), 3);
 
             // mint token and add asset to it. Should be accepted without approval
-            assert!(rmrk.mint_many(accounts.alice, 1).is_ok());
+            assert!(rmrk.mint(accounts.alice).is_ok());
 
             assert_eq!(
                 rmrk.add_asset_to_token(TOKEN_ID, ASSET_ID3, Some(ASSET_ID1)),

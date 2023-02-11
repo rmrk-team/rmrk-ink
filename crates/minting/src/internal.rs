@@ -33,6 +33,7 @@ pub trait Internal {
     /// Mint many tokens to specified account
     fn _mint_many(&mut self, to: AccountId, mint_amount: u64) -> Result<(Id, Id)>;
 
+    /// Get URI for the token Id.
     fn _token_uri(&self, token_id: u64) -> Result<PreludeString>;
 }
 
@@ -100,6 +101,7 @@ where
         Ok((Id::U64(next_to_mint), Id::U64(mint_offset - 1)))
     }
 
+    /// Get URI for the token Id.
     default fn _token_uri(&self, token_id: u64) -> Result<PreludeString> {
         let uri: PreludeString;
         match self
@@ -120,6 +122,7 @@ where
                 uri = token_uri + &token_id.to_string() + &PreludeString::from(".json");
             }
         }
+
         Ok(uri)
     }
 }
