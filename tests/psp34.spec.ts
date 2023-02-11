@@ -4,6 +4,7 @@ import { encodeAddress } from "@polkadot/keyring";
 import BN from "bn.js";
 import Rmrk_factory from "../types/constructors/rmrk_example_equippable";
 import Rmrk from "../types/contracts/rmrk_example_equippable";
+import { RmrkError } from "../types/types-returns/rmrk_example_equippable";
 
 import { ApiPromise, WsProvider, Keyring } from "@polkadot/api";
 import { KeyringPair } from "@polkadot/keyring/types";
@@ -119,12 +120,10 @@ describe("Minting rmrk as psp34 tests", () => {
     ).to.equal(0);
 
     const { gasRequired } = await contract.withSigner(bob).query.mintNext();
-    await contract
-      .withSigner(bob)
-      .tx.mint(bob.address, 5, {
-        value: PRICE_PER_MINT.muln(5),
-        gasLimit: gasRequired * 2n,
-      });
+    await contract.withSigner(bob).tx.mint(bob.address, 5, {
+      value: PRICE_PER_MINT.muln(5),
+      gasLimit: gasRequired * 2n,
+    });
 
     expect(
       (await contract.query.totalSupply()).value.rawNumber.toNumber()
@@ -213,7 +212,8 @@ describe("Minting rmrk as psp34 tests", () => {
 
     // Bob trys to mint without funding
     let mintResult = await contract.withSigner(bob).query.mintNext();
-    expect(hex2a(mintResult.value.err.custom)).to.be.equal("BadMintValue");
+
+    expect(mintResult.value.err.rmrk).to.be.equal(RmrkError.badMintValue);
   });
 });
 

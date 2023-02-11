@@ -4,6 +4,7 @@ import { encodeAddress } from "@polkadot/keyring";
 import BN from "bn.js";
 import Rmrk_factory from "../types/constructors/rmrk_example_equippable";
 import Rmrk from "../types/contracts/rmrk_example_equippable";
+import { RmrkError } from "../types/types-returns/rmrk_example_equippable";
 
 import { ApiPromise, WsProvider, Keyring } from "@polkadot/api";
 import { KeyringPair } from "@polkadot/keyring/types";
@@ -177,7 +178,8 @@ describe("RMRK Nesting tests", () => {
     const failResult = await parent
       .withSigner(dave)
       .query.acceptChild({ u64: 1 }, [child.address, { u64: 1 }]);
-    expect(hex2a(failResult.value.err.custom)).to.be.equal("NotTokenOwner");
+
+    expect(failResult.value.err.rmrk).to.be.equal(RmrkError.notTokenOwner);
 
     // bob accepts child
     const acceptChildGas = (
@@ -203,17 +205,16 @@ describe("RMRK Nesting tests", () => {
     const failAcceptResult = await parent
       .withSigner(bob)
       .query.acceptChild({ u64: 1 }, [child.address, { u64: 1 }]);
-    expect(hex2a(failAcceptResult.value.err.custom)).to.be.equal(
-      "AlreadyAddedChild"
+
+    expect(failAcceptResult.value.err.rmrk).to.be.equal(
+      RmrkError.alreadyAddedChild
     );
 
     // dave fails to remove child (not owner)
     const failRemoveChild = await parent
       .withSigner(dave)
       .query.removeChild({ u64: 1 }, [child.address, { u64: 1 }]);
-    expect(hex2a(failRemoveChild.value.err.custom)).to.be.equal(
-      "NotTokenOwner"
-    );
+    expect(failRemoveChild.value.err.rmrk).to.be.equal(RmrkError.notTokenOwner);
 
     // bob removes child
     const removeChildGas = (
@@ -307,16 +308,18 @@ describe("RMRK Nesting tests", () => {
     const failAcceptResult = await parent
       .withSigner(dave)
       .query.acceptChild({ u64: 1 }, [child.address, { u64: 1 }]);
-    expect(hex2a(failAcceptResult.value.err.custom)).to.be.equal(
-      "NotTokenOwner"
+
+    expect(failAcceptResult.value.err.rmrk).to.be.equal(
+      RmrkError.notTokenOwner
     );
 
     // since bob is owner of parent, dave fails to reject child
     const failRejectResult = await parent
       .withSigner(dave)
       .query.rejectChild({ u64: 1 }, [child.address, { u64: 1 }]);
-    expect(hex2a(failRejectResult.value.err.custom)).to.be.equal(
-      "NotTokenOwner"
+
+    expect(failRejectResult.value.err.rmrk).to.be.equal(
+      RmrkError.notTokenOwner
     );
 
     // bob rejects child
