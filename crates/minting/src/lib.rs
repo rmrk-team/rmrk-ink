@@ -95,26 +95,7 @@ where
     /// Get URI for the token Id
     default fn token_uri(&self, token_id: u64) -> Result<PreludeString> {
         self.ensure_exists_and_get_owner(&Id::U64(token_id))?;
-        let uri: PreludeString;
-        match self
-            .data::<MintingData>()
-            .nft_metadata
-            .get(Id::U64(token_id))
-        {
-            Some(token_uri) => {
-                uri = PreludeString::from_utf8(token_uri).unwrap();
-            }
-            None => {
-                let value = self.get_attribute(
-                    self.data::<psp34::Data<enumerable::Balances>>()
-                        .collection_id(),
-                    String::from("baseUri"),
-                );
-                let token_uri = PreludeString::from_utf8(value.unwrap()).unwrap();
-                uri = token_uri + &token_id.to_string() + &PreludeString::from(".json");
-            }
-        }
-        Ok(uri)
+        self._token_uri(token_id)
     }
 }
 
@@ -129,7 +110,7 @@ where
         + Utils,
 {
     /// Mint one token to caller
-    default fn mint_to_caller(&mut self) -> Result<()> {
+    default fn mint(&mut self) -> Result<()> {
         self._check_value(Self::env().transferred_value(), 1)?;
         self._mint(Self::env().caller())?;
         return Ok(())
@@ -137,10 +118,21 @@ where
 
     /// Mint one or more tokens to caller
     #[modifiers(non_reentrant)]
-    default fn mint_many_to_caller(&mut self, mint_amount: u64) -> Result<()> {
+    default fn mint_many(&mut self, mint_amount: u64) -> Result<()> {
         self._check_value(Self::env().transferred_value(), mint_amount)?;
         self._mint_many(Self::env().caller(), mint_amount)?;
         Ok(())
+    }
+
+    /// Get max supply of tokens
+    default fn max_supply(&self) -> u64 {
+        self.data::<MintingData>().max_supply
+    }
+
+    /// Get URI for the token Id
+    default fn token_uri(&self, token_id: u64) -> Result<PreludeString> {
+        self.ensure_exists_and_get_owner(&Id::U64(token_id))?;
+        self._token_uri(token_id)
     }
 
     /// Get token mint price

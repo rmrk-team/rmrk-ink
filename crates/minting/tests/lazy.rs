@@ -71,8 +71,6 @@ pub mod rmrk_contract_minting {
 
     impl PSP34Enumerable for Rmrk {}
 
-    impl Minting for Rmrk {}
-
     impl MintingLazy for Rmrk {}
 
     impl Rmrk {
@@ -112,7 +110,10 @@ pub mod rmrk_contract_minting {
 
     #[cfg(test)]
     mod tests {
-        use super::*;
+        use super::{
+            Environment,
+            Rmrk,
+        };
         use ink_env::{
             pay_with_call,
             test,
@@ -120,16 +121,31 @@ pub mod rmrk_contract_minting {
         };
         use ink_lang as ink;
         use ink_lang::codegen::Env;
+        use openbrush::{
+            contracts::{
+                ownable::*,
+                psp34::extensions::enumerable::*,
+            },
+            traits::Balance,
+        };
         use rmrk_common::{
             errors::RmrkError,
             utils::Utils,
         };
+        use rmrk_minting::traits::MintingLazy;
 
         const PRICE: Balance = 100_000_000_000_000_000;
         const MAX_SUPPLY: u64 = 10;
 
         fn init() -> Rmrk {
             Rmrk::new(MAX_SUPPLY, PRICE)
+        }
+
+        #[ink::test]
+        fn init_with_price_works() {
+            let rmrk = init();
+            assert_eq!(rmrk.max_supply(), MAX_SUPPLY);
+            assert_eq!(rmrk.price(), PRICE);
         }
 
         #[ink::test]
@@ -144,13 +160,13 @@ pub mod rmrk_contract_minting {
                 PRICE * num_of_mints as u128 - 1,
             );
             assert_eq!(
-                rmrk.mint_many_to_caller(num_of_mints),
+                rmrk.mint_many(num_of_mints),
                 Err(RmrkError::BadMintValue.into())
             );
             test::set_value_transferred::<ink_env::DefaultEnvironment>(
                 PRICE * num_of_mints as u128 - 1,
             );
-            assert_eq!(rmrk.mint_to_caller(), Err(RmrkError::BadMintValue.into()));
+            assert_eq!(rmrk.mint(), Err(RmrkError::BadMintValue.into()));
             assert_eq!(rmrk.total_supply(), 0);
         }
 
@@ -161,7 +177,7 @@ pub mod rmrk_contract_minting {
             set_balance(accounts.bob, PRICE);
             set_sender(accounts.bob);
 
-            assert!(pay_with_call!(rmrk.mint_to_caller(), PRICE).is_ok());
+            assert!(pay_with_call!(rmrk.mint(), PRICE).is_ok());
             let expected_contract_balance = PRICE + rmrk.env().minimum_balance();
             assert_eq!(rmrk.env().balance(), expected_contract_balance);
 
@@ -184,7 +200,7 @@ pub mod rmrk_contract_minting {
             assert_eq!(rmrk.total_supply(), 0);
             set_sender(accounts.bob);
             test::set_value_transferred::<ink_env::DefaultEnvironment>(PRICE);
-            assert!(rmrk.mint_to_caller().is_ok());
+            assert!(rmrk.mint().is_ok());
             assert_eq!(rmrk.total_supply(), 1);
             assert_eq!(rmrk.owner_of(Id::U64(1)), Some(accounts.bob));
             assert_eq!(rmrk.balance_of(accounts.bob), 1);
@@ -204,7 +220,7 @@ pub mod rmrk_contract_minting {
             test::set_value_transferred::<ink_env::DefaultEnvironment>(
                 PRICE * num_of_mints as u128,
             );
-            assert!(rmrk.mint_many_to_caller(num_of_mints).is_ok());
+            assert!(rmrk.mint_many(num_of_mints).is_ok());
             assert_eq!(rmrk.total_supply(), num_of_mints as u128);
             assert_eq!(rmrk.balance_of(accounts.bob), 5);
             assert_eq!(rmrk.owners_token_by_index(accounts.bob, 0), Ok(Id::U64(1)));

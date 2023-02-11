@@ -6,10 +6,17 @@ use rmrk_common::errors::{
 };
 
 use ink_env::AccountId;
+use ink_prelude::string::{
+    String as PreludeString,
+    ToString,
+};
 
 use openbrush::{
     contracts::psp34::extensions::enumerable::*,
-    traits::Storage,
+    traits::{
+        Storage,
+        String,
+    },
 };
 
 /// Trait definitions for Minting internal functions.
@@ -25,6 +32,8 @@ pub trait Internal {
 
     /// Mint many tokens to specified account
     fn _mint_many(&mut self, to: AccountId, mint_amount: u64) -> Result<(Id, Id)>;
+
+    fn _token_uri(&self, token_id: u64) -> Result<PreludeString>;
 }
 
 /// Helper trait for Minting
@@ -89,5 +98,28 @@ where
         }
 
         Ok((Id::U64(next_to_mint), Id::U64(mint_offset - 1)))
+    }
+
+    default fn _token_uri(&self, token_id: u64) -> Result<PreludeString> {
+        let uri: PreludeString;
+        match self
+            .data::<MintingData>()
+            .nft_metadata
+            .get(Id::U64(token_id))
+        {
+            Some(token_uri) => {
+                uri = PreludeString::from_utf8(token_uri).unwrap();
+            }
+            None => {
+                let value = self.get_attribute(
+                    self.data::<psp34::Data<enumerable::Balances>>()
+                        .collection_id(),
+                    String::from("baseUri"),
+                );
+                let token_uri = PreludeString::from_utf8(value.unwrap()).unwrap();
+                uri = token_uri + &token_id.to_string() + &PreludeString::from(".json");
+            }
+        }
+        Ok(uri)
     }
 }

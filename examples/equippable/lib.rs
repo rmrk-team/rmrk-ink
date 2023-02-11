@@ -221,8 +221,6 @@ pub mod rmrk_example_equippable {
 
     impl Minting for Rmrk {}
 
-    impl MintingLazy for Rmrk {}
-
     impl Nesting for Rmrk {}
 
     impl MultiAsset for Rmrk {}
@@ -433,8 +431,26 @@ pub mod rmrk_example_equippable {
 
     #[cfg(test)]
     mod tests {
-        use super::*;
+        use super::{
+            Environment,
+            Rmrk,
+        };
         use crate::rmrk_example_equippable::PSP34Error::*;
+
+        use openbrush::{
+            contracts::{
+                ownable::*,
+                psp34::extensions::{
+                    enumerable::*,
+                    metadata::*,
+                },
+            },
+            traits::{
+                Balance,
+                String,
+            },
+        };
+
         use ink_env::{
             test,
             AccountId,
@@ -449,7 +465,13 @@ pub mod rmrk_example_equippable {
 
         use rmrk::{
             errors::*,
-            traits::*,
+            traits::{
+                Base,
+                Equippable,
+                Minting,
+                MultiAsset,
+            },
+            types::*,
             utils::Utils,
         };
 
@@ -474,7 +496,6 @@ pub mod rmrk_example_equippable {
                 Some(String::from(BASE_URI))
             );
             assert_eq!(rmrk.max_supply(), MAX_SUPPLY);
-            assert_eq!(rmrk.price(), PRICE);
         }
 
         fn init() -> Rmrk {

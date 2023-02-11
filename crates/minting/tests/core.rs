@@ -118,7 +118,10 @@ pub mod rmrk_contract_minting {
 
     #[cfg(test)]
     mod tests {
-        use super::*;
+        use super::{
+            Environment,
+            Rmrk,
+        };
         use ink_env::{
             test,
             AccountId,
@@ -130,10 +133,16 @@ pub mod rmrk_contract_minting {
             errors::*,
             utils::Utils,
         };
+        use rmrk_minting::traits::Minting;
 
         use openbrush::contracts::{
-            ownable::OwnableError,
-            psp34::PSP34Error,
+            ownable::*,
+            psp34::extensions::enumerable::*,
+        };
+
+        use openbrush::traits::{
+            Balance,
+            String,
         };
 
         const PRICE: Balance = 100_000_000_000_000_000;

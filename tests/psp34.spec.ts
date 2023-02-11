@@ -2,13 +2,13 @@ import { expect, use } from "chai";
 import chaiAsPromised from "chai-as-promised";
 import { encodeAddress } from "@polkadot/keyring";
 import BN from "bn.js";
-import Rmrk_factory from "../types/constructors/rmrk_example_equippable";
-import Rmrk from "../types/contracts/rmrk_example_equippable";
-import { RmrkError } from "../types/types-returns/rmrk_example_equippable";
+import Rmrk_factory from "../types/constructors/rmrk_example_equippable_lazy";
+import Rmrk from "../types/contracts/rmrk_example_equippable_lazy";
+import { RmrkError } from "../types/types-returns/rmrk_example_equippable_lazy";
 
 import { ApiPromise, WsProvider, Keyring } from "@polkadot/api";
 import { KeyringPair } from "@polkadot/keyring/types";
-// import { AccountId } from '../types/types-arguments/rmrk_example_equippable';
+// import { AccountId } from '../types/types-arguments/rmrk_example_equippable_lazy';
 import { ReturnNumber } from "@supercolony/typechain-types";
 
 use(chaiAsPromised);
@@ -79,7 +79,7 @@ describe("Minting rmrk as psp34 tests", () => {
     // expect((await contract.query.getAttribute(collectionId, ["baseUri"])).value).to.equal(BASE_URI);
   });
 
-  it("mintNext works", async () => {
+  it("mint works", async () => {
     await setup();
     const tokenId = 1;
 
@@ -88,10 +88,10 @@ describe("Minting rmrk as psp34 tests", () => {
     ).to.equal(0);
 
     // mint
-    const { gasRequired } = await contract.withSigner(bob).query.mintNext();
+    const { gasRequired } = await contract.withSigner(bob).query.mint();
     let mintResult = await contract
       .withSigner(bob)
-      .tx.mintNext({ value: PRICE_PER_MINT, gasLimit: gasRequired * 2n });
+      .tx.mint({ value: PRICE_PER_MINT, gasLimit: gasRequired * 2n });
 
     // verify minting results. The totalSupply value is BN
     expect(
@@ -119,8 +119,8 @@ describe("Minting rmrk as psp34 tests", () => {
       (await contract.query.totalSupply()).value.rawNumber.toNumber()
     ).to.equal(0);
 
-    const { gasRequired } = await contract.withSigner(bob).query.mintNext();
-    await contract.withSigner(bob).tx.mint(bob.address, 5, {
+    const { gasRequired } = await contract.withSigner(bob).query.mint();
+    await contract.withSigner(bob).tx.mintMany(5, {
       value: PRICE_PER_MINT.muln(5),
       gasLimit: gasRequired * 2n,
     });
@@ -137,10 +137,10 @@ describe("Minting rmrk as psp34 tests", () => {
     await setup();
 
     // Bob mints
-    let { gasRequired } = await contract.withSigner(bob).query.mintNext();
+    let { gasRequired } = await contract.withSigner(bob).query.mint();
     let mintResult = await contract
       .withSigner(bob)
-      .tx.mintNext({ value: PRICE_PER_MINT, gasLimit: gasRequired * 2n });
+      .tx.mint({ value: PRICE_PER_MINT, gasLimit: gasRequired * 2n });
     emit(mintResult, "Transfer", {
       from: null,
       to: bob.address,
@@ -173,10 +173,10 @@ describe("Minting rmrk as psp34 tests", () => {
     await setup();
 
     // Bob mints
-    let { gasRequired } = await contract.withSigner(bob).query.mintNext();
+    let { gasRequired } = await contract.withSigner(bob).query.mint();
     await contract
       .withSigner(bob)
-      .tx.mintNext({ value: PRICE_PER_MINT, gasLimit: gasRequired * 2n });
+      .tx.mint({ value: PRICE_PER_MINT, gasLimit: gasRequired * 2n });
 
     // Bob approves deployer to be operator of the token
     const approveGas = (
@@ -211,7 +211,7 @@ describe("Minting rmrk as psp34 tests", () => {
     await setup();
 
     // Bob trys to mint without funding
-    let mintResult = await contract.withSigner(bob).query.mintNext();
+    let mintResult = await contract.withSigner(bob).query.mint();
 
     expect(mintResult.value.err.rmrk).to.be.equal(RmrkError.badMintValue);
   });

@@ -17,7 +17,7 @@ pub type MintingRef = dyn Minting;
 #[openbrush::wrapper]
 pub type MintingLazyRef = dyn MintingLazy;
 
-/// Trait definitions for Minting functions
+/// Trait definitions for core Minting functions
 #[openbrush::trait_definition]
 pub trait Minting {
     /// Mint one or more tokens.
@@ -41,17 +41,26 @@ pub trait Minting {
     fn token_uri(&self, token_id: u64) -> Result<PreludeString>;
 }
 
+/// Trait definitions for lazy Minting functions
 #[openbrush::trait_definition]
 pub trait MintingLazy {
     /// Mint one token to the caller
     #[ink(message, payable)]
-    fn mint_to_caller(&mut self) -> Result<()>;
+    fn mint(&mut self) -> Result<()>;
 
     /// Mint one or more tokens to the caller
     #[ink(message, payable)]
-    fn mint_many_to_caller(&mut self, mint_amount: u64) -> Result<()>;
+    fn mint_many(&mut self, mint_amount: u64) -> Result<()>;
 
     /// Get token mint price.
     #[ink(message)]
     fn price(&self) -> Balance;
+
+    /// Get max supply of tokens.
+    #[ink(message)]
+    fn max_supply(&self) -> u64;
+
+    /// Get URI for the token Id.
+    #[ink(message)]
+    fn token_uri(&self, token_id: u64) -> Result<PreludeString>;
 }
