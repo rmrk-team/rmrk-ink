@@ -42,7 +42,6 @@ use openbrush::{
     traits::{
         AccountId,
         Storage,
-        String,
     },
 };
 

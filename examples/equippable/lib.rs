@@ -442,8 +442,7 @@ pub mod rmrk_example_equippable {
         use openbrush::contracts::{
             ownable::OwnableError,
             psp34::PSP34Error,
-            reentrancy_guard::ReentrancyGuardError,
-        };
+         };
 
         use ink_lang as ink;
         use ink_prelude::string::String as PreludeString;

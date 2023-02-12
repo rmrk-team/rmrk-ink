@@ -4,11 +4,15 @@ import { encodeAddress } from "@polkadot/keyring";
 import BN from "bn.js";
 import Rmrk_factory from "../types/constructors/rmrk_example_equippable";
 import Rmrk from "../types/contracts/rmrk_example_equippable";
+import { RmrkError } from "../types/types-returns/rmrk_example_equippable";
 
 import { ApiPromise, WsProvider, Keyring } from "@polkadot/api";
 import { KeyringPair } from "@polkadot/keyring/types";
 import { ReturnNumber } from "@supercolony/typechain-types";
-import { PartType, Part } from "../types/types-arguments/rmrk_example_equippable";
+import {
+  PartType,
+  Part,
+} from "../types/types-arguments/rmrk_example_equippable";
 
 use(chaiAsPromised);
 
@@ -144,7 +148,7 @@ describe("RMRK Base tests", () => {
     const failAddEquip = await gem
       .withSigner(deployer)
       .query.addEquippableAddresses(1, [kanaria.address]);
-    expect(hex2a(failAddEquip.value.err.custom)).to.be.equal("PartIsNotSlot");
+    expect(failAddEquip.value.err.rmrk).to.be.equal(RmrkError.partIsNotSlot);
   });
 });
 

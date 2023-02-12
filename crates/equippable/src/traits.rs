@@ -7,7 +7,6 @@ use rmrk_common::{
 use openbrush::{
     contracts::psp34::{
         Id,
-        PSP34Error,
     },
     traits::AccountId,
 };
