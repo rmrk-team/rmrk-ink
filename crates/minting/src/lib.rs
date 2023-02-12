@@ -13,10 +13,7 @@ use rmrk_common::{
     utils::Utils,
 };
 
-use ink_prelude::string::{
-    String as PreludeString,
-    ToString,
-};
+use ink_prelude::string::String as PreludeString;
 use ink_storage::Mapping;
 
 use openbrush::{

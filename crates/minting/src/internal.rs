@@ -14,8 +14,8 @@ use ink_prelude::string::{
 use openbrush::{
     contracts::psp34::extensions::enumerable::*,
     traits::{
-        String,
         Storage,
+        String,
     },
 };
 
@@ -103,26 +103,20 @@ where
 
     /// Get URI for the token Id.
     default fn _token_uri(&self, token_id: u64) -> Result<PreludeString> {
-        let uri: PreludeString;
-        match self
-            .data::<MintingData>()
+        let from_attribute = || {
+            let collection_id = self
+                .data::<psp34::Data<enumerable::Balances>>()
+                .collection_id();
+            self.get_attribute(collection_id, String::from("baseUri"))
+                .and_then(|uri| PreludeString::from_utf8(uri).ok())
+                .map(|uri| uri + &token_id.to_string() + &PreludeString::from(".json"))
+        };
+
+        self.data::<MintingData>()
             .nft_metadata
             .get(Id::U64(token_id))
-        {
-            Some(token_uri) => {
-                uri = PreludeString::from_utf8(token_uri).unwrap();
-            }
-            None => {
-                let value = self.get_attribute(
-                    self.data::<psp34::Data<enumerable::Balances>>()
-                        .collection_id(),
-                    String::from("baseUri"),
-                );
-                let token_uri = PreludeString::from_utf8(value.unwrap()).unwrap();
-                uri = token_uri + &token_id.to_string() + &PreludeString::from(".json");
-            }
-        }
-
-        Ok(uri)
+            .and_then(|token_uri| PreludeString::from_utf8(token_uri).ok())
+            .or_else(from_attribute)
+            .ok_or(RmrkError::InvalidTokenId.into())
     }
 }

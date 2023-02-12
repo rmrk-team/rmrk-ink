@@ -1061,9 +1061,5 @@ pub mod rmrk_example_equippable {
         fn set_sender(sender: AccountId) {
             ink_env::test::set_caller::<Environment>(sender);
         }
-
-        fn set_balance(account_id: AccountId, balance: Balance) {
-            ink_env::test::set_account_balance::<ink_env::DefaultEnvironment>(account_id, balance)
-        }
     }
 }
