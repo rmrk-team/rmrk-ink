@@ -1,6 +1,8 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 #![feature(min_specialization)]
 
+mod common;
+
 #[openbrush::contract]
 pub mod rmrk_contract_minting {
 
@@ -134,11 +136,40 @@ pub mod rmrk_contract_minting {
         };
         use rmrk_minting::traits::MintingLazy;
 
-        const PRICE: Balance = 100_000_000_000_000_000;
-        const MAX_SUPPLY: u64 = 10;
+        use crate::common::{
+            check_mint_many_outcome,
+            check_mint_single_outcome,
+            default_accounts,
+            set_sender,
+            Accessor,
+            MAX_SUPPLY,
+            PRICE,
+        };
+
+        impl Accessor for super::Rmrk {
+            fn _last_token_id(&self) -> u64 {
+                self.minting.last_token_id
+            }
+
+            fn _owners_token_by_index(
+                &self,
+                account: AccountId,
+                index: u128,
+            ) -> core::result::Result<Id, PSP34Error> {
+                self.owners_token_by_index(account, index)
+            }
+        }
 
         fn init() -> Rmrk {
             Rmrk::new(MAX_SUPPLY, PRICE)
+        }
+
+        fn purchase(amount: u64) {
+            test::set_value_transferred::<ink_env::DefaultEnvironment>(PRICE * amount as u128);
+        }
+
+        fn set_balance(account_id: AccountId, balance: Balance) {
+            ink_env::test::set_account_balance::<ink_env::DefaultEnvironment>(account_id, balance)
         }
 
         #[ink::test]
@@ -156,16 +187,12 @@ pub mod rmrk_contract_minting {
             let num_of_mints = 1;
 
             assert_eq!(rmrk.total_supply(), 0);
-            test::set_value_transferred::<ink_env::DefaultEnvironment>(
-                PRICE * num_of_mints as u128 - 1,
-            );
+            purchase(num_of_mints - 1);
             assert_eq!(
                 rmrk.mint_many(num_of_mints),
                 Err(RmrkError::BadMintValue.into())
             );
-            test::set_value_transferred::<ink_env::DefaultEnvironment>(
-                PRICE * num_of_mints as u128 - 1,
-            );
+            purchase(num_of_mints - 1);
             assert_eq!(rmrk.mint(), Err(RmrkError::BadMintValue.into()));
             assert_eq!(rmrk.total_supply(), 0);
         }
@@ -199,66 +226,44 @@ pub mod rmrk_contract_minting {
             assert_eq!(rmrk.owner(), accounts.alice);
             assert_eq!(rmrk.total_supply(), 0);
             set_sender(accounts.bob);
-            test::set_value_transferred::<ink_env::DefaultEnvironment>(PRICE);
+            purchase(1);
             assert!(rmrk.mint().is_ok());
-            assert_eq!(rmrk.total_supply(), 1);
-            assert_eq!(rmrk.owner_of(Id::U64(1)), Some(accounts.bob));
-            assert_eq!(rmrk.balance_of(accounts.bob), 1);
-            assert_eq!(rmrk.owners_token_by_index(accounts.bob, 0), Ok(Id::U64(1)));
-            assert_eq!(rmrk.minting.last_token_id, 1);
-            assert_eq!(1, ink_env::test::recorded_events().count());
+            check_mint_single_outcome(rmrk, accounts.bob, 1);
         }
 
         #[ink::test]
-        fn mint_multiple_lazy_works() {
+        fn mint_events_works() {
+            let mut rmrk = init();
+            let num_of_mints: u64 = 5;
+            purchase(num_of_mints);
+            assert!(rmrk.mint_many(num_of_mints).is_ok());
+            assert_eq!(
+                num_of_mints as usize,
+                ink_env::test::recorded_events().count()
+            );
+        }
+
+        #[ink::test]
+        fn mint_many_lazy_works() {
             let mut rmrk = init();
             let accounts = default_accounts();
-            set_sender(accounts.bob);
             let num_of_mints: u64 = 5;
-
+            set_sender(accounts.bob);
             assert_eq!(rmrk.total_supply(), 0);
-            test::set_value_transferred::<ink_env::DefaultEnvironment>(
-                PRICE * num_of_mints as u128,
-            );
+            purchase(num_of_mints);
             assert!(rmrk.mint_many(num_of_mints).is_ok());
-            assert_eq!(rmrk.total_supply(), num_of_mints as u128);
-            assert_eq!(rmrk.balance_of(accounts.bob), 5);
-            assert_eq!(rmrk.owners_token_by_index(accounts.bob, 0), Ok(Id::U64(1)));
-            assert_eq!(rmrk.owners_token_by_index(accounts.bob, 1), Ok(Id::U64(2)));
-            assert_eq!(rmrk.owners_token_by_index(accounts.bob, 2), Ok(Id::U64(3)));
-            assert_eq!(rmrk.owners_token_by_index(accounts.bob, 3), Ok(Id::U64(4)));
-            assert_eq!(rmrk.owners_token_by_index(accounts.bob, 4), Ok(Id::U64(5)));
-            assert_eq!(5, ink_env::test::recorded_events().count());
-            assert_eq!(
-                rmrk.owners_token_by_index(accounts.bob, 5),
-                Err(PSP34Error::TokenNotExists)
-            );
+            check_mint_many_outcome(rmrk, accounts.bob, num_of_mints);
         }
 
         #[ink::test]
         fn mint_above_limit_fails() {
             let mut rmrk = init();
-            let accounts = default_accounts();
-            set_sender(accounts.alice);
             let num_of_mints: u64 = MAX_SUPPLY + 1;
-
             assert_eq!(rmrk.total_supply(), 0);
             assert_eq!(
                 rmrk.mint_many(num_of_mints),
                 Err(RmrkError::CollectionIsFull.into())
             );
-        }
-
-        fn default_accounts() -> test::DefaultAccounts<ink_env::DefaultEnvironment> {
-            test::default_accounts::<Environment>()
-        }
-
-        fn set_sender(sender: AccountId) {
-            ink_env::test::set_caller::<Environment>(sender);
-        }
-
-        fn set_balance(account_id: AccountId, balance: Balance) {
-            ink_env::test::set_account_balance::<ink_env::DefaultEnvironment>(account_id, balance)
         }
     }
 }

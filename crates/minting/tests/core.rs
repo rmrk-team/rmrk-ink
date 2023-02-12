@@ -1,6 +1,8 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 #![feature(min_specialization)]
 
+mod common;
+
 #[openbrush::contract]
 pub mod rmrk_contract_minting {
 
@@ -117,10 +119,8 @@ pub mod rmrk_contract_minting {
 
     #[cfg(test)]
     mod tests {
-        use super::{
-            Environment,
-            Rmrk,
-        };
+        use super::Rmrk;
+
         use ink_env::{
             test,
             AccountId,
@@ -128,6 +128,7 @@ pub mod rmrk_contract_minting {
         use ink_lang as ink;
 
         use ink_prelude::string::String as PreludeString;
+        use openbrush::contracts::psp34::PSP34Error;
         use rmrk_common::{
             errors::*,
             utils::Utils,
@@ -139,14 +140,34 @@ pub mod rmrk_contract_minting {
             psp34::extensions::enumerable::*,
         };
 
-        use openbrush::traits::{
-            Balance,
-            String,
+        use openbrush::traits::String;
+
+        use crate::common::{
+            check_mint_many_outcome,
+            check_mint_single_outcome,
+            default_accounts,
+            set_sender,
+            Accessor,
+            MAX_SUPPLY,
+            PRICE,
         };
 
-        const PRICE: Balance = 100_000_000_000_000_000;
+        impl Accessor for super::Rmrk {
+            fn _last_token_id(&self) -> u64 {
+                self.minting.last_token_id
+            }
+
+            fn _owners_token_by_index(
+                &self,
+                account: AccountId,
+                index: u128,
+            ) -> core::result::Result<Id, PSP34Error> {
+                self.owners_token_by_index(account, index)
+            }
+        }
+
         const BASE_URI: &str = "ipfs://myIpfsUri/";
-        const MAX_SUPPLY: u64 = 10;
+        const RMRK_METADATA: &str = "ipfs://rmrkIpfsUri/";
 
         fn init() -> Rmrk {
             Rmrk::new(
@@ -164,12 +185,7 @@ pub mod rmrk_contract_minting {
             assert_eq!(rmrk.owner(), accounts.alice);
             assert_eq!(rmrk.total_supply(), 0);
             assert_eq!(rmrk.mint(accounts.bob), Ok(Id::U64(1)));
-            assert_eq!(rmrk.total_supply(), 1);
-            assert_eq!(rmrk.owner_of(Id::U64(1)), Some(accounts.bob));
-            assert_eq!(rmrk.balance_of(accounts.bob), 1);
-            assert_eq!(rmrk.owners_token_by_index(accounts.bob, 0), Ok(Id::U64(1)));
-            assert_eq!(rmrk.minting.last_token_id, 1);
-            assert_eq!(1, ink_env::test::recorded_events().count());
+            check_mint_single_outcome(rmrk, accounts.bob, 1);
         }
 
         #[ink::test]
@@ -184,25 +200,11 @@ pub mod rmrk_contract_minting {
                 rmrk.mint_many(accounts.bob, num_of_mints),
                 Ok((Id::U64(1), Id::U64(5)))
             );
-
-            assert_eq!(rmrk.total_supply(), num_of_mints as u128);
-            assert_eq!(rmrk.balance_of(accounts.bob), 5);
-            assert_eq!(rmrk.owners_token_by_index(accounts.bob, 0), Ok(Id::U64(1)));
-            assert_eq!(rmrk.owners_token_by_index(accounts.bob, 1), Ok(Id::U64(2)));
-            assert_eq!(rmrk.owners_token_by_index(accounts.bob, 2), Ok(Id::U64(3)));
-            assert_eq!(rmrk.owners_token_by_index(accounts.bob, 3), Ok(Id::U64(4)));
-            assert_eq!(rmrk.owners_token_by_index(accounts.bob, 4), Ok(Id::U64(5)));
-            assert_eq!(5, ink_env::test::recorded_events().count());
-            assert_eq!(
-                rmrk.owners_token_by_index(accounts.bob, 5),
-                Err(PSP34Error::TokenNotExists)
-            );
+            check_mint_many_outcome(rmrk, accounts.bob, num_of_mints);
         }
 
         #[ink::test]
         fn mint_with_metadata_works() {
-            const RMRK_METADATA: &str = "ipfs://rmrkIpfsUri/";
-
             let mut rmrk = init();
             let accounts = default_accounts();
             assert_eq!(rmrk.owner(), accounts.alice);
@@ -247,12 +249,10 @@ pub mod rmrk_contract_minting {
         fn mint_above_limit_fails() {
             let mut rmrk = init();
             let accounts = default_accounts();
-            set_sender(accounts.alice);
             let num_of_mints: u64 = MAX_SUPPLY + 1;
-
             assert_eq!(rmrk.total_supply(), 0);
             assert_eq!(
-                rmrk.mint_many(accounts.bob, num_of_mints),
+                rmrk.mint_many(accounts.alice, num_of_mints),
                 Err(RmrkError::CollectionIsFull.into())
             );
         }
@@ -281,14 +281,6 @@ pub mod rmrk_contract_minting {
                 rmrk.token_uri(1),
                 Ok("".to_owned() + &PreludeString::from("1.json"))
             );
-        }
-
-        fn default_accounts() -> test::DefaultAccounts<ink_env::DefaultEnvironment> {
-            test::default_accounts::<Environment>()
-        }
-
-        fn set_sender(sender: AccountId) {
-            ink_env::test::set_caller::<Environment>(sender);
         }
     }
 }
