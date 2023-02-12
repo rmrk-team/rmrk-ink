@@ -14,8 +14,8 @@ use ink_prelude::string::{
 use openbrush::{
     contracts::psp34::extensions::enumerable::*,
     traits::{
-        Storage,
         String,
+        Storage,
     },
 };
 
