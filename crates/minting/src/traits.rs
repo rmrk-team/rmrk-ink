@@ -21,14 +21,14 @@ pub type MintingLazyRef = dyn MintingLazy;
 #[openbrush::trait_definition]
 pub trait Minting {
     /// Mint one or more tokens.
-    #[ink(message, payable)]
+    #[ink(message)]
     fn mint(&mut self, to: AccountId) -> Result<Id>;
 
-    /// Mint one or more tokens to specified account
-    #[ink(message, payable)]
+    /// Mint many to specified account.
+    #[ink(message)]
     fn mint_many(&mut self, to: AccountId, mint_amount: u64) -> Result<(Id, Id)>;
 
-    /// Assign metadata to specified token
+    /// Assign metadata to specified token.
     #[ink(message)]
     fn assign_metadata(&mut self, token_id: Id, metadata: PreludeString) -> Result<()>;
 
@@ -44,11 +44,11 @@ pub trait Minting {
 /// Trait definitions for lazy Minting functions
 #[openbrush::trait_definition]
 pub trait MintingLazy {
-    /// Mint one token to the caller
+    /// Purchase one token.
     #[ink(message, payable)]
     fn mint(&mut self) -> Result<()>;
 
-    /// Mint one or more tokens to the caller
+    /// Purchas many tokens.
     #[ink(message, payable)]
     fn mint_many(&mut self, mint_amount: u64) -> Result<()>;
 

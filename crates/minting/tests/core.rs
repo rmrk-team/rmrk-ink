@@ -83,7 +83,6 @@ pub mod rmrk_contract_minting {
         pub fn new(name: String, symbol: String, base_uri: String, max_supply: u64) -> Self {
             ink_lang::codegen::initialize_contract(|instance: &mut Rmrk| {
                 instance._init_with_owner(instance.env().caller());
-
                 let collection_id = instance.collection_id();
                 instance._set_attribute(collection_id.clone(), String::from("name"), name);
                 instance._set_attribute(collection_id.clone(), String::from("symbol"), symbol);

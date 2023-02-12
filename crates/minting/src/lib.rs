@@ -64,21 +64,21 @@ where
         + psp34::Internal
         + Utils,
 {
-    /// Mint one token to the specified account
+    /// Mint one token to the specified account.
     #[modifiers(only_owner)]
     default fn mint(&mut self, to: AccountId) -> Result<Id> {
         self._check_amount(1)?;
         self._mint(to)
     }
 
-    /// Mint one or more tokens to the specified account
+    /// Mint many tokens to the specified account.
     #[modifiers(only_owner, non_reentrant)]
     default fn mint_many(&mut self, to: AccountId, mint_amount: u64) -> Result<(Id, Id)> {
         self._check_amount(mint_amount)?;
         self._mint_many(to, mint_amount)
     }
 
-    /// Assign metadata to specified token
+    /// Assign metadata to specified token.
     #[modifiers(only_owner)]
     default fn assign_metadata(&mut self, token_id: Id, metadata: PreludeString) -> Result<()> {
         self.data::<MintingData>()
@@ -87,12 +87,12 @@ where
         return Ok(())
     }
 
-    /// Get max supply of tokens
+    /// Get max supply of tokens.
     default fn max_supply(&self) -> u64 {
         self.data::<MintingData>().max_supply
     }
 
-    /// Get URI for the token Id
+    /// Get URI for the token Id.
     default fn token_uri(&self, token_id: u64) -> Result<PreludeString> {
         self.ensure_exists_and_get_owner(&Id::U64(token_id))?;
         self._token_uri(token_id)
@@ -109,7 +109,7 @@ where
         + psp34::Internal
         + Utils,
 {
-    /// Mint one token to caller
+    /// Purchase one token.
     default fn mint(&mut self) -> Result<()> {
         self._check_amount(1)?;
         self._check_value(Self::env().transferred_value(), 1)?;
@@ -117,7 +117,7 @@ where
         return Ok(())
     }
 
-    /// Mint one or more tokens to caller
+    /// Purchas many tokens.
     #[modifiers(non_reentrant)]
     default fn mint_many(&mut self, mint_amount: u64) -> Result<()> {
         self._check_amount(mint_amount)?;
@@ -126,18 +126,18 @@ where
         Ok(())
     }
 
-    /// Get max supply of tokens
+    /// Get max supply of tokens.
     default fn max_supply(&self) -> u64 {
         self.data::<MintingData>().max_supply
     }
 
-    /// Get URI for the token Id
+    /// Get URI for the token Id.
     default fn token_uri(&self, token_id: u64) -> Result<PreludeString> {
         self.ensure_exists_and_get_owner(&Id::U64(token_id))?;
         self._token_uri(token_id)
     }
 
-    /// Get token mint price
+    /// Get token mint price.
     default fn price(&self) -> Balance {
         self.data::<MintingData>().price_per_mint
     }
