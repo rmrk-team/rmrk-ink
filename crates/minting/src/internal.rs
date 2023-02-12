@@ -9,7 +9,6 @@ use openbrush::{
     contracts::psp34::extensions::enumerable::*,
     traits::{
         Storage,
-        String,
     },
 };
 

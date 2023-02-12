@@ -26,7 +26,6 @@ use ink_storage::Mapping;
 use openbrush::{
     contracts::{
         ownable::*,
-        psp34::extensions::enumerable::*,
     },
     modifiers,
     traits::{
