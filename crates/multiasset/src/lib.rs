@@ -13,6 +13,7 @@ use rmrk_common::{
         Result,
         RmrkError,
     },
+    roles::CONTRIBUTOR,
     types::*,
     utils::Utils,
 };
@@ -27,7 +28,7 @@ use ink_storage::Mapping;
 
 use openbrush::{
     contracts::{
-        ownable::*,
+        access_control::*,
         psp34::extensions::enumerable::*,
     },
     modifiers,
@@ -59,11 +60,11 @@ impl<T> MultiAsset for T
 where
     T: Storage<MultiAssetData>
         + Storage<psp34::Data<enumerable::Balances>>
-        + Storage<ownable::Data>
+        + Storage<access_control::Data>
         + Utils,
 {
     /// Used to add a asset entry.
-    #[modifiers(only_owner)]
+    #[modifiers(only_role(CONTRIBUTOR))]
     fn add_asset_entry(
         &mut self,
         asset_id: AssetId,

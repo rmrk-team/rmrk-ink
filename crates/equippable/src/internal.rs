@@ -19,12 +19,13 @@ use crate::EquippableData;
 
 use openbrush::{
     contracts::{
-        ownable::*,
+        access_control::*,
         psp34::extensions::enumerable::*,
     },
     traits::{
         AccountId,
         Storage,
+        String,
     },
 };
 
@@ -59,7 +60,7 @@ pub trait Internal {
 impl<T> Internal for T
 where
     T: Storage<EquippableData>
-        + Storage<ownable::Data>
+        + Storage<access_control::Data>
         + Storage<MultiAssetData>
         + MultiAsset
         + MultiAssetInternal

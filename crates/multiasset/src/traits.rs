@@ -8,6 +8,7 @@ use ink_prelude::vec::Vec;
 use openbrush::{
     contracts::psp34::{
         Id,
+        PSP34Error,
     },
     traits::String,
 };

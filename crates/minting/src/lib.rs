@@ -10,6 +10,7 @@ use internal::Internal;
 
 use rmrk_common::{
     errors::Result,
+    roles::CONTRIBUTOR,
     utils::Utils,
 };
 
@@ -18,6 +19,10 @@ use ink_storage::Mapping;
 
 use openbrush::{
     contracts::{
+        access_control::{
+            self,
+            only_role,
+        },
         ownable::*,
         psp34::extensions::{
             enumerable::*,
@@ -55,28 +60,28 @@ where
     T: Storage<MintingData>
         + Storage<psp34::Data<enumerable::Balances>>
         + Storage<reentrancy_guard::Data>
-        + Storage<ownable::Data>
+        + Storage<access_control::Data>
         + Storage<metadata::Data>
         + psp34::extensions::metadata::PSP34Metadata
         + psp34::Internal
         + Utils,
 {
     /// Mint one token to the specified account.
-    #[modifiers(only_owner)]
+    #[modifiers(only_role(CONTRIBUTOR))]
     default fn mint(&mut self, to: AccountId) -> Result<Id> {
         self._check_amount(1)?;
         self._mint(to)
     }
 
     /// Mint many tokens to the specified account.
-    #[modifiers(only_owner, non_reentrant)]
+    #[modifiers(only_role(CONTRIBUTOR), non_reentrant)]
     default fn mint_many(&mut self, to: AccountId, mint_amount: u64) -> Result<(Id, Id)> {
         self._check_amount(mint_amount)?;
         self._mint_many(to, mint_amount)
     }
 
     /// Assign metadata to specified token.
-    #[modifiers(only_owner)]
+    #[modifiers(only_role(CONTRIBUTOR))]
     default fn assign_metadata(&mut self, token_id: Id, metadata: PreludeString) -> Result<()> {
         self.data::<MintingData>()
             .nft_metadata

@@ -3,5 +3,6 @@
 #![allow(clippy::inline_fn_without_body)]
 
 pub mod errors;
+pub mod roles;
 pub mod types;
 pub mod utils;

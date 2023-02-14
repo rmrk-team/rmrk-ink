@@ -9,7 +9,7 @@ pub mod rmrk_contract_minting {
     use ink_storage::traits::SpreadAllocate;
     use openbrush::{
         contracts::{
-            ownable::*,
+            access_control::*,
             psp34::extensions::{
                 enumerable::*,
                 metadata::*,
@@ -23,6 +23,7 @@ pub mod rmrk_contract_minting {
         EmitEvent,
         Env,
     };
+    use rmrk_common::roles::CONTRIBUTOR;
     use rmrk_minting::{
         traits::*,
         MintingData,
@@ -58,7 +59,7 @@ pub mod rmrk_contract_minting {
         #[storage_field]
         guard: reentrancy_guard::Data,
         #[storage_field]
-        ownable: ownable::Data,
+        access: access_control::Data,
         #[storage_field]
         metadata: metadata::Data,
         #[storage_field]
@@ -67,7 +68,7 @@ pub mod rmrk_contract_minting {
 
     impl PSP34 for Rmrk {}
 
-    impl Ownable for Rmrk {}
+    impl AccessControl for Rmrk {}
 
     impl PSP34Metadata for Rmrk {}
 
@@ -80,7 +81,8 @@ pub mod rmrk_contract_minting {
         #[ink(constructor)]
         pub fn new(max_supply: u64, price_per_mint: Balance) -> Self {
             ink_lang::codegen::initialize_contract(|instance: &mut Rmrk| {
-                instance._init_with_owner(instance.env().caller());
+                instance._init_with_admin(instance.env().caller());
+                instance._setup_role(CONTRIBUTOR, instance.env().caller());
                 instance.minting.max_supply = max_supply;
                 instance.minting.price_per_mint = price_per_mint;
             })
@@ -125,13 +127,14 @@ pub mod rmrk_contract_minting {
         use ink_lang::codegen::Env;
         use openbrush::{
             contracts::{
-                ownable::*,
+                access_control::*,
                 psp34::extensions::enumerable::*,
             },
             traits::Balance,
         };
         use rmrk_common::{
             errors::RmrkError,
+            roles::ADMIN,
             utils::Utils,
         };
         use rmrk_minting::traits::MintingLazy;
@@ -223,7 +226,7 @@ pub mod rmrk_contract_minting {
         fn mint_single_lazy_works() {
             let mut rmrk = init();
             let accounts = default_accounts();
-            assert_eq!(rmrk.owner(), accounts.alice);
+            assert!(rmrk.has_role(ADMIN, accounts.alice));
             assert_eq!(rmrk.total_supply(), 0);
             set_sender(accounts.bob);
             purchase(1);

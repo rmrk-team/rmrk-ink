@@ -2,14 +2,20 @@
 
 use ink_prelude::string::String as PreludeString;
 
-use crate::errors::{
-    Result,
-    RmrkError,
+use crate::{
+    errors::{
+        Result,
+        RmrkError,
+    },
+    roles::{
+        ADMIN,
+        CONTRIBUTOR,
+    },
 };
 
 use openbrush::{
     contracts::{
-        ownable::*,
+        access_control::*,
         psp34::extensions::{
             enumerable::*,
             metadata::*,
@@ -46,13 +52,13 @@ impl<T> Utils for T
 where
     T: Storage<psp34::Data<enumerable::Balances>>
         + Storage<reentrancy_guard::Data>
-        + Storage<ownable::Data>
+        + Storage<access_control::Data>
         + Storage<metadata::Data>
         + psp34::extensions::metadata::PSP34Metadata
         + psp34::Internal,
 {
     /// Set new value for the baseUri
-    #[modifiers(only_owner)]
+    #[modifiers(only_role(CONTRIBUTOR))]
     default fn set_base_uri(&mut self, uri: PreludeString) -> Result<()> {
         let id = self
             .data::<psp34::Data<enumerable::Balances>>()
@@ -63,14 +69,15 @@ where
     }
 
     /// Withdraw contract's balance
-    #[modifiers(only_owner)]
+    #[modifiers(only_role(ADMIN))]
     default fn withdraw(&mut self) -> Result<()> {
         let balance = Self::env().balance();
+        let caller = Self::env().caller();
         let current_balance = balance
             .checked_sub(Self::env().minimum_balance())
             .unwrap_or_default();
         Self::env()
-            .transfer(self.data::<ownable::Data>().owner(), current_balance)
+            .transfer(caller, current_balance)
             .map_err(|_| RmrkError::WithdrawalFailed)?;
         Ok(())
     }
