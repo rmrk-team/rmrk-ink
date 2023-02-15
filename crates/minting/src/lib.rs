@@ -23,7 +23,6 @@ use openbrush::{
             self,
             only_role,
         },
-        ownable::*,
         psp34::extensions::{
             enumerable::*,
             metadata::*,
