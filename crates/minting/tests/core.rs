@@ -124,19 +124,18 @@ pub mod rmrk_contract_minting {
     mod tests {
         use super::Rmrk;
 
-        use ink_env::{
-            test,
-            AccountId,
-        };
+        use ink_env::AccountId;
         use ink_lang as ink;
 
         use ink_prelude::string::String as PreludeString;
         use openbrush::contracts::psp34::PSP34Error;
+
         use rmrk_common::{
             errors::*,
             roles::ADMIN,
             utils::Utils,
         };
+
         use rmrk_minting::traits::Minting;
 
         use openbrush::contracts::{
@@ -153,7 +152,6 @@ pub mod rmrk_contract_minting {
             set_sender,
             Accessor,
             MAX_SUPPLY,
-            PRICE,
         };
 
         impl Accessor for super::Rmrk {
@@ -239,14 +237,6 @@ pub mod rmrk_contract_minting {
                 rmrk.token_uri(2),
                 Ok(PreludeString::from(RMRK_METADATA.to_owned()))
             );
-
-            // token_uri for mint_next work
-            test::set_value_transferred::<ink_env::DefaultEnvironment>(PRICE);
-            assert!(rmrk.mint(accounts.bob).is_ok());
-            assert_eq!(
-                rmrk.token_uri(3),
-                Ok(PreludeString::from(BASE_URI.to_owned() + "3.json"))
-            );
         }
 
         #[ink::test]
@@ -270,21 +260,14 @@ pub mod rmrk_contract_minting {
             assert!(rmrk.mint(accounts.alice).is_ok());
             // return error if request is for not yet minted token
             assert_eq!(rmrk.token_uri(42), Err(PSP34Error::TokenNotExists.into()));
-            assert_eq!(
-                rmrk.token_uri(1),
-                Ok(PreludeString::from(BASE_URI.to_owned() + "1.json"))
-            );
+            // return error if metadata is net yet assigned
+            assert_eq!(rmrk.token_uri(1), Err(RmrkError::UriNotFound.into()));
 
-            // return error if request is for not yet minted token
-            assert_eq!(rmrk.token_uri(42), Err(PSP34Error::TokenNotExists.into()));
+            assert!(rmrk
+                .assign_metadata(Id::U64(1), PreludeString::from(RMRK_METADATA))
+                .is_ok());
 
-            // verify token_uri when baseUri is empty
-            set_sender(accounts.alice);
-            assert!(rmrk.set_base_uri(PreludeString::from("")).is_ok());
-            assert_eq!(
-                rmrk.token_uri(1),
-                Ok("".to_owned() + &PreludeString::from("1.json"))
-            );
+            assert_eq!(rmrk.token_uri(1), Ok(PreludeString::from(RMRK_METADATA)));
         }
     }
 }

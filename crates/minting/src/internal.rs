@@ -6,17 +6,11 @@ use rmrk_common::errors::{
 };
 
 use ink_env::AccountId;
-use ink_prelude::string::{
-    String as PreludeString,
-    ToString,
-};
+use ink_prelude::string::String as PreludeString;
 
 use openbrush::{
     contracts::psp34::extensions::enumerable::*,
-    traits::{
-        Storage,
-        String,
-    },
+    traits::Storage,
 };
 
 /// Trait definitions for Minting internal functions.
@@ -103,20 +97,10 @@ where
 
     /// Get URI for the token Id.
     default fn _token_uri(&self, token_id: u64) -> Result<PreludeString> {
-        let from_attribute = || {
-            let collection_id = self
-                .data::<psp34::Data<enumerable::Balances>>()
-                .collection_id();
-            self.get_attribute(collection_id, String::from("baseUri"))
-                .and_then(|uri| PreludeString::from_utf8(uri).ok())
-                .map(|uri| uri + &token_id.to_string() + &PreludeString::from(".json"))
-        };
-
         self.data::<MintingData>()
             .nft_metadata
             .get(Id::U64(token_id))
             .and_then(|token_uri| PreludeString::from_utf8(token_uri).ok())
-            .or_else(from_attribute)
-            .ok_or(RmrkError::InvalidTokenId.into())
+            .ok_or(RmrkError::UriNotFound.into())
     }
 }
