@@ -132,7 +132,10 @@ pub mod rmrk_contract_minting {
 
         use rmrk_common::{
             errors::*,
-            roles::ADMIN,
+            roles::{
+                ADMIN,
+                CONTRIBUTOR,
+            },
         };
 
         use rmrk_minting::traits::Minting;
@@ -248,6 +251,24 @@ pub mod rmrk_contract_minting {
                 rmrk.mint_many(accounts.alice, num_of_mints),
                 Err(RmrkError::CollectionIsFull.into())
             );
+        }
+
+        #[ink::test]
+        fn mint_as_contributor_works() {
+            let mut rmrk = init();
+            let accounts = default_accounts();
+            set_sender(accounts.bob);
+
+            assert_eq!(
+                rmrk.mint(accounts.bob),
+                Err(AccessControlError::MissingRole.into())
+            );
+
+            set_sender(accounts.alice);
+            assert!(rmrk.grant_role(CONTRIBUTOR, accounts.bob).is_ok());
+
+            set_sender(accounts.bob);
+            assert!(rmrk.mint(accounts.bob).is_ok());
         }
 
         #[ink::test]
