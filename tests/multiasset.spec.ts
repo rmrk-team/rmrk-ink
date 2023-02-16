@@ -19,6 +19,7 @@ const TOKEN_URI_1 = "ipfs://tokenUriPrefix/1.json";
 const TOKEN_URI_5 = "ipfs://tokenUriPrefix/5.json";
 const ONE = new BN(10).pow(new BN(18));
 const PRICE_PER_MINT = ONE;
+const ADMIN_ROLE = 0;
 // const ASSET1 = {{id: "1"},
 //   {equippableGroupId: "1"},
 //   baseId: "1",
@@ -92,7 +93,9 @@ describe("RMRK Multi Asset tests", () => {
     expect(
       (await kanaria.query.totalSupply()).value.rawNumber.toNumber()
     ).to.equal(0);
-    expect((await kanaria.query.owner()).value).to.equal(deployer.address);
+    expect(
+      (await kanaria.query.hasRole(ADMIN_ROLE, deployer.address)).value
+    ).to.equal(true);
     expect((await kanaria.query.maxSupply()).value).to.equal(MAX_SUPPLY);
     expect((await kanaria.query.price()).value.rawNumber.toString()).to.equal(
       PRICE_PER_MINT.toString()
@@ -102,7 +105,9 @@ describe("RMRK Multi Asset tests", () => {
     expect((await gem.query.totalSupply()).value.rawNumber.toNumber()).to.equal(
       0
     );
-    expect((await gem.query.owner()).value).to.equal(deployer.address);
+    expect(
+      (await gem.query.hasRole(ADMIN_ROLE, deployer.address)).value
+    ).to.equal(true);
     expect((await gem.query.maxSupply()).value).to.equal(MAX_SUPPLY);
     expect((await gem.query.price()).value.rawNumber.toString()).to.equal(
       PRICE_PER_MINT.toString()
