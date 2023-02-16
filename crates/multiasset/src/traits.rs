@@ -6,10 +6,7 @@ use rmrk_common::{
 
 use ink_prelude::vec::Vec;
 use openbrush::{
-    contracts::psp34::{
-        Id,
-        PSP34Error,
-    },
+    contracts::psp34::Id,
     traits::String,
 };
 

@@ -133,7 +133,6 @@ pub mod rmrk_contract_minting {
         use rmrk_common::{
             errors::*,
             roles::ADMIN,
-            utils::Utils,
         };
 
         use rmrk_minting::traits::Minting;
