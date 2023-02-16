@@ -3,12 +3,8 @@ use ink_env::{
     AccountId,
 };
 
-use openbrush::{
-    contracts::psp34::extensions::enumerable::*,
-    traits::Balance,
-};
+use openbrush::contracts::psp34::extensions::enumerable::*;
 
-pub const PRICE: Balance = 100_000_000_000_000_000;
 pub const MAX_SUPPLY: u64 = 10;
 
 pub trait Accessor {

@@ -143,8 +143,9 @@ pub mod rmrk_contract_minting {
             set_sender,
             Accessor,
             MAX_SUPPLY,
-            PRICE,
         };
+
+        pub const PRICE: Balance = 100_000_000_000_000_000;
 
         impl Accessor for super::Rmrk {
             fn _last_token_id(&self) -> u64 {
