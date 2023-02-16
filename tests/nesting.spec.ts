@@ -2,13 +2,13 @@ import { expect, use } from "chai";
 import chaiAsPromised from "chai-as-promised";
 import { encodeAddress } from "@polkadot/keyring";
 import BN from "bn.js";
-import Rmrk_factory from "../types/constructors/rmrk_example_equippable";
-import Rmrk from "../types/contracts/rmrk_example_equippable";
-import { RmrkError } from "../types/types-returns/rmrk_example_equippable";
+import Rmrk_factory from "../types/constructors/rmrk_example_equippable_lazy";
+import Rmrk from "../types/contracts/rmrk_example_equippable_lazy";
+import { RmrkError } from "../types/types-returns/rmrk_example_equippable_lazy";
 
 import { ApiPromise, WsProvider, Keyring } from "@polkadot/api";
 import { KeyringPair } from "@polkadot/keyring/types";
-// import { AccountId } from '../types/types-arguments/rmrk_example_equippable';
+// import { AccountId } from '../types/types-arguments/rmrk_example_equippable_lazy';
 import { ReturnNumber } from "@supercolony/typechain-types";
 
 use(chaiAsPromised);
@@ -111,10 +111,10 @@ describe("RMRK Nesting tests", () => {
     await setup();
 
     // bob mints parent
-    const mintGas = (await parent.withSigner(bob).query.mintNext()).gasRequired;
+    const mintGas = (await parent.withSigner(bob).query.mint()).gasRequired;
     let parentMintResult = await parent
       .withSigner(bob)
-      .tx.mintNext({ value: PRICE_PER_MINT, gasLimit: mintGas * 2n });
+      .tx.mint({ value: PRICE_PER_MINT, gasLimit: mintGas * 2n });
     emit(parentMintResult, "Transfer", {
       from: null,
       to: bob.address,
@@ -124,7 +124,7 @@ describe("RMRK Nesting tests", () => {
     // dave mints child
     let childMintResult = await child
       .withSigner(dave)
-      .tx.mintNext({ value: PRICE_PER_MINT, gasLimit: mintGas * 2n });
+      .tx.mint({ value: PRICE_PER_MINT, gasLimit: mintGas * 2n });
     expect(
       (await child.query.totalSupply()).value.rawNumber.toNumber()
     ).to.equal(1);
@@ -241,10 +241,10 @@ describe("RMRK Nesting tests", () => {
     await setup();
 
     // bob mints parent
-    const mintGas = (await parent.withSigner(bob).query.mintNext()).gasRequired;
+    const mintGas = (await parent.withSigner(bob).query.mint()).gasRequired;
     let parentMintResult = await parent
       .withSigner(bob)
-      .tx.mintNext({ value: PRICE_PER_MINT, gasLimit: mintGas * 2n });
+      .tx.mint({ value: PRICE_PER_MINT, gasLimit: mintGas * 2n });
     emit(parentMintResult, "Transfer", {
       from: null,
       to: bob.address,
@@ -254,7 +254,7 @@ describe("RMRK Nesting tests", () => {
     // dave mints child
     let childMintResult = await child
       .withSigner(dave)
-      .tx.mintNext({ value: PRICE_PER_MINT, gasLimit: mintGas * 2n });
+      .tx.mint({ value: PRICE_PER_MINT, gasLimit: mintGas * 2n });
     expect(
       (await child.query.totalSupply()).value.rawNumber.toNumber()
     ).to.equal(1);
@@ -347,10 +347,10 @@ describe("RMRK Nesting tests", () => {
     await setup();
 
     // bob mints parent
-    const mintGas = (await parent.withSigner(bob).query.mintNext()).gasRequired;
+    const mintGas = (await parent.withSigner(bob).query.mint()).gasRequired;
     let parentMintResult = await parent
       .withSigner(bob)
-      .tx.mintNext({ value: PRICE_PER_MINT, gasLimit: mintGas * 2n });
+      .tx.mint({ value: PRICE_PER_MINT, gasLimit: mintGas * 2n });
     emit(parentMintResult, "Transfer", {
       from: null,
       to: bob.address,
@@ -360,7 +360,7 @@ describe("RMRK Nesting tests", () => {
     // bob mints child
     let childMintResult = await child
       .withSigner(bob)
-      .tx.mintNext({ value: PRICE_PER_MINT, gasLimit: mintGas * 2n });
+      .tx.mint({ value: PRICE_PER_MINT, gasLimit: mintGas * 2n });
     expect(
       (await child.query.totalSupply()).value.rawNumber.toNumber()
     ).to.equal(1);
@@ -425,10 +425,10 @@ describe("RMRK Nesting tests", () => {
     await setup();
 
     // bob mints parent-1
-    const mintGas = (await parent.withSigner(bob).query.mintNext()).gasRequired;
+    const mintGas = (await parent.withSigner(bob).query.mint()).gasRequired;
     let parentMintResult = await parent
       .withSigner(bob)
-      .tx.mintNext({ value: PRICE_PER_MINT, gasLimit: mintGas * 2n });
+      .tx.mint({ value: PRICE_PER_MINT, gasLimit: mintGas * 2n });
     emit(parentMintResult, "Transfer", {
       from: null,
       to: bob.address,
@@ -438,7 +438,7 @@ describe("RMRK Nesting tests", () => {
     // dave mints parent-2
     let parentMintResult2 = await parent
       .withSigner(dave)
-      .tx.mintNext({ value: PRICE_PER_MINT, gasLimit: mintGas * 2n });
+      .tx.mint({ value: PRICE_PER_MINT, gasLimit: mintGas * 2n });
     expect(
       (await parent.query.totalSupply()).value.rawNumber.toNumber()
     ).to.equal(2);
@@ -451,7 +451,7 @@ describe("RMRK Nesting tests", () => {
     // dave mints a child and approves parentContract on child
     let childMintResult = await child
       .withSigner(dave)
-      .tx.mintNext({ value: PRICE_PER_MINT, gasLimit: mintGas * 2n });
+      .tx.mint({ value: PRICE_PER_MINT, gasLimit: mintGas * 2n });
     expect(
       (await child.query.totalSupply()).value.rawNumber.toNumber()
     ).to.equal(1);

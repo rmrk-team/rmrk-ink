@@ -9,17 +9,11 @@ pub mod traits;
 use internal::Internal;
 
 use rmrk_common::{
-    errors::{
-        Result,
-        RmrkError,
-    },
+    errors::Result,
     utils::Utils,
 };
 
-use ink_prelude::string::{
-    String as PreludeString,
-    ToString,
-};
+use ink_prelude::string::String as PreludeString;
 use ink_storage::Mapping;
 
 use openbrush::{
@@ -40,7 +34,10 @@ use openbrush::{
     },
 };
 
-use traits::Minting;
+use traits::{
+    Minting,
+    MintingLazy,
+};
 
 pub const STORAGE_MINTING_KEY: u32 = openbrush::storage_unique_key!(MintingData);
 
@@ -64,93 +61,81 @@ where
         + psp34::Internal
         + Utils,
 {
-    /// Mint next available token for the caller
-    default fn mint_next(&mut self) -> Result<()> {
-        self._check_value(Self::env().transferred_value(), 1)?;
-        let caller = Self::env().caller();
-        let token_id = self
-            .data::<MintingData>()
-            .last_token_id
-            .checked_add(1)
-            .ok_or(RmrkError::CollectionIsFull)?;
-        self.data::<psp34::Data<enumerable::Balances>>()
-            ._mint_to(caller, Id::U64(token_id))?;
-        self.data::<MintingData>().last_token_id += 1;
-
-        self._emit_transfer_event(None, Some(caller), Id::U64(token_id));
-        return Ok(())
-    }
-
-    /// Mint one or more tokens
-    #[modifiers(non_reentrant)]
-    default fn mint(&mut self, to: AccountId, mint_amount: u64) -> Result<()> {
-        self._check_value(Self::env().transferred_value(), mint_amount)?;
-        self._check_amount(mint_amount)?;
-
-        let next_to_mint = self.data::<MintingData>().last_token_id + 1; // first mint id is 1
-        let mint_offset = next_to_mint + mint_amount;
-
-        for mint_id in next_to_mint..mint_offset {
-            self.data::<psp34::Data<enumerable::Balances>>()
-                ._mint_to(to, Id::U64(mint_id))?;
-            self.data::<MintingData>().last_token_id += 1;
-            self._emit_transfer_event(None, Some(to), Id::U64(mint_id));
-        }
-
-        Ok(())
-    }
-
-    /// Mint next available token with specific metadata
+    /// Mint one token to the specified account.
     #[modifiers(only_owner)]
-    default fn mint_with_metadata(&mut self, metadata: PreludeString, to: AccountId) -> Result<()> {
-        let token_id = self
-            .data::<MintingData>()
-            .last_token_id
-            .checked_add(1)
-            .ok_or(RmrkError::CollectionIsFull)?;
-        self.data::<psp34::Data<enumerable::Balances>>()
-            ._mint_to(to, Id::U64(token_id))?;
+    default fn mint(&mut self, to: AccountId) -> Result<Id> {
+        self._check_amount(1)?;
+        self._mint(to)
+    }
+
+    /// Mint many tokens to the specified account.
+    #[modifiers(only_owner, non_reentrant)]
+    default fn mint_many(&mut self, to: AccountId, mint_amount: u64) -> Result<(Id, Id)> {
+        self._check_amount(mint_amount)?;
+        self._mint_many(to, mint_amount)
+    }
+
+    /// Assign metadata to specified token.
+    #[modifiers(only_owner)]
+    default fn assign_metadata(&mut self, token_id: Id, metadata: PreludeString) -> Result<()> {
         self.data::<MintingData>()
             .nft_metadata
-            .insert(Id::U64(token_id), &String::from(metadata));
-        self.data::<MintingData>().last_token_id += 1;
-
-        self._emit_transfer_event(None, Some(to), Id::U64(token_id));
+            .insert(token_id, &String::from(metadata));
         return Ok(())
     }
 
-    /// Get max supply of tokens
+    /// Get max supply of tokens.
     default fn max_supply(&self) -> u64 {
         self.data::<MintingData>().max_supply
     }
 
-    /// Get token mint price
-    default fn price(&self) -> Balance {
-        self.data::<MintingData>().price_per_mint
-    }
-
-    /// Get URI for the token Id
+    /// Get URI for the token Id.
     default fn token_uri(&self, token_id: u64) -> Result<PreludeString> {
         self.ensure_exists_and_get_owner(&Id::U64(token_id))?;
-        let uri: PreludeString;
-        match self
-            .data::<MintingData>()
-            .nft_metadata
-            .get(Id::U64(token_id))
-        {
-            Some(token_uri) => {
-                uri = PreludeString::from_utf8(token_uri).unwrap();
-            }
-            None => {
-                let value = self.get_attribute(
-                    self.data::<psp34::Data<enumerable::Balances>>()
-                        .collection_id(),
-                    String::from("baseUri"),
-                );
-                let token_uri = PreludeString::from_utf8(value.unwrap()).unwrap();
-                uri = token_uri + &token_id.to_string() + &PreludeString::from(".json");
-            }
-        }
-        Ok(uri)
+        self._token_uri(token_id)
+    }
+}
+
+impl<T> MintingLazy for T
+where
+    T: Storage<MintingData>
+        + Minting
+        + Storage<psp34::Data<enumerable::Balances>>
+        + Storage<reentrancy_guard::Data>
+        + Storage<metadata::Data>
+        + psp34::Internal
+        + Utils,
+{
+    /// Purchase one token.
+    default fn mint(&mut self) -> Result<()> {
+        self._check_amount(1)?;
+        self._check_value(Self::env().transferred_value(), 1)?;
+        self._mint(Self::env().caller())?;
+        return Ok(())
+    }
+
+    /// Purchas many tokens.
+    #[modifiers(non_reentrant)]
+    default fn mint_many(&mut self, mint_amount: u64) -> Result<()> {
+        self._check_amount(mint_amount)?;
+        self._check_value(Self::env().transferred_value(), mint_amount)?;
+        self._mint_many(Self::env().caller(), mint_amount)?;
+        Ok(())
+    }
+
+    /// Get max supply of tokens.
+    default fn max_supply(&self) -> u64 {
+        self.data::<MintingData>().max_supply
+    }
+
+    /// Get URI for the token Id.
+    default fn token_uri(&self, token_id: u64) -> Result<PreludeString> {
+        self.ensure_exists_and_get_owner(&Id::U64(token_id))?;
+        self._token_uri(token_id)
+    }
+
+    /// Get token mint price.
+    default fn price(&self) -> Balance {
+        self.data::<MintingData>().price_per_mint
     }
 }

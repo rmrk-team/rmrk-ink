@@ -2,13 +2,16 @@ import { expect, use } from "chai";
 import chaiAsPromised from "chai-as-promised";
 import { encodeAddress } from "@polkadot/keyring";
 import BN from "bn.js";
-import Rmrk_factory from "../types/constructors/rmrk_example_equippable";
-import Rmrk from "../types/contracts/rmrk_example_equippable";
-import { PartType, Part } from "../types/types-arguments/rmrk_example_equippable";
+import Rmrk_factory from "../types/constructors/rmrk_example_equippable_lazy";
+import Rmrk from "../types/contracts/rmrk_example_equippable_lazy";
+import {
+  PartType,
+  Part,
+} from "../types/types-arguments/rmrk_example_equippable_lazy";
 
 import { ApiPromise, WsProvider, Keyring } from "@polkadot/api";
 import { KeyringPair } from "@polkadot/keyring/types";
-// import { AccountId } from '../types/types-arguments/rmrk_example_equippable';
+// import { AccountId } from '../types/types-arguments/rmrk_example_equippable_lazy';
 import { ReturnNumber } from "@supercolony/typechain-types";
 
 use(chaiAsPromised);
@@ -209,10 +212,10 @@ describe("RMRK Merged Equippable", () => {
     console.log("Minting Kanaria tokens");
     const { gasRequired } = await kanaria
       .withSigner(bob)
-      .query.mint(bob.address, mintingKanariaCnt);
+      .query.mintMany(mintingKanariaCnt);
     let kanariaMintResult = await kanaria
       .withSigner(bob)
-      .tx.mint(bob.address, mintingKanariaCnt, {
+      .tx.mintMany(mintingKanariaCnt, {
         value: PRICE_PER_MINT.muln(mintingKanariaCnt),
         gasLimit: gasRequired * 2n,
       });
@@ -225,11 +228,9 @@ describe("RMRK Merged Equippable", () => {
 
     // bob mints 15 gem
     console.log("Minting Gem tokens");
-    const gasRequiredGem = (
-      await gem.withSigner(bob).query.mint(bob.address, 1)
-    ).gasRequired;
+    const gasRequiredGem = (await gem.withSigner(bob).query.mint()).gasRequired;
     for (let i = 1; i < 16; i++) {
-      const gemMintResult = await gem.withSigner(bob).tx.mint(bob.address, 1, {
+      const gemMintResult = await gem.withSigner(bob).tx.mint({
         value: PRICE_PER_MINT,
         gasLimit: gasRequiredGem * 2n,
       });

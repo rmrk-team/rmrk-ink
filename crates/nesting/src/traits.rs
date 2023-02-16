@@ -5,9 +5,7 @@ use rmrk_common::{
 };
 
 use openbrush::{
-    contracts::psp34::{
-        Id,
-    },
+    contracts::psp34::Id,
     traits::AccountId,
 };
 
