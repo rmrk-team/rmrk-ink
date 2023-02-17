@@ -20,6 +20,7 @@ const TOKEN_URI_1 = "ipfs://tokenUriPrefix/1.json";
 const TOKEN_URI_5 = "ipfs://tokenUriPrefix/5.json";
 const ONE = new BN(10).pow(new BN(18));
 const PRICE_PER_MINT = ONE;
+const ADMIN_ROLE = 0;
 
 // Create a new instance of contract
 const wsProvider = new WsProvider("ws://127.0.0.1:9944");
@@ -88,7 +89,9 @@ describe("RMRK Nesting tests", () => {
     expect(
       (await parent.query.totalSupply()).value.rawNumber.toNumber()
     ).to.equal(0);
-    expect((await parent.query.owner()).value).to.equal(deployer.address);
+    expect(
+      (await parent.query.hasRole(ADMIN_ROLE, deployer.address)).value
+    ).to.equal(true);
     expect((await parent.query.maxSupply()).value).to.equal(MAX_SUPPLY);
     expect((await parent.query.price()).value.rawNumber.toString()).to.equal(
       PRICE_PER_MINT.toString()
@@ -98,7 +101,9 @@ describe("RMRK Nesting tests", () => {
     expect(
       (await child.query.totalSupply()).value.rawNumber.toNumber()
     ).to.equal(0);
-    expect((await child.query.owner()).value).to.equal(deployer.address);
+    expect(
+      (await child.query.hasRole(ADMIN_ROLE, deployer.address)).value
+    ).to.equal(true);
     expect((await child.query.maxSupply()).value).to.equal(MAX_SUPPLY);
     expect((await child.query.price()).value.rawNumber.toString()).to.equal(
       PRICE_PER_MINT.toString()

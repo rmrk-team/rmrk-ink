@@ -11,7 +11,7 @@ pub mod rmrk_example_mintable {
     use ink_storage::traits::SpreadAllocate;
     use openbrush::{
         contracts::{
-            ownable::*,
+            access_control::*,
             psp34::extensions::{
                 enumerable::*,
                 metadata::*,
@@ -62,7 +62,7 @@ pub mod rmrk_example_mintable {
         #[storage_field]
         guard: reentrancy_guard::Data,
         #[storage_field]
-        ownable: ownable::Data,
+        access: access_control::Data,
         #[storage_field]
         metadata: metadata::Data,
         #[storage_field]
@@ -71,7 +71,7 @@ pub mod rmrk_example_mintable {
 
     impl PSP34 for Rmrk {}
 
-    impl Ownable for Rmrk {}
+    impl AccessControl for Rmrk {}
 
     impl PSP34Metadata for Rmrk {}
 
@@ -105,7 +105,7 @@ pub mod rmrk_example_mintable {
                 )
             })
         }
-    } 
+    }
 
     impl psp34::Internal for Rmrk {
         /// Emit Transfer event

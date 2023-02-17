@@ -36,7 +36,7 @@ use ink_storage::Mapping;
 
 use openbrush::{
     contracts::{
-        ownable::*,
+        access_control,
         psp34::extensions::enumerable::*,
     },
     traits::{
@@ -58,7 +58,7 @@ pub struct EquippableData {
 impl<T> Equippable for T
 where
     T: Storage<EquippableData>
-        + Storage<ownable::Data>
+        + Storage<access_control::Data>
         + Storage<MultiAssetData>
         + MultiAsset
         + MultiAssetInternal

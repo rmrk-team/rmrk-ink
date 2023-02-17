@@ -14,6 +14,7 @@ use rmrk_common::{
         Result,
         RmrkError,
     },
+    roles::CONTRIBUTOR,
     types::*,
 };
 
@@ -24,9 +25,7 @@ use ink_prelude::{
 use ink_storage::Mapping;
 
 use openbrush::{
-    contracts::{
-        ownable::*,
-    },
+    contracts::access_control::*,
     modifiers,
     traits::{
         AccountId,
@@ -56,10 +55,10 @@ pub struct BaseData {
 
 impl<T> Base for T
 where
-    T: Storage<BaseData> + Storage<ownable::Data>,
+    T: Storage<BaseData> + Storage<access_control::Data>,
 {
     /// Add one or more parts to the base
-    #[modifiers(only_owner)]
+    #[modifiers(only_role(CONTRIBUTOR))]
     default fn add_part_list(&mut self, parts: Vec<Part>) -> Result<()> {
         for part in parts {
             let part_id = self.data::<BaseData>().next_part_id;
@@ -78,7 +77,7 @@ where
     }
 
     /// Add collection address(es) that can be used to equip given `PartId`.
-    #[modifiers(only_owner)]
+    #[modifiers(only_role(CONTRIBUTOR))]
     default fn add_equippable_addresses(
         &mut self,
         part_id: PartId,
@@ -92,7 +91,7 @@ where
     }
 
     /// Remove list of equippable addresses for given Part
-    #[modifiers(only_owner)]
+    #[modifiers(only_role(CONTRIBUTOR))]
     default fn reset_equippable_addresses(&mut self, part_id: PartId) -> Result<()> {
         let mut part = self.ensure_only_slot(part_id)?;
         part.is_equippable_by_all = false;
@@ -103,7 +102,7 @@ where
     }
 
     /// Sets the is_equippable_by_all flag to true, meaning that any collection may be equipped into the `PartId`
-    #[modifiers(only_owner)]
+    #[modifiers(only_role(CONTRIBUTOR))]
     default fn set_equippable_by_all(&mut self, part_id: PartId) -> Result<()> {
         let mut part = self.ensure_only_slot(part_id)?;
         part.is_equippable_by_all = true;
@@ -113,7 +112,7 @@ where
     }
 
     /// Sets the metadata URI for Base
-    #[modifiers(only_owner)]
+    #[modifiers(only_role(CONTRIBUTOR))]
     default fn setup_base(&mut self, base_metadata: String) -> Result<()> {
         self.data::<BaseData>().base_metadata_uri = base_metadata;
 

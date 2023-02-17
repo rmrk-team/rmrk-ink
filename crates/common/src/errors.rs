@@ -5,7 +5,7 @@ use ink_prelude::string::{
     ToString,
 };
 use openbrush::contracts::{
-    ownable::OwnableError,
+    access_control::AccessControlError,
     psp34::PSP34Error,
     reentrancy_guard::ReentrancyGuardError,
 };
@@ -17,7 +17,7 @@ pub type Result<T> = core::result::Result<T, Error>;
 pub enum Error {
     Rmrk(RmrkError),
     PSP34(PSP34Error),
-    Ownable(OwnableError),
+    AccessControl(AccessControlError),
     Reentrancy(ReentrancyGuardError),
 }
 
@@ -33,9 +33,9 @@ impl From<PSP34Error> for Error {
     }
 }
 
-impl From<OwnableError> for Error {
-    fn from(err: OwnableError) -> Self {
-        Self::Ownable(err)
+impl From<AccessControlError> for Error {
+    fn from(err: AccessControlError) -> Self {
+        Self::AccessControl(err)
     }
 }
 
@@ -51,12 +51,16 @@ impl From<Error> for PSP34Error {
         match err {
             Error::PSP34(err) => err,
             Error::Rmrk(err) => PSP34Error::Custom(err.to_string().into()),
-            Error::Ownable(OwnableError::CallerIsNotOwner) => {
-                PSP34Error::Custom(String::from("CallerIsNotOwner").into())
+            Error::AccessControl(AccessControlError::InvalidCaller) => {
+                PSP34Error::Custom(String::from("InvalidCaller").into())
             }
-            Error::Ownable(OwnableError::NewOwnerIsZero) => {
-                PSP34Error::Custom(String::from("NewOwnerIsZero").into())
+            Error::AccessControl(AccessControlError::MissingRole) => {
+                PSP34Error::Custom(String::from("MissingRole").into())
             }
+            Error::AccessControl(AccessControlError::RoleRedundant) => {
+                PSP34Error::Custom(String::from("RoleRedundant").into())
+            }
+
             Error::Reentrancy(ReentrancyGuardError::ReentrantCall) => {
                 PSP34Error::Custom(String::from("ReentrantCall").into())
             }

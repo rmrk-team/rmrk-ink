@@ -5,9 +5,7 @@ use rmrk_common::{
 };
 // use ink_prelude::vec::Vec;
 use openbrush::{
-    contracts::psp34::{
-        Id,
-    },
+    contracts::psp34::Id,
     traits::AccountId,
 };
 

@@ -1,8 +1,9 @@
-
+use rmrk_common::roles::CONTRIBUTOR;
+use rmrk_minting;
 
 use openbrush::{
     contracts::{
-        ownable::*,
+        access_control::*,
         psp34::extensions::{
             enumerable::*,
             metadata::*,
@@ -47,10 +48,11 @@ where
     T: openbrush::traits::DefaultEnv
         + Storage<rmrk_minting::MintingData>
         + Storage<psp34::Data<enumerable::Balances>>
-        + Storage<ownable::Data>
+        + Storage<access_control::Data>
         + Storage<metadata::Data>
         + psp34::extensions::metadata::PSP34Metadata
-        + psp34::Internal,
+        + psp34::Internal
+        + access_control::Internal,
 {
     fn config(
         &mut self,
@@ -61,7 +63,11 @@ where
         price_per_mint: Balance,
         collection_metadata: String,
     ) {
-        self._init_with_owner(<T as openbrush::traits::DefaultEnv>::env().caller());
+        self._init_with_admin(<T as openbrush::traits::DefaultEnv>::env().caller());
+        self._setup_role(
+            CONTRIBUTOR,
+            <T as openbrush::traits::DefaultEnv>::env().caller(),
+        );
 
         let psp34: &psp34::Data<enumerable::Balances> = <T as StorageAsRef>::data(self);
         let collection_id = psp34.collection_id();

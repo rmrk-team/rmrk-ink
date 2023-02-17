@@ -13,7 +13,7 @@ pub mod rmrk_contract_minting {
     use ink_storage::traits::SpreadAllocate;
     use openbrush::{
         contracts::{
-            ownable::*,
+            access_control::*,
             psp34::extensions::{
                 enumerable::*,
                 metadata::*,
@@ -25,6 +25,8 @@ pub mod rmrk_contract_minting {
             String,
         },
     };
+
+    use rmrk_common::roles::CONTRIBUTOR;
     use rmrk_minting::{
         traits::*,
         MintingData,
@@ -62,7 +64,7 @@ pub mod rmrk_contract_minting {
         #[storage_field]
         guard: reentrancy_guard::Data,
         #[storage_field]
-        ownable: ownable::Data,
+        access: access_control::Data,
         #[storage_field]
         metadata: metadata::Data,
         #[storage_field]
@@ -71,7 +73,7 @@ pub mod rmrk_contract_minting {
 
     impl PSP34 for Rmrk {}
 
-    impl Ownable for Rmrk {}
+    impl AccessControl for Rmrk {}
 
     impl PSP34Metadata for Rmrk {}
 
@@ -84,7 +86,8 @@ pub mod rmrk_contract_minting {
         #[ink(constructor)]
         pub fn new(name: String, symbol: String, base_uri: String, max_supply: u64) -> Self {
             ink_lang::codegen::initialize_contract(|instance: &mut Rmrk| {
-                instance._init_with_owner(instance.env().caller());
+                instance._init_with_admin(instance.env().caller());
+                instance._setup_role(CONTRIBUTOR, instance.env().caller());
                 let collection_id = instance.collection_id();
                 instance._set_attribute(collection_id.clone(), String::from("name"), name);
                 instance._set_attribute(collection_id.clone(), String::from("symbol"), symbol);
@@ -126,11 +129,19 @@ pub mod rmrk_contract_minting {
 
         use ink_prelude::string::String as PreludeString;
         use openbrush::contracts::psp34::PSP34Error;
-        use rmrk_common::errors::*;
+
+        use rmrk_common::{
+            errors::*,
+            roles::{
+                ADMIN,
+                CONTRIBUTOR,
+            },
+        };
+
         use rmrk_minting::traits::Minting;
 
         use openbrush::contracts::{
-            ownable::*,
+            access_control::*,
             psp34::extensions::enumerable::*,
         };
 
@@ -175,7 +186,7 @@ pub mod rmrk_contract_minting {
         fn mint_single_works() {
             let mut rmrk = init();
             let accounts = default_accounts();
-            assert_eq!(rmrk.owner(), accounts.alice);
+            assert!(rmrk.has_role(ADMIN, accounts.alice));
             assert_eq!(rmrk.total_supply(), 0);
             assert_eq!(rmrk.mint(accounts.bob), Ok(Id::U64(1)));
             check_mint_single_outcome(rmrk, accounts.bob, 1);
@@ -200,7 +211,7 @@ pub mod rmrk_contract_minting {
         fn mint_with_metadata_works() {
             let mut rmrk = init();
             let accounts = default_accounts();
-            assert_eq!(rmrk.owner(), accounts.alice);
+            assert!(rmrk.has_role(ADMIN, accounts.alice));
 
             let mut id = rmrk.mint(accounts.bob).unwrap();
             set_sender(accounts.bob);
@@ -208,7 +219,7 @@ pub mod rmrk_contract_minting {
             // only owner is allowed to assign metadata
             assert_eq!(
                 rmrk.assign_metadata(id, RMRK_METADATA.into()),
-                Err(OwnableError::CallerIsNotOwner.into())
+                Err(AccessControlError::MissingRole.into())
             );
 
             // owner mints
@@ -240,6 +251,24 @@ pub mod rmrk_contract_minting {
                 rmrk.mint_many(accounts.alice, num_of_mints),
                 Err(RmrkError::CollectionIsFull.into())
             );
+        }
+
+        #[ink::test]
+        fn mint_as_contributor_works() {
+            let mut rmrk = init();
+            let accounts = default_accounts();
+            set_sender(accounts.bob);
+
+            assert_eq!(
+                rmrk.mint(accounts.bob),
+                Err(AccessControlError::MissingRole.into())
+            );
+
+            set_sender(accounts.alice);
+            assert!(rmrk.grant_role(CONTRIBUTOR, accounts.bob).is_ok());
+
+            set_sender(accounts.bob);
+            assert!(rmrk.mint(accounts.bob).is_ok());
         }
 
         #[ink::test]

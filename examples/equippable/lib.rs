@@ -11,7 +11,7 @@ pub mod rmrk_example_equippable {
     use ink_storage::traits::SpreadAllocate;
     use openbrush::{
         contracts::{
-            ownable::*,
+            access_control::*,
             psp34::extensions::{
                 enumerable::*,
                 metadata::*,
@@ -196,7 +196,7 @@ pub mod rmrk_example_equippable {
         #[storage_field]
         guard: reentrancy_guard::Data,
         #[storage_field]
-        ownable: ownable::Data,
+        access: access_control::Data,
         #[storage_field]
         metadata: metadata::Data,
         #[storage_field]
@@ -213,7 +213,7 @@ pub mod rmrk_example_equippable {
 
     impl PSP34 for Rmrk {}
 
-    impl Ownable for Rmrk {}
+    impl AccessControl for Rmrk {}
 
     impl PSP34Metadata for Rmrk {}
 
@@ -439,7 +439,7 @@ pub mod rmrk_example_equippable {
 
         use openbrush::{
             contracts::{
-                ownable::*,
+                access_control::*,
                 psp34::extensions::{
                     enumerable::*,
                     metadata::*,
@@ -457,7 +457,7 @@ pub mod rmrk_example_equippable {
         };
 
         use openbrush::contracts::{
-            ownable::OwnableError,
+            access_control::AccessControlError::*,
             psp34::PSP34Error,
         };
 
@@ -465,6 +465,7 @@ pub mod rmrk_example_equippable {
 
         use rmrk::{
             errors::*,
+            roles::ADMIN,
             traits::{
                 Base,
                 Equippable,
@@ -516,7 +517,7 @@ pub mod rmrk_example_equippable {
         fn owner_is_set() {
             let accounts = default_accounts();
             let rmrk = init();
-            assert_eq!(rmrk.owner(), accounts.alice);
+            assert!(rmrk.has_role(ADMIN, accounts.alice));
         }
 
         #[ink::test]
@@ -535,7 +536,7 @@ pub mod rmrk_example_equippable {
             set_sender(accounts.bob);
             assert_eq!(
                 rmrk.set_base_uri(NEW_BASE_URI.into()),
-                Err(OwnableError::CallerIsNotOwner.into())
+                Err(MissingRole.into())
             );
         }
 
