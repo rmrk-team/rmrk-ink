@@ -16,7 +16,7 @@ scale = { package = "parity-scale-codec", version = "3", default-features = fals
 scale-info = { version = "2", default-features = false, features = ["derive"], optional = true }
 
 openbrush = { tag = "v2.3.0", git = "https://github.com/Supercolony-net/openbrush-contracts", default-features = false, features = ["ownable", "psp34", "reentrancy_guard"] }
-rmrk = { path = "../../crates/rmrk", default-features = false, features = ["equippable"] }
+rmrk = { path = "../../crates/rmrk", default-features = false  }
 
 
 [lib]

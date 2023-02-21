@@ -17,12 +17,12 @@ scale-info = { version = "2", default-features = false, features = ["derive"], o
 
 openbrush = { tag = "v2.3.0", git = "https://github.com/Supercolony-net/openbrush-contracts", default-features = false, features = ["access_control", "psp34", "reentrancy_guard"] }
 
-rmrk_base = { path = "../base", default-features = false, optional = true }
-rmrk_minting = { path = "../minting", default-features = false, optional = true }
-rmrk_multiasset = { path = "../multiasset", default-features = false, optional = true }
-rmrk_nesting = { path = "../nesting", default-features = false, optional = true }
-rmrk_common = { path = "../common", default-features = false, optional = true }
-rmrk_equippable = { path = "../equippable", default-features = false, optional = true }
+rmrk_base = { path = "../base", default-features = false }
+rmrk_minting = { path = "../minting", default-features = false }
+rmrk_multiasset = { path = "../multiasset", default-features = false }
+rmrk_nesting = { path = "../nesting", default-features = false }
+rmrk_common = { path = "../common", default-features = false }
+rmrk_equippable = { path = "../equippable", default-features = false }
 
 [lib]
 path = "src/lib.rs"
@@ -48,7 +48,5 @@ std = [
     "rmrk_nesting/std",
     "rmrk_equippable/std",
 ]
-mintable = [ "rmrk_common", "rmrk_minting" ] 
-equippable = ["mintable", "rmrk_base", "rmrk_multiasset", "rmrk_nesting", "rmrk_equippable"]
 
 

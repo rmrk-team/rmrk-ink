@@ -50,7 +50,7 @@ pub struct BaseData {
     pub next_part_id: PartId,
 
     /// Metadata for Base
-    pub base_metadata_uri: String,
+    pub base_uri: String,
 }
 
 impl<T> Base for T
@@ -114,14 +114,14 @@ where
     /// Sets the metadata URI for Base
     #[modifiers(only_role(CONTRIBUTOR))]
     default fn setup_base(&mut self, base_metadata: String) -> Result<()> {
-        self.data::<BaseData>().base_metadata_uri = base_metadata;
+        self.data::<BaseData>().base_uri = base_metadata;
 
         Ok(())
     }
 
     /// Get the Base metadataURI.
     default fn get_base_metadata(&self) -> PreludeString {
-        match PreludeString::from_utf8(self.data::<BaseData>().base_metadata_uri.clone()) {
+        match PreludeString::from_utf8(self.data::<BaseData>().base_uri.clone()) {
             Ok(m) => m,
             _ => PreludeString::from(""),
         }

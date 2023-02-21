@@ -25,9 +25,9 @@ pub mod rmrk_example_mintable {
     };
 
     use rmrk::{
+        config,
         storage::*,
         traits::*,
-        Config as RmrkConfig,
     };
 
     /// Event emitted when a token transfer occurs.
@@ -88,20 +88,17 @@ pub mod rmrk_example_mintable {
             symbol: String,
             base_uri: String,
             max_supply: u64,
-            price_per_mint: Balance,
             collection_metadata: String,
-            _royalty_receiver: AccountId,
-            _royalty: u8,
         ) -> Self {
             ink_lang::codegen::initialize_contract(|instance: &mut Rmrk| {
-                RmrkConfig::config(
+                config::with_admin(instance, Self::env().caller());
+                config::with_collection(
                     instance,
                     name,
                     symbol,
                     base_uri,
-                    max_supply,
-                    price_per_mint,
                     collection_metadata,
+                    max_supply,
                 )
             })
         }

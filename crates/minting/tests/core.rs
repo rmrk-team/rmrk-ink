@@ -284,7 +284,7 @@ pub mod rmrk_contract_minting {
             assert_eq!(rmrk.token_uri(1), Err(RmrkError::UriNotFound.into()));
 
             assert!(rmrk
-                .assign_metadata(Id::U64(1), PreludeString::from(RMRK_METADATA))
+                .assign_metadata(Id::U64(1), String::from(RMRK_METADATA))
                 .is_ok());
 
             assert_eq!(rmrk.token_uri(1), Ok(PreludeString::from(RMRK_METADATA)));

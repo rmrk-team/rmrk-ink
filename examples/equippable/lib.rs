@@ -25,10 +25,10 @@ pub mod rmrk_example_equippable {
     };
 
     use rmrk::{
+        config,
         storage::*,
         traits::*,
         types::*,
-        Config as RmrkConfig,
     };
 
     /// Event emitted when a token transfer occurs.
@@ -238,21 +238,18 @@ pub mod rmrk_example_equippable {
             symbol: String,
             base_uri: String,
             max_supply: u64,
-            price_per_mint: Balance,
             collection_metadata: String,
-            _royalty_receiver: AccountId,
-            _royalty: u8,
         ) -> Self {
             ink_lang::codegen::initialize_contract(|instance: &mut Rmrk| {
-                RmrkConfig::config(
+                config::with_admin(instance, Self::env().caller());
+                config::with_collection(
                     instance,
                     name,
                     symbol,
                     base_uri,
-                    max_supply,
-                    price_per_mint,
                     collection_metadata,
-                )
+                    max_supply,
+                );
             })
         }
     }
@@ -445,10 +442,7 @@ pub mod rmrk_example_equippable {
                     metadata::*,
                 },
             },
-            traits::{
-                Balance,
-                String,
-            },
+            traits::String,
         };
 
         use ink_env::{
@@ -476,7 +470,6 @@ pub mod rmrk_example_equippable {
             utils::Utils,
         };
 
-        const PRICE: Balance = 100_000_000_000_000_000;
         const BASE_URI: &str = "ipfs://myIpfsUri/";
         const MAX_SUPPLY: u64 = 10;
 
@@ -500,16 +493,12 @@ pub mod rmrk_example_equippable {
         }
 
         fn init() -> Rmrk {
-            let accounts = default_accounts();
             Rmrk::new(
                 String::from("Rmrk Project"),
                 String::from("RMK"),
                 String::from(BASE_URI),
                 MAX_SUPPLY,
-                PRICE,
                 String::from(BASE_URI),
-                accounts.eve,
-                0,
             )
         }
 
@@ -639,7 +628,7 @@ pub mod rmrk_example_equippable {
             assert!(rmrk.accept_asset(TOKEN_ID2, ASSET_ID).is_ok());
             assert_eq!(9, ink_env::test::recorded_events().count());
             assert_eq!(rmrk.total_token_assets(TOKEN_ID2), Ok((1, 0)));
-            assert_eq!(rmrk.get_accepted_token_assets(TOKEN_ID2), Ok(Some(vec![1])));
+            assert_eq!(rmrk.get_accepted_token_assets(TOKEN_ID2), Ok(vec![1]));
 
             // Try adding asset to not minted token fails
             set_sender(accounts.alice);
@@ -671,7 +660,7 @@ pub mod rmrk_example_equippable {
             set_sender(accounts.bob);
             assert!(rmrk.remove_asset(TOKEN_ID2, ASSET_ID).is_ok());
             assert_eq!(10, ink_env::test::recorded_events().count());
-            assert_eq!(rmrk.get_accepted_token_assets(TOKEN_ID2), Ok(Some(vec![])));
+            assert_eq!(rmrk.get_accepted_token_assets(TOKEN_ID2), Ok(vec![]));
             assert_eq!(rmrk.total_token_assets(TOKEN_ID2), Ok((0, 0)));
         }
 
@@ -711,18 +700,12 @@ pub mod rmrk_example_equippable {
             assert!(rmrk.add_asset_to_token(TOKEN_ID, ASSET_ID1, None).is_ok());
             assert!(rmrk.add_asset_to_token(TOKEN_ID, ASSET_ID2, None).is_ok());
 
-            assert_eq!(
-                rmrk.get_accepted_token_assets(TOKEN_ID),
-                Ok(Some(vec![1, 2]))
-            );
+            assert_eq!(rmrk.get_accepted_token_assets(TOKEN_ID), Ok(vec![1, 2]));
             // replace previously accepted ASSET_ID1 with ASSET_ID3
             assert!(rmrk
                 .add_asset_to_token(TOKEN_ID, ASSET_ID3, Some(ASSET_ID1))
                 .is_ok());
-            assert_eq!(
-                rmrk.get_accepted_token_assets(TOKEN_ID),
-                Ok(Some(vec![3, 2]))
-            );
+            assert_eq!(rmrk.get_accepted_token_assets(TOKEN_ID), Ok(vec![3, 2]));
         }
 
         #[ink::test]
@@ -750,14 +733,14 @@ pub mod rmrk_example_equippable {
             assert_eq!(rmrk.total_token_assets(TOKEN_ID1), Ok((2, 0)));
             assert_eq!(
                 rmrk.get_accepted_token_assets(TOKEN_ID1),
-                Ok(Some(vec![ASSET_ID1, ASSET_ID2]))
+                Ok(vec![ASSET_ID1, ASSET_ID2])
             );
             assert!(rmrk
                 .set_priority(TOKEN_ID1, vec![ASSET_ID2, ASSET_ID1])
                 .is_ok());
             assert_eq!(
                 rmrk.get_accepted_token_assets(TOKEN_ID1),
-                Ok(Some(vec![ASSET_ID2, ASSET_ID1]))
+                Ok(vec![ASSET_ID2, ASSET_ID1])
             );
 
             // error cases
@@ -788,7 +771,7 @@ pub mod rmrk_example_equippable {
                     part_type: PartType::Slot,
                     z: 0,
                     equippable: vec![EQUIPABLE_ADDRESS1.into(), EQUIPABLE_ADDRESS2.into()],
-                    metadata_uri: String::from("ipfs://backgrounds/1.svg"),
+                    part_uri: String::from("ipfs://backgrounds/1.svg"),
                     is_equippable_by_all: false,
                 },
                 // Background option 2
@@ -796,7 +779,7 @@ pub mod rmrk_example_equippable {
                     part_type: PartType::Fixed,
                     z: 0,
                     equippable: vec![],
-                    metadata_uri: String::from("ipfs://backgrounds/2.svg"),
+                    part_uri: String::from("ipfs://backgrounds/2.svg"),
                     is_equippable_by_all: false,
                 },
             ];
@@ -805,14 +788,14 @@ pub mod rmrk_example_equippable {
                 part_type: PartType::Fixed,
                 z: 0,
                 equippable: vec![EQUIPABLE_ADDRESS1.into()],
-                metadata_uri: String::from("ipfs://backgrounds/2.svg"),
+                part_uri: String::from("ipfs://backgrounds/2.svg"),
                 is_equippable_by_all: false,
             }];
             let bad_part_list2 = vec![Part {
                 part_type: PartType::Fixed,
                 z: 0,
                 equippable: vec![],
-                metadata_uri: String::from("ipfs://backgrounds/2.svg"),
+                part_uri: String::from("ipfs://backgrounds/2.svg"),
                 is_equippable_by_all: true,
             }];
 
@@ -823,10 +806,7 @@ pub mod rmrk_example_equippable {
             assert!(rmrk.add_part_list(part_list.clone()).is_ok());
             assert_eq!(rmrk.get_parts_count(), part_list.len() as u32);
             assert_eq!(rmrk.get_part(0).unwrap().z, part_list[0].z);
-            assert_eq!(
-                rmrk.get_part(0).unwrap().metadata_uri,
-                part_list[0].metadata_uri
-            );
+            assert_eq!(rmrk.get_part(0).unwrap().part_uri, part_list[0].part_uri);
 
             // verify array of equippable addresses
             assert!(rmrk
@@ -913,7 +893,7 @@ pub mod rmrk_example_equippable {
                     part_type: PartType::Slot,
                     z: 0,
                     equippable: vec![CHILD_COLLECTION_ADDRESS.into()],
-                    metadata_uri: String::from("ipfs://backgrounds/1.svg"),
+                    part_uri: String::from("ipfs://backgrounds/1.svg"),
                     is_equippable_by_all: false,
                 },
                 // Background option 2
@@ -921,7 +901,7 @@ pub mod rmrk_example_equippable {
                     part_type: PartType::Fixed,
                     z: 0,
                     equippable: vec![],
-                    metadata_uri: String::from("ipfs://backgrounds/2.svg"),
+                    part_uri: String::from("ipfs://backgrounds/2.svg"),
                     is_equippable_by_all: false,
                 },
             ];

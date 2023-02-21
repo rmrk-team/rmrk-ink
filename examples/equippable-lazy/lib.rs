@@ -25,10 +25,10 @@ pub mod rmrk_example_equippable {
     };
 
     use rmrk::{
+        config,
         storage::*,
         traits::*,
         types::*,
-        Config as RmrkConfig,
     };
 
     /// Event emitted when a token transfer occurs.
@@ -244,15 +244,16 @@ pub mod rmrk_example_equippable {
             _royalty: u8,
         ) -> Self {
             ink_lang::codegen::initialize_contract(|instance: &mut Rmrk| {
-                RmrkConfig::config(
+                config::with_admin(instance, Self::env().caller());
+                config::with_lazy_mint(instance, price_per_mint);
+                config::with_collection(
                     instance,
                     name,
                     symbol,
                     base_uri,
-                    max_supply,
-                    price_per_mint,
                     collection_metadata,
-                )
+                    max_supply,
+                );
             })
         }
     }
