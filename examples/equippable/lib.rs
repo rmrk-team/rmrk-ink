@@ -26,6 +26,7 @@ pub mod rmrk_example_equippable {
 
     use rmrk::{
         config,
+        query::*,
         storage::*,
         traits::*,
         types::*,
@@ -228,6 +229,8 @@ pub mod rmrk_example_equippable {
     impl Base for Rmrk {}
 
     impl Equippable for Rmrk {}
+
+    impl Query for Rmrk {}
 
     impl Rmrk {
         /// Instantiate new RMRK contract

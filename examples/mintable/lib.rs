@@ -26,6 +26,7 @@ pub mod rmrk_example_mintable {
 
     use rmrk::{
         config,
+        query::*,
         storage::*,
         traits::*,
     };
@@ -78,6 +79,8 @@ pub mod rmrk_example_mintable {
     impl PSP34Enumerable for Rmrk {}
 
     impl Minting for Rmrk {}
+
+    impl Query for Rmrk {}
 
     impl Rmrk {
         /// Instantiate new RMRK contract
