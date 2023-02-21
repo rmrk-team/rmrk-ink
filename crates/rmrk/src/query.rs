@@ -1,3 +1,5 @@
+#![allow(clippy::inline_fn_without_body)]
+
 use crate::traits::{
     BaseRef,
     MintingRef,
