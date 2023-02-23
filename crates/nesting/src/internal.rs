@@ -11,9 +11,10 @@ use rmrk_common::{
     types::*,
 };
 
-use ink_env::CallFlags;
-use ink_prelude::vec::Vec;
-
+use ink::{
+    env::CallFlags,
+    prelude::vec::Vec,
+};
 use openbrush::{
     contracts::psp34::extensions::enumerable::*,
     traits::{
@@ -189,8 +190,8 @@ where
 
         PSP34Ref::transfer_builder(&child_nft.0, to, child_nft.1, Vec::new())
             .call_flags(CallFlags::default().set_allow_reentry(true))
-            .fire()
-            .unwrap()?;
+            .invoke()
+            .unwrap();
 
         Ok(())
     }

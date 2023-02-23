@@ -12,13 +12,11 @@ use rmrk_common::{
     utils::Utils,
 };
 
-use ink_prelude::vec::Vec;
+use ink::prelude::vec::Vec;
 
 use openbrush::{
     contracts::psp34::extensions::enumerable::*,
-    traits::{
-        Storage,
-    },
+    traits::Storage,
 };
 
 /// Trait definitions for MultiAsset helper functions

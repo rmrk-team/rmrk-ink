@@ -1,6 +1,6 @@
 //! Set of functions commonly used with PSP34 contract
 
-use ink_prelude::string::String as PreludeString;
+use ink::prelude::string::String as PreludeString;
 
 use crate::{
     errors::{

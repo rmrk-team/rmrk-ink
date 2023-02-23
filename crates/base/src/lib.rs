@@ -18,11 +18,13 @@ use rmrk_common::{
     types::*,
 };
 
-use ink_prelude::{
-    string::String as PreludeString,
-    vec::Vec,
+use ink::{
+    prelude::{
+        string::String as PreludeString,
+        vec::Vec,
+    },
+    storage::Mapping,
 };
-use ink_storage::Mapping;
 
 use openbrush::{
     contracts::access_control::*,

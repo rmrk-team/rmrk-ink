@@ -3,12 +3,13 @@
 
 #[openbrush::contract]
 pub mod rmrk_example_equippable {
-    use ink_lang::codegen::{
-        EmitEvent,
-        Env,
+    use ink::{
+        codegen::{
+            EmitEvent,
+            Env,
+        },
+        prelude::vec::Vec,
     };
-    use ink_prelude::vec::Vec;
-    use ink_storage::traits::SpreadAllocate;
     use openbrush::{
         contracts::{
             access_control::*,
@@ -189,7 +190,7 @@ pub mod rmrk_example_equippable {
 
     // Rmrk contract storage
     #[ink(storage)]
-    #[derive(Default, SpreadAllocate, Storage)]
+    #[derive(Default, Storage)]
     pub struct Rmrk {
         #[storage_field]
         psp34: psp34::Data<enumerable::Balances>,
@@ -243,17 +244,17 @@ pub mod rmrk_example_equippable {
             _royalty_receiver: AccountId,
             _royalty: u8,
         ) -> Self {
-            ink_lang::codegen::initialize_contract(|instance: &mut Rmrk| {
-                RmrkConfig::config(
-                    instance,
-                    name,
-                    symbol,
-                    base_uri,
-                    max_supply,
-                    price_per_mint,
-                    collection_metadata,
-                )
-            })
+            let mut instance = Rmrk::default();
+            RmrkConfig::config(
+                &mut instance,
+                name,
+                symbol,
+                base_uri,
+                max_supply,
+                price_per_mint,
+                collection_metadata,
+            );
+            instance
         }
     }
 
@@ -446,22 +447,18 @@ pub mod rmrk_example_equippable {
                 },
             },
             traits::{
+                AccountId,
                 Balance,
                 String,
             },
         };
 
-        use ink_env::{
-            test,
-            AccountId,
-        };
+        use ink::env::test;
 
         use openbrush::contracts::{
             access_control::AccessControlError::*,
             psp34::PSP34Error,
         };
-
-        use ink_lang as ink;
 
         use rmrk::{
             errors::*,
@@ -557,7 +554,7 @@ pub mod rmrk_example_equippable {
                     vec![]
                 )
                 .is_ok());
-            assert_eq!(1, ink_env::test::recorded_events().count());
+            assert_eq!(1, ink::env::test::recorded_events().count());
             assert_eq!(rmrk.total_assets(), 1);
             assert_eq!(
                 rmrk.get_asset_uri(ASSET_ID1),
@@ -596,13 +593,13 @@ pub mod rmrk_example_equippable {
                 .add_asset_entry(ASSET_ID, 1, String::from(ASSET_URI), vec![])
                 .is_ok());
             assert_eq!(rmrk.total_assets(), 1);
-            assert_eq!(1, ink_env::test::recorded_events().count());
+            assert_eq!(1, ink::env::test::recorded_events().count());
 
             // mint token and add asset to it. Should be accepted without approval
             assert!(rmrk.mint(accounts.alice).is_ok());
-            assert_eq!(2, ink_env::test::recorded_events().count());
+            assert_eq!(2, ink::env::test::recorded_events().count());
             assert!(rmrk.add_asset_to_token(TOKEN_ID1, ASSET_ID, None).is_ok());
-            assert_eq!(4, ink_env::test::recorded_events().count());
+            assert_eq!(4, ink::env::test::recorded_events().count());
             assert_eq!(rmrk.total_token_assets(TOKEN_ID1), Ok((1, 0)));
 
             // error cases
@@ -618,26 +615,26 @@ pub mod rmrk_example_equippable {
             // mint second token to non owner (Bob)
             set_sender(accounts.alice);
             assert!(rmrk.mint(accounts.bob).is_ok());
-            assert_eq!(5, ink_env::test::recorded_events().count());
+            assert_eq!(5, ink::env::test::recorded_events().count());
 
             // Add asset by alice and reject asset by Bob to test asset_reject
             set_sender(accounts.alice);
             assert!(rmrk.add_asset_to_token(TOKEN_ID2, ASSET_ID, None).is_ok());
-            assert_eq!(6, ink_env::test::recorded_events().count());
+            assert_eq!(6, ink::env::test::recorded_events().count());
             assert_eq!(rmrk.total_token_assets(TOKEN_ID2), Ok((0, 1)));
             set_sender(accounts.bob);
             assert!(rmrk.reject_asset(TOKEN_ID2, ASSET_ID).is_ok());
-            assert_eq!(7, ink_env::test::recorded_events().count());
+            assert_eq!(7, ink::env::test::recorded_events().count());
             assert_eq!(rmrk.total_token_assets(TOKEN_ID2), Ok((0, 0)));
 
             // Add asset by alice and accept asset by Bob, to test accept_asset
             set_sender(accounts.alice);
             assert!(rmrk.add_asset_to_token(TOKEN_ID2, ASSET_ID, None).is_ok());
-            assert_eq!(8, ink_env::test::recorded_events().count());
+            assert_eq!(8, ink::env::test::recorded_events().count());
             assert_eq!(rmrk.total_token_assets(TOKEN_ID2), Ok((0, 1)));
             set_sender(accounts.bob);
             assert!(rmrk.accept_asset(TOKEN_ID2, ASSET_ID).is_ok());
-            assert_eq!(9, ink_env::test::recorded_events().count());
+            assert_eq!(9, ink::env::test::recorded_events().count());
             assert_eq!(rmrk.total_token_assets(TOKEN_ID2), Ok((1, 0)));
             assert_eq!(rmrk.get_accepted_token_assets(TOKEN_ID2), Ok(Some(vec![1])));
 
@@ -670,7 +667,7 @@ pub mod rmrk_example_equippable {
             // Remove accepted asset
             set_sender(accounts.bob);
             assert!(rmrk.remove_asset(TOKEN_ID2, ASSET_ID).is_ok());
-            assert_eq!(10, ink_env::test::recorded_events().count());
+            assert_eq!(10, ink::env::test::recorded_events().count());
             assert_eq!(rmrk.get_accepted_token_assets(TOKEN_ID2), Ok(Some(vec![])));
             assert_eq!(rmrk.total_token_assets(TOKEN_ID2), Ok((0, 0)));
         }
@@ -890,7 +887,7 @@ pub mod rmrk_example_equippable {
                 .is_ok());
             assert_eq!(rmrk.get_base_metadata(), "ipfs://base_metadata");
 
-            // assert_eq!(1, ink_env::test::recorded_events().count());
+            // assert_eq!(1, ink::env::test::recorded_events().count());
         }
 
         #[ink::test]
@@ -941,7 +938,7 @@ pub mod rmrk_example_equippable {
                     vec![PART_ID0]
                 )
                 .is_ok());
-            assert_eq!(1, ink_env::test::recorded_events().count());
+            assert_eq!(1, ink::env::test::recorded_events().count());
 
             // equip fails, token does not exist. Not minted yet
             assert_eq!(
@@ -958,7 +955,7 @@ pub mod rmrk_example_equippable {
             // Bob mints kanaria
             // set_sender(accounts.bob);
             assert!(kanaria.mint(accounts.bob).is_ok());
-            assert_eq!(2, ink_env::test::recorded_events().count());
+            assert_eq!(2, ink::env::test::recorded_events().count());
 
             // equip fails, caller not token owner
             // set_sender(accounts.alice);
@@ -977,7 +974,7 @@ pub mod rmrk_example_equippable {
             assert!(kanaria
                 .add_asset_to_token(TOKEN_ID1, ASSET_ID, None)
                 .is_ok());
-            // assert_eq!(4, ink_env::test::recorded_events().count());
+            // assert_eq!(4, ink::env::test::recorded_events().count());
 
             let asset = kanaria
                 .get_asset_and_equippable_data(TOKEN_ID1, ASSET_ID)
@@ -1000,7 +997,7 @@ pub mod rmrk_example_equippable {
             );
 
             // equip works
-            assert_eq!(3, ink_env::test::recorded_events().count());
+            assert_eq!(3, ink::env::test::recorded_events().count());
             assert!(kanaria
                 .equip(
                     TOKEN_ID1,
@@ -1021,7 +1018,7 @@ pub mod rmrk_example_equippable {
             );
 
             // check AssetEquipped event is emitted
-            // assert_eq!(4, ink_env::test::recorded_events().count());
+            // assert_eq!(4, ink::env::test::recorded_events().count());
 
             // equip fails, TargetAssetCannotReceiveSlot
             assert_eq!(
@@ -1052,15 +1049,15 @@ pub mod rmrk_example_equippable {
             assert_eq!(kanaria.get_equipment(TOKEN_ID1, PART_ID0), None);
 
             // check AssetEquipped event is emitted
-            // assert_eq!(6, ink_env::test::recorded_events().count());
+            // assert_eq!(6, ink::env::test::recorded_events().count());
         }
 
-        fn default_accounts() -> test::DefaultAccounts<ink_env::DefaultEnvironment> {
+        fn default_accounts() -> test::DefaultAccounts<ink::env::DefaultEnvironment> {
             test::default_accounts::<Environment>()
         }
 
         fn set_sender(sender: AccountId) {
-            ink_env::test::set_caller::<Environment>(sender);
+            ink::env::test::set_caller::<Environment>(sender);
         }
     }
 }

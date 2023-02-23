@@ -6,11 +6,10 @@ mod common;
 #[openbrush::contract]
 pub mod rmrk_contract_minting {
 
-    use ink_lang::codegen::{
+    use ink::codegen::{
         EmitEvent,
         Env,
     };
-    use ink_storage::traits::SpreadAllocate;
     use openbrush::{
         contracts::{
             access_control::*,
@@ -57,7 +56,7 @@ pub mod rmrk_contract_minting {
 
     // Rmrk contract storage
     #[ink(storage)]
-    #[derive(Default, SpreadAllocate, Storage)]
+    #[derive(Default, Storage)]
     pub struct Rmrk {
         #[storage_field]
         psp34: psp34::Data<enumerable::Balances>,
@@ -85,15 +84,15 @@ pub mod rmrk_contract_minting {
         #[allow(clippy::too_many_arguments)]
         #[ink(constructor)]
         pub fn new(name: String, symbol: String, base_uri: String, max_supply: u64) -> Self {
-            ink_lang::codegen::initialize_contract(|instance: &mut Rmrk| {
-                instance._init_with_admin(instance.env().caller());
-                instance._setup_role(CONTRIBUTOR, instance.env().caller());
-                let collection_id = instance.collection_id();
-                instance._set_attribute(collection_id.clone(), String::from("name"), name);
-                instance._set_attribute(collection_id.clone(), String::from("symbol"), symbol);
-                instance._set_attribute(collection_id.clone(), String::from("baseUri"), base_uri);
-                instance.minting.max_supply = max_supply;
-            })
+            let mut instance = Rmrk::default();
+            instance._init_with_admin(instance.env().caller());
+            instance._setup_role(CONTRIBUTOR, instance.env().caller());
+            let collection_id = instance.collection_id();
+            instance._set_attribute(collection_id.clone(), String::from("name"), name);
+            instance._set_attribute(collection_id.clone(), String::from("symbol"), symbol);
+            instance._set_attribute(collection_id.clone(), String::from("baseUri"), base_uri);
+            instance.minting.max_supply = max_supply;
+            instance
         }
     }
 
@@ -124,10 +123,7 @@ pub mod rmrk_contract_minting {
     mod tests {
         use super::Rmrk;
 
-        use ink_env::AccountId;
-        use ink_lang as ink;
-
-        use ink_prelude::string::String as PreludeString;
+        use ink::prelude::string::String as PreludeString;
         use openbrush::contracts::psp34::PSP34Error;
 
         use rmrk_common::{
@@ -145,7 +141,10 @@ pub mod rmrk_contract_minting {
             psp34::extensions::enumerable::*,
         };
 
-        use openbrush::traits::String;
+        use openbrush::traits::{
+            AccountId,
+            String,
+        };
 
         use crate::common::{
             check_mint_many_outcome,
@@ -232,7 +231,7 @@ pub mod rmrk_contract_minting {
             assert_eq!(rmrk.owner_of(Id::U64(1)), Some(accounts.bob));
             assert_eq!(rmrk.balance_of(accounts.bob), 1);
             assert_eq!(rmrk.owners_token_by_index(accounts.bob, 0), Ok(Id::U64(1)));
-            assert_eq!(2, ink_env::test::recorded_events().count());
+            assert_eq!(2, ink::env::test::recorded_events().count());
 
             // token_uri for rmrk mint works
             assert_eq!(

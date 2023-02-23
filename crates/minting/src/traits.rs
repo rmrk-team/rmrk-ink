@@ -2,7 +2,7 @@
 
 use rmrk_common::errors::Result;
 
-use ink_prelude::string::String as PreludeString;
+use ink::prelude::string::String as PreludeString;
 use openbrush::{
     contracts::psp34::extensions::enumerable::*,
     traits::{

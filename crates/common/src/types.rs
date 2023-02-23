@@ -1,10 +1,6 @@
 //! Types definition for RMRK contract
 
-use ink_prelude::vec::Vec;
-use ink_storage::traits::{
-    PackedLayout,
-    SpreadLayout,
-};
+use ink::prelude::vec::Vec;
 use openbrush::{
     contracts::psp34::Id,
     traits::{
@@ -26,10 +22,10 @@ pub type AssetId = u32;
 pub type EquippableGroupId = u32;
 
 /// Part's details
-#[derive(scale::Encode, scale::Decode, SpreadLayout, PackedLayout, Default, Debug)]
+#[derive(scale::Encode, scale::Decode, Default, Debug)]
 #[cfg_attr(
     feature = "std",
-    derive(scale_info::TypeInfo, ink_storage::traits::StorageLayout)
+    derive(scale_info::TypeInfo, ink::storage::traits::StorageLayout)
 )]
 pub struct Asset {
     /// Only used for assets meant to equip into others
@@ -43,10 +39,10 @@ pub struct Asset {
 }
 
 /// Part's details
-#[derive(scale::Encode, scale::Decode, SpreadLayout, PackedLayout, Debug, Clone)]
+#[derive(scale::Encode, scale::Decode, Debug, Clone)]
 #[cfg_attr(
     feature = "std",
-    derive(scale_info::TypeInfo, ink_storage::traits::StorageLayout)
+    derive(scale_info::TypeInfo, ink::storage::traits::StorageLayout)
 )]
 pub struct Part {
     /// Part type `None`, `Slot` or `Fixed`.
@@ -66,10 +62,10 @@ pub struct Part {
 }
 
 /// Used to define a type of the part. Possible values are `None`, `Slot` or `Fixed`.
-#[derive(scale::Encode, scale::Decode, SpreadLayout, PackedLayout, Debug, Clone, PartialEq)]
+#[derive(scale::Encode, scale::Decode, Debug, Clone, PartialEq)]
 #[cfg_attr(
     feature = "std",
-    derive(scale_info::TypeInfo, ink_storage::traits::StorageLayout)
+    derive(scale_info::TypeInfo, ink::storage::traits::StorageLayout)
 )]
 pub enum PartType {
     None,
@@ -78,10 +74,10 @@ pub enum PartType {
 }
 
 /// Used to define Equipment
-#[derive(scale::Encode, scale::Decode, SpreadLayout, PackedLayout, Debug, Clone, PartialEq)]
+#[derive(scale::Encode, scale::Decode, Debug, Clone, PartialEq)]
 #[cfg_attr(
     feature = "std",
-    derive(scale_info::TypeInfo, ink_storage::traits::StorageLayout)
+    derive(scale_info::TypeInfo, ink::storage::traits::StorageLayout)
 )]
 pub struct Equipment {
     // asset_id: The ID of the asset being equipped by child

@@ -14,8 +14,10 @@ use rmrk_common::{
     utils::Utils,
 };
 
-use ink_prelude::string::String as PreludeString;
-use ink_storage::Mapping;
+use ink::{
+    prelude::string::String as PreludeString,
+    storage::Mapping,
+};
 
 use openbrush::{
     contracts::{

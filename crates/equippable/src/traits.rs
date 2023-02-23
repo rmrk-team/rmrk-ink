@@ -3,7 +3,7 @@ use rmrk_common::{
     errors::Result,
     types::*,
 };
-// use ink_prelude::vec::Vec;
+// use ink::prelude::vec::Vec;
 use openbrush::{
     contracts::psp34::Id,
     traits::AccountId,
