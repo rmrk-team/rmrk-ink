@@ -26,10 +26,11 @@ pub mod rmrk_example_equippable {
     };
 
     use rmrk::{
+        config,
+        query::*,
         storage::*,
         traits::*,
         types::*,
-        Config as RmrkConfig,
     };
 
     /// Event emitted when a token transfer occurs.
@@ -230,6 +231,8 @@ pub mod rmrk_example_equippable {
 
     impl Equippable for Rmrk {}
 
+    impl Query for Rmrk {}
+
     impl Rmrk {
         /// Instantiate new RMRK contract
         #[allow(clippy::too_many_arguments)]
@@ -245,14 +248,15 @@ pub mod rmrk_example_equippable {
             _royalty: u8,
         ) -> Self {
             let mut instance = Rmrk::default();
-            RmrkConfig::config(
+            config::with_admin(&mut instance, Self::env().caller());
+            config::with_lazy_mint(&mut instance, price_per_mint);
+            config::with_collection(
                 &mut instance,
                 name,
                 symbol,
                 base_uri,
-                max_supply,
-                price_per_mint,
                 collection_metadata,
+                max_supply,
             );
             instance
         }

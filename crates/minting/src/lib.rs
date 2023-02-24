@@ -83,10 +83,11 @@ where
 
     /// Assign metadata to specified token.
     #[modifiers(only_role(CONTRIBUTOR))]
-    default fn assign_metadata(&mut self, token_id: Id, metadata: PreludeString) -> Result<()> {
+    default fn assign_metadata(&mut self, token_id: Id, metadata: String) -> Result<()> {
         self.data::<MintingData>()
             .nft_metadata
-            .insert(token_id, &String::from(metadata));
+            .insert(token_id, &metadata);
+
         return Ok(())
     }
 

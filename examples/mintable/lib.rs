@@ -24,9 +24,10 @@ pub mod rmrk_example_mintable {
     };
 
     use rmrk::{
+        config,
+        query::*,
         storage::*,
         traits::*,
-        Config as RmrkConfig,
     };
 
     /// Event emitted when a token transfer occurs.
@@ -78,6 +79,8 @@ pub mod rmrk_example_mintable {
 
     impl Minting for Rmrk {}
 
+    impl Query for Rmrk {}
+
     impl Rmrk {
         /// Instantiate new RMRK contract
         #[allow(clippy::too_many_arguments)]
@@ -87,20 +90,17 @@ pub mod rmrk_example_mintable {
             symbol: String,
             base_uri: String,
             max_supply: u64,
-            price_per_mint: Balance,
             collection_metadata: String,
-            _royalty_receiver: AccountId,
-            _royalty: u8,
         ) -> Self {
             let mut instance = Rmrk::default();
-            RmrkConfig::config(
+            config::with_admin(&mut instance, Self::env().caller());
+            config::with_collection(
                 &mut instance,
                 name,
                 symbol,
                 base_uri,
-                max_supply,
-                price_per_mint,
                 collection_metadata,
+                max_supply,
             );
             instance
         }

@@ -55,7 +55,7 @@ pub struct Part {
     pub equippable: Vec<AccountId>,
 
     /// Uri for this part
-    pub metadata_uri: String,
+    pub part_uri: String,
 
     /// Is accepting to be equipped by any collection
     pub is_equippable_by_all: bool,

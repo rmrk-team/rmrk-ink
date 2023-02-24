@@ -100,13 +100,21 @@ pub trait MultiAsset {
     #[ink(message)]
     fn get_asset_uri(&self, asset_id: AssetId) -> Option<String>;
 
+    /// Used to retrieve asset
+    #[ink(message)]
+    fn get_asset(&self, asset_id: AssetId) -> Option<Asset>;
+
     /// Used to retrieve the total number of assets per token
     #[ink(message)]
     fn total_token_assets(&self, token_id: Id) -> Result<(u64, u64)>;
 
     /// Fetch all accepted assets for the token_id
     #[ink(message)]
-    fn get_accepted_token_assets(&self, token_id: Id) -> Result<Option<Vec<AssetId>>>;
+    fn get_accepted_token_assets(&self, token_id: Id) -> Result<Vec<AssetId>>;
+
+    /// Fetch all pending assets for the token_id
+    #[ink(message)]
+    fn get_pending_token_assets(&self, token_id: Id) -> Result<Vec<AssetId>>;
 
     /// Remove the assets for the list of token assets
     #[ink(message)]
