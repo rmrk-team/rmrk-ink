@@ -4,6 +4,7 @@ use rmrk_common::{
     types::*,
 };
 
+use ink_prelude::vec::Vec;
 use openbrush::{
     contracts::psp34::Id,
     traits::AccountId,
@@ -111,6 +112,14 @@ pub trait Nesting {
     /// Returns the tupple of `(accepted_children, pending_children)` count
     #[ink(message)]
     fn children_balance(&self, parent_token_id: Id) -> Result<(u64, u64)>;
+
+    /// Get all pending children for parent token_id
+    #[ink(message)]
+    fn get_pending_children(&self, parent_token_id: Id) -> Vec<ChildNft>;
+
+    /// Get all accepted children for parent token_id
+    #[ink(message)]
+    fn get_accepted_children(&self, parent_token_id: Id) -> Vec<ChildNft>;
 }
 
 /// Trait definitions for Nesting ink events

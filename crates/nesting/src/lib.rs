@@ -228,6 +228,22 @@ where
             parents_with_pending_children,
         ))
     }
+
+    /// Get all pending children for parent token_id
+    fn get_pending_children(&self, parent_token_id: Id) -> Vec<ChildNft> {
+        self.data::<NestingData>()
+            .pending_children
+            .get(&parent_token_id)
+            .unwrap_or_default()
+    }
+
+    /// Get all accepted children for parent token_id
+    fn get_accepted_children(&self, parent_token_id: Id) -> Vec<ChildNft> {
+        self.data::<NestingData>()
+            .accepted_children
+            .get(&parent_token_id)
+            .unwrap_or_default()
+    }
 }
 
 /// Event trait for Nesting

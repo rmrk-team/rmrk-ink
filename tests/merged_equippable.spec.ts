@@ -110,7 +110,7 @@ describe("RMRK Merged Equippable", () => {
         partType: PartType.fixed,
         z: 0,
         equippable: [],
-        metadataUri: ["ipfs://backgrounds/1.svg"],
+        partUri: ["ipfs://backgrounds/1.svg"],
         isEquippableByAll: false,
       },
       // Background option 2
@@ -118,7 +118,7 @@ describe("RMRK Merged Equippable", () => {
         partType: PartType.fixed,
         z: 0,
         equippable: [],
-        metadataUri: ["ipfs://backgrounds/2.svg"],
+        partUri: ["ipfs://backgrounds/2.svg"],
         isEquippableByAll: false,
       },
       // Head option 1
@@ -126,7 +126,7 @@ describe("RMRK Merged Equippable", () => {
         partType: PartType.fixed,
         z: 3,
         equippable: [],
-        metadataUri: ["ipfs://heads/1.svg"],
+        partUri: ["ipfs://heads/1.svg"],
         isEquippableByAll: false,
       },
       // Head option 2
@@ -134,7 +134,7 @@ describe("RMRK Merged Equippable", () => {
         partType: PartType.fixed,
         z: 3,
         equippable: [],
-        metadataUri: ["ipfs://heads/2.svg"],
+        partUri: ["ipfs://heads/2.svg"],
         isEquippableByAll: false,
       },
       // Body option 1
@@ -142,7 +142,7 @@ describe("RMRK Merged Equippable", () => {
         partType: PartType.fixed,
         z: 2,
         equippable: [],
-        metadataUri: ["ipfs://body/1.svg"],
+        partUri: ["ipfs://body/1.svg"],
         isEquippableByAll: false,
       },
       // Body option 2
@@ -150,7 +150,7 @@ describe("RMRK Merged Equippable", () => {
         partType: PartType.fixed,
         z: 2,
         equippable: [],
-        metadataUri: ["ipfs://body/2.svg"],
+        partUri: ["ipfs://body/2.svg"],
         isEquippableByAll: false,
       },
       // Wings option 1
@@ -158,7 +158,7 @@ describe("RMRK Merged Equippable", () => {
         partType: PartType.fixed,
         z: 1,
         equippable: [],
-        metadataUri: ["ipfs://wings/1.svg"],
+        partUri: ["ipfs://wings/1.svg"],
         isEquippableByAll: false,
       },
       // Wings option 2
@@ -166,7 +166,7 @@ describe("RMRK Merged Equippable", () => {
         partType: PartType.fixed,
         z: 1,
         equippable: [],
-        metadataUri: ["ipfs://wings/2.svg"],
+        partUri: ["ipfs://wings/2.svg"],
         isEquippableByAll: false,
       },
       // Gem slot 1
@@ -174,7 +174,7 @@ describe("RMRK Merged Equippable", () => {
         partType: PartType.slot,
         z: 4,
         equippable: [gem.address],
-        metadataUri: [""],
+        partUri: [""],
         isEquippableByAll: false,
       },
       // Gem slot 2
@@ -182,7 +182,7 @@ describe("RMRK Merged Equippable", () => {
         partType: PartType.slot,
         z: 4,
         equippable: [gem.address],
-        metadataUri: [""],
+        partUri: [""],
         isEquippableByAll: false,
       },
       // Gem slot 3
@@ -190,7 +190,7 @@ describe("RMRK Merged Equippable", () => {
         partType: PartType.slot,
         z: 4,
         equippable: [gem.address],
-        metadataUri: [""],
+        partUri: [""],
         isEquippableByAll: false,
       },
     ];

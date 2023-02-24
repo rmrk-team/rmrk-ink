@@ -8,6 +8,7 @@ use openbrush::{
     traits::{
         AccountId,
         Balance,
+        String,
     },
 };
 
@@ -30,7 +31,7 @@ pub trait Minting {
 
     /// Assign metadata to specified token.
     #[ink(message)]
-    fn assign_metadata(&mut self, token_id: Id, metadata: PreludeString) -> Result<()>;
+    fn assign_metadata(&mut self, token_id: Id, metadata: String) -> Result<()>;
 
     /// Get max supply of tokens.
     #[ink(message)]

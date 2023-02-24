@@ -230,20 +230,34 @@ where
 
     /// Used to retrieve asset's uri
     default fn get_asset_uri(&self, asset_id: AssetId) -> Option<String> {
-        if let Some(asset) = self
-            .data::<MultiAssetData>()
+        self.get_asset(asset_id).map(|asset| asset.asset_uri)
+    }
+
+    /// Used to retrieve asset
+    default fn get_asset(&self, asset_id: AssetId) -> Option<Asset> {
+        self.data::<MultiAssetData>()
             .collection_asset_entries
             .get(asset_id)
-        {
-            return Some(asset.asset_uri)
-        }
-        return None
     }
 
     /// Fetch all accepted assets for the token_id
-    fn get_accepted_token_assets(&self, token_id: Id) -> Result<Option<Vec<AssetId>>> {
+    fn get_accepted_token_assets(&self, token_id: Id) -> Result<Vec<AssetId>> {
         self.ensure_exists_and_get_owner(&token_id)?;
-        Ok(self.data::<MultiAssetData>().accepted_assets.get(&token_id))
+        Ok(self
+            .data::<MultiAssetData>()
+            .accepted_assets
+            .get(&token_id)
+            .unwrap_or_default())
+    }
+
+    /// Fetch all pending assets for the token_id
+    fn get_pending_token_assets(&self, token_id: Id) -> Result<Vec<AssetId>> {
+        self.ensure_exists_and_get_owner(&token_id)?;
+        Ok(self
+            .data::<MultiAssetData>()
+            .pending_assets
+            .get(&token_id)
+            .unwrap_or_default())
     }
 }
 

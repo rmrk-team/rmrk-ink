@@ -101,14 +101,14 @@ describe("RMRK Base tests", () => {
         partType: PartType.slot,
         z: 0,
         equippable: [],
-        metadataUri: ["ipfs://backgrounds/1.svg"],
+        partUri: ["ipfs://backgrounds/1.svg"],
         isEquippableByAll: true,
       },
       {
         partType: PartType.fixed,
         z: 0,
         equippable: [],
-        metadataUri: ["ipfs://backgrounds/2.svg"],
+        partUri: ["ipfs://backgrounds/2.svg"],
         isEquippableByAll: false,
       },
     ];
