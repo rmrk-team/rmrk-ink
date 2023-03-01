@@ -7,25 +7,23 @@ use crate::traits::{
     NestingRef,
 };
 
-use ink_env::AccountId;
-use ink_prelude::vec::Vec;
-use ink_storage::traits::{
-    PackedLayout,
-    SpreadLayout,
-};
+use ink::prelude::vec::Vec;
 use openbrush::{
     contracts::psp34::extensions::enumerable::*,
-    traits::String,
+    traits::{
+        AccountId,
+        String,
+    },
 };
 use rmrk_common::{
     errors::Error,
     types::*,
 };
 
-#[derive(scale::Encode, scale::Decode, SpreadLayout, PackedLayout, Debug)]
+#[derive(scale::Encode, scale::Decode, Debug)]
 #[cfg_attr(
     feature = "std",
-    derive(scale_info::TypeInfo, ink_storage::traits::StorageLayout)
+    derive(scale_info::TypeInfo, ink::storage::traits::StorageLayout)
 )]
 pub struct Token {
     id: u64,
@@ -51,9 +49,20 @@ fn unpack_children_id(children: Vec<(AccountId, Id)>) -> Vec<(AccountId, u64)> {
         .collect()
 }
 
-fn nested_result_unwrap_or_default<T: Default>(res: Result<Result<T, Error>, ink_env::Error>) -> T {
+fn nested_result_unwrap_or_default<T: Default>(
+    res: Result<Result<T, ink::LangError>, ink::env::Error>,
+) -> T {
     match res {
         Ok(Ok(v)) => v,
+        _ => Default::default(),
+    }
+}
+
+fn nested_deep_result_unwrap_or_default<T: Default>(
+    res: Result<Result<Result<T, Error>, ink::LangError>, ink::env::Error>,
+) -> T {
+    match res {
+        Ok(Ok(Ok(v))) => v,
         _ => Default::default(),
     }
 }
@@ -65,18 +74,16 @@ pub type QueryRef = dyn Query;
 pub trait Query {
     #[ink(message)]
     fn get_part(&self, collection_id: AccountId, part_id: PartId) -> Option<Part> {
-        BaseRef::get_part_builder(&collection_id, part_id)
-            .fire()
-            .ok()
-            .flatten()
+        nested_result_unwrap_or_default(
+            BaseRef::get_part_builder(&collection_id, part_id).try_invoke(),
+        )
     }
 
     #[ink(message)]
     fn get_asset(&self, collection_id: AccountId, asset_id: AssetId) -> Option<Asset> {
-        MultiAssetRef::get_asset_builder(&collection_id, asset_id)
-            .fire()
-            .ok()
-            .flatten()
+        nested_result_unwrap_or_default(
+            MultiAssetRef::get_asset_builder(&collection_id, asset_id).try_invoke(),
+        )
     }
 
     #[ink(message)]
@@ -101,22 +108,23 @@ pub trait Query {
 
         let token_uri = MintingRef::token_uri(&collection_id, id_u64).unwrap_or_default();
 
-        let assets_pending = nested_result_unwrap_or_default(
-            MultiAssetRef::get_pending_token_assets_builder(&collection_id, id.clone()).fire(),
+        let assets_pending = nested_deep_result_unwrap_or_default(
+            MultiAssetRef::get_pending_token_assets_builder(&collection_id, id.clone())
+                .try_invoke(),
         );
 
-        let assets_accepted = nested_result_unwrap_or_default(
-            MultiAssetRef::get_accepted_token_assets_builder(&collection_id, id.clone()).fire(),
+        let assets_accepted = nested_deep_result_unwrap_or_default(
+            MultiAssetRef::get_accepted_token_assets_builder(&collection_id, id.clone())
+                .try_invoke(),
         );
 
-        let children_pending = NestingRef::get_pending_children_builder(&collection_id, id.clone())
-            .fire()
-            .unwrap_or_default();
+        let children_pending = nested_result_unwrap_or_default(
+            NestingRef::get_pending_children_builder(&collection_id, id.clone()).try_invoke(),
+        );
 
-        let children_accepted =
-            NestingRef::get_accepted_children_builder(&collection_id, id.clone())
-                .fire()
-                .unwrap_or_default();
+        let children_accepted = nested_result_unwrap_or_default(
+            NestingRef::get_accepted_children_builder(&collection_id, id.clone()).try_invoke(),
+        );
 
         Token {
             id: id_u64,

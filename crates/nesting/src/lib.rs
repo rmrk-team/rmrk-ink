@@ -19,8 +19,10 @@ use traits::{
     NestingEvents,
 };
 
-use ink_prelude::vec::Vec;
-use ink_storage::Mapping;
+use ink::{
+    prelude::vec::Vec,
+    storage::Mapping,
+};
 
 use openbrush::{
     contracts::psp34::extensions::enumerable::*,

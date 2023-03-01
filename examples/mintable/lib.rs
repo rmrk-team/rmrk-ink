@@ -3,12 +3,11 @@
 
 #[openbrush::contract]
 pub mod rmrk_example_mintable {
-    use ink_lang::codegen::{
+    use ink::codegen::{
         EmitEvent,
         Env,
     };
 
-    use ink_storage::traits::SpreadAllocate;
     use openbrush::{
         contracts::{
             access_control::*,
@@ -56,7 +55,7 @@ pub mod rmrk_example_mintable {
 
     // Rmrk contract storage
     #[ink(storage)]
-    #[derive(Default, SpreadAllocate, Storage)]
+    #[derive(Default, Storage)]
     pub struct Rmrk {
         #[storage_field]
         psp34: psp34::Data<enumerable::Balances>,
@@ -93,17 +92,17 @@ pub mod rmrk_example_mintable {
             max_supply: u64,
             collection_metadata: String,
         ) -> Self {
-            ink_lang::codegen::initialize_contract(|instance: &mut Rmrk| {
-                config::with_admin(instance, Self::env().caller());
-                config::with_collection(
-                    instance,
-                    name,
-                    symbol,
-                    base_uri,
-                    collection_metadata,
-                    max_supply,
-                )
-            })
+            let mut instance = Rmrk::default();
+            config::with_admin(&mut instance, Self::env().caller());
+            config::with_collection(
+                &mut instance,
+                name,
+                symbol,
+                base_uri,
+                collection_metadata,
+                max_supply,
+            );
+            instance
         }
     }
 

@@ -1,6 +1,6 @@
 //! Error definition for RMRK contract
 
-use ink_prelude::string::{
+use ink::prelude::string::{
     String,
     ToString,
 };

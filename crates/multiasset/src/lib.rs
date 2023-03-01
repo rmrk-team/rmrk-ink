@@ -23,8 +23,10 @@ use traits::{
     MultiAssetEvents,
 };
 
-use ink_prelude::vec::Vec;
-use ink_storage::Mapping;
+use ink::{
+    prelude::vec::Vec,
+    storage::Mapping,
+};
 
 use openbrush::{
     contracts::{
@@ -112,7 +114,7 @@ where
         self._emit_asset_added_to_token_event(&token_id, &asset_id, &replaces_asset_with_id);
 
         if let Some(replace_with_id) = replaces_asset_with_id {
-            ink_env::debug_println!("replaces_asset_with_id {:?}", &replaces_asset_with_id);
+            ink::env::debug_println!("replaces_asset_with_id {:?}", &replaces_asset_with_id);
             return self.replace_asset(&token_id, &asset_id, &replace_with_id)
         } else {
             let caller = Self::env().caller();

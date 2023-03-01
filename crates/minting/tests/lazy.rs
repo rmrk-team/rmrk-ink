@@ -6,7 +6,6 @@ mod common;
 #[openbrush::contract]
 pub mod rmrk_contract_minting {
 
-    use ink_storage::traits::SpreadAllocate;
     use openbrush::{
         contracts::{
             access_control::*,
@@ -19,7 +18,7 @@ pub mod rmrk_contract_minting {
         traits::Storage,
     };
 
-    use ink_lang::codegen::{
+    use ink::codegen::{
         EmitEvent,
         Env,
     };
@@ -52,7 +51,7 @@ pub mod rmrk_contract_minting {
     }
     // Rmrk contract storage
     #[ink(storage)]
-    #[derive(Default, SpreadAllocate, Storage)]
+    #[derive(Default, Storage)]
     pub struct Rmrk {
         #[storage_field]
         psp34: psp34::Data<enumerable::Balances>,
@@ -80,12 +79,12 @@ pub mod rmrk_contract_minting {
         #[allow(clippy::too_many_arguments)]
         #[ink(constructor)]
         pub fn new(max_supply: u64, price_per_mint: Balance) -> Self {
-            ink_lang::codegen::initialize_contract(|instance: &mut Rmrk| {
-                instance._init_with_admin(instance.env().caller());
-                instance._setup_role(CONTRIBUTOR, instance.env().caller());
-                instance.minting.max_supply = max_supply;
-                instance.minting.price_per_mint = price_per_mint;
-            })
+            let mut instance = Rmrk::default();
+            instance._init_with_admin(instance.env().caller());
+            instance._setup_role(CONTRIBUTOR, instance.env().caller());
+            instance.minting.max_supply = max_supply;
+            instance.minting.price_per_mint = price_per_mint;
+            instance
         }
     }
 
@@ -118,19 +117,22 @@ pub mod rmrk_contract_minting {
             Environment,
             Rmrk,
         };
-        use ink_env::{
-            pay_with_call,
-            test,
-            AccountId,
+        use ink::{
+            codegen::Env,
+            env::{
+                pay_with_call,
+                test,
+            },
         };
-        use ink_lang as ink;
-        use ink_lang::codegen::Env;
         use openbrush::{
             contracts::{
                 access_control::*,
                 psp34::extensions::enumerable::*,
             },
-            traits::Balance,
+            traits::{
+                AccountId,
+                Balance,
+            },
         };
         use rmrk_common::{
             errors::RmrkError,
@@ -169,11 +171,11 @@ pub mod rmrk_contract_minting {
         }
 
         fn purchase(amount: u64) {
-            test::set_value_transferred::<ink_env::DefaultEnvironment>(PRICE * amount as u128);
+            test::set_value_transferred::<ink::env::DefaultEnvironment>(PRICE * amount as u128);
         }
 
         fn set_balance(account_id: AccountId, balance: Balance) {
-            ink_env::test::set_account_balance::<ink_env::DefaultEnvironment>(account_id, balance)
+            ink::env::test::set_account_balance::<ink::env::DefaultEnvironment>(account_id, balance)
         }
 
         #[ink::test]
@@ -243,7 +245,7 @@ pub mod rmrk_contract_minting {
             assert!(rmrk.mint_many(num_of_mints).is_ok());
             assert_eq!(
                 num_of_mints as usize,
-                ink_env::test::recorded_events().count()
+                ink::env::test::recorded_events().count()
             );
         }
 

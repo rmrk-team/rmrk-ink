@@ -5,7 +5,7 @@ use rmrk_common::{
     types::*,
 };
 
-use ink_prelude::{
+use ink::prelude::{
     string::String as PreludeString,
     vec::Vec,
 };

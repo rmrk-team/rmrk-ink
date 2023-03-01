@@ -1,12 +1,11 @@
 //! Trait definitions for Equippable module
-use rmrk_common::{
-    errors::Result,
-    types::*,
-};
-// use ink_prelude::vec::Vec;
 use openbrush::{
     contracts::psp34::Id,
     traits::AccountId,
+};
+use rmrk_common::{
+    errors::Result,
+    types::*,
 };
 
 #[openbrush::wrapper]

@@ -5,12 +5,14 @@ use rmrk_common::errors::{
     RmrkError,
 };
 
-use ink_env::AccountId;
-use ink_prelude::string::String as PreludeString;
+use ink::prelude::string::String as PreludeString;
 
 use openbrush::{
     contracts::psp34::extensions::enumerable::*,
-    traits::Storage,
+    traits::{
+        AccountId,
+        Storage,
+    },
 };
 
 /// Trait definitions for Minting internal functions.

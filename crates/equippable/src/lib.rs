@@ -32,7 +32,7 @@ use traits::{
     EquippableEvents,
 };
 
-use ink_storage::Mapping;
+use ink::storage::Mapping;
 
 use openbrush::{
     contracts::{

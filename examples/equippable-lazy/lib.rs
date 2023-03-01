@@ -3,12 +3,13 @@
 
 #[openbrush::contract]
 pub mod rmrk_example_equippable {
-    use ink_lang::codegen::{
-        EmitEvent,
-        Env,
+    use ink::{
+        codegen::{
+            EmitEvent,
+            Env,
+        },
+        prelude::vec::Vec,
     };
-    use ink_prelude::vec::Vec;
-    use ink_storage::traits::SpreadAllocate;
     use openbrush::{
         contracts::{
             access_control::*,
@@ -190,7 +191,7 @@ pub mod rmrk_example_equippable {
 
     // Rmrk contract storage
     #[ink(storage)]
-    #[derive(Default, SpreadAllocate, Storage)]
+    #[derive(Default, Storage)]
     pub struct Rmrk {
         #[storage_field]
         psp34: psp34::Data<enumerable::Balances>,
@@ -246,18 +247,18 @@ pub mod rmrk_example_equippable {
             _royalty_receiver: AccountId,
             _royalty: u8,
         ) -> Self {
-            ink_lang::codegen::initialize_contract(|instance: &mut Rmrk| {
-                config::with_admin(instance, Self::env().caller());
-                config::with_lazy_mint(instance, price_per_mint);
-                config::with_collection(
-                    instance,
-                    name,
-                    symbol,
-                    base_uri,
-                    collection_metadata,
-                    max_supply,
-                );
-            })
+            let mut instance = Rmrk::default();
+            config::with_admin(&mut instance, Self::env().caller());
+            config::with_lazy_mint(&mut instance, price_per_mint);
+            config::with_collection(
+                &mut instance,
+                name,
+                symbol,
+                base_uri,
+                collection_metadata,
+                max_supply,
+            );
+            instance
         }
     }
 
