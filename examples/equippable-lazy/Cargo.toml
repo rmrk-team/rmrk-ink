@@ -13,7 +13,6 @@ rmrk = { path = "../../crates/rmrk", default-features = false }
 
 
 [lib]
-name = "rmrk_example_equippable_lazy"
 path = "lib.rs"
 crate-type = [
 	# Used for normal contract Wasm blobs.
