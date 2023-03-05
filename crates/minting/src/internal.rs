@@ -63,7 +63,8 @@ where
             .last_token_id
             .checked_add(mint_amount)
         {
-            if amount <= self.data::<MintingData>().max_supply {
+            let max_supply = self.data::<MintingData>().max_supply;
+            if max_supply == 0 || amount <= max_supply {
                 return Ok(())
             }
         }

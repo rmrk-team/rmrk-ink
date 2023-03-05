@@ -51,6 +51,7 @@ pub const STORAGE_MINTING_KEY: u32 = openbrush::storage_unique_key!(MintingData)
 #[openbrush::upgradeable_storage(STORAGE_MINTING_KEY)]
 pub struct MintingData {
     pub last_token_id: u64,
+    // If zero the supply is not limited
     pub max_supply: u64,
     pub price_per_mint: Balance,
     pub nft_metadata: Mapping<Id, String>,

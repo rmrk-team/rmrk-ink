@@ -253,6 +253,24 @@ pub mod rmrk_contract_minting {
         }
 
         #[ink::test]
+        fn mint_without_limit_works() {
+            let mut rmrk = Rmrk::new(
+                String::from("Rmrk Project"),
+                String::from("RMK"),
+                String::from(BASE_URI),
+                0, // By setting the `max_supply` to zero the `max_supply` is infinite.
+            );
+
+            let accounts = default_accounts();
+            assert_eq!(rmrk.total_supply(), 0);
+            let num_of_mints = 9;
+            assert_eq!(
+                rmrk.mint_many(accounts.alice, num_of_mints),
+                Ok((Id::U64(1), Id::U64(9)))
+            );
+        }
+
+        #[ink::test]
         fn mint_as_contributor_works() {
             let mut rmrk = init();
             let accounts = default_accounts();

@@ -271,5 +271,19 @@ pub mod rmrk_contract_minting {
                 Err(RmrkError::CollectionIsFull.into())
             );
         }
+
+        #[ink::test]
+        fn mint_lazy_without_limit_works() {
+            // We set the max_supply to zero so that the supply is unlimited
+            let mut rmrk = Rmrk::new(0, PRICE);
+
+            let accounts = default_accounts();
+            let num_of_mints: u64 = 9;
+            set_sender(accounts.bob);
+            assert_eq!(rmrk.total_supply(), 0);
+            purchase(num_of_mints);
+            assert!(rmrk.mint_many(num_of_mints).is_ok());
+            check_mint_many_outcome(rmrk, accounts.bob, num_of_mints);
+        }
     }
 }
