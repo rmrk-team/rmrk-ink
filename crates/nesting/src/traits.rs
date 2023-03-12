@@ -120,6 +120,10 @@ pub trait Nesting {
     /// Get all accepted children for parent token_id
     #[ink(message)]
     fn get_accepted_children(&self, parent_token_id: Id) -> Vec<ChildNft>;
+
+    /// Returns the parent token_id of the provided child nft.
+    #[ink(message)]
+    fn get_owner_of_child(&self, child_nft: ChildNft) -> Result<Id>;
 }
 
 /// Trait definitions for Nesting ink events

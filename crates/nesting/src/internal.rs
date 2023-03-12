@@ -48,6 +48,12 @@ pub trait Internal {
 
     /// Cross contract call to transfer child nft ownership.
     fn transfer_child_ownership(&self, to: AccountId, child_nft: ChildNft) -> Result<()>;
+
+    /// Adds a parent to a child nft.
+    fn add_parent_to_child(&mut self, child_nft: &ChildNft, parent_token_id: &Id);
+
+    /// Removes the parent of a child nft.
+    fn remove_parent_from_child(&mut self, child_nft: &ChildNft);
 }
 
 /// Implement internal helper trait for Nesting
@@ -163,6 +169,16 @@ where
             .insert(&parent_token_id, &child_nfts);
 
         Ok(())
+    }
+
+    default fn add_parent_to_child(&mut self, child_nft: &ChildNft, parent_token_id: &Id) {
+        self.data::<NestingData>()
+            .children_parent
+            .insert(child_nft, parent_token_id);
+    }
+
+    default fn remove_parent_from_child(&mut self, child_nft: &ChildNft) {
+        self.data::<NestingData>().children_parent.take(child_nft);
     }
 
     /// Check if caller is the owner of this parent token
