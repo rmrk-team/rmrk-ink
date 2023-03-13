@@ -255,6 +255,7 @@ where
             .unwrap_or_default()
     }
 
+    /// Returns the parent token_id of a `child_nft`.
     fn get_owner_of_child(&self, child_nft: ChildNft) -> Result<Id> {
         let parent_token_id = self
             .data::<NestingData>()

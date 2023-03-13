@@ -171,12 +171,14 @@ where
         Ok(())
     }
 
+    /// Add the token_id of the parent parent of a child_nft.
     default fn add_parent_to_child(&mut self, child_nft: &ChildNft, parent_token_id: &Id) {
         self.data::<NestingData>()
             .children_parent
             .insert(child_nft, parent_token_id);
     }
 
+    /// Remove the token_id of the parent parent of a child_nft.
     default fn remove_parent_from_child(&mut self, child_nft: &ChildNft) {
         self.data::<NestingData>().children_parent.take(child_nft);
     }
