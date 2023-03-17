@@ -7,5 +7,10 @@ members = [
     "crates/multiasset",
     "crates/nesting",
     "crates/rmrk",
+    "crates/tests",
     "examples/*",
 ]
+
+[patch.crates-io]
+ink = { git = "https://github.com/paritytech/ink" }
+ink_e2e = { git = "https://github.com/paritytech/ink" }
