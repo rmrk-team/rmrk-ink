@@ -76,10 +76,8 @@ describe("Minting rmrk as psp34, using MintingLazy trait from rmrk_example_equip
     expect((await contract.query.price()).value.unwrap().toString()).to.equal(
       PRICE_PER_MINT.toString()
     );
-    const collectionId = await contract.query.collectionId();
-    console.log(collectionId.value.unwrap())
-    const id = new BN(collectionId.value.unwrap().toString());
-    console.log("iiiii" ,id)
+
+    const collectionId = (await contract.query.collectionId()).value.unwrap().toString();
 
     // expect((await contract.query.getAttribute(collectionId, ["baseUri"])).value).to.equal(BASE_URI);
     // expect((await contract.query.getAttribute(collectionId, ["baseUri"])).value).to.equal(BASE_URI);
