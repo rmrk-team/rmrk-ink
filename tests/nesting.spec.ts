@@ -190,16 +190,9 @@ describe("RMRK Nesting tests", () => {
     );
 
     // bob rejects child
-    const rejectChildGas = (
-      await parent
-        .withSigner(bob)
-        .query.rejectChild({ u64: 1 }, [child.address, { u64: 1 }])
-    ).gasRequired;
     const acceptChildResult = await parent
       .withSigner(bob)
-      .tx.rejectChild({ u64: 1 }, [child.address, { u64: 1 }], {
-        gasLimit: rejectChildGas,
-      });
+      .tx.rejectChild({ u64: 1 }, [child.address, { u64: 1 }]);
     emit(acceptChildResult, "ChildRejected", {
       parent: { u64: 1 },
       childCollection: child.address,
@@ -251,19 +244,9 @@ describe("RMRK Nesting tests", () => {
     await addChild(child, parent, dave, 2);
 
     // dave transfers his child-1 from parent-2 to bob's parent-1, bob accepts the child
-    const { gasRequired: transferChildGas } =
-      await parent
-        .withSigner(dave)
-        .query.transferChild({ u64: 2 }, { u64: 1 }, [
-          child.address,
-          { u64: 1 },
-        ],
-        );
     const transferChildResult = await parent
       .withSigner(dave)
-      .tx.transferChild({ u64: 2 }, { u64: 1 }, [child.address, { u64: 1 }], {
-        gasLimit: transferChildGas,
-      });
+      .tx.transferChild({ u64: 2 }, { u64: 1 }, [child.address, { u64: 1 }]);
     emit(transferChildResult, "ChildRemoved", {
       parent: { u64: 2 },
       childCollection: child.address,
@@ -295,19 +278,11 @@ describe("RMRK Nesting tests", () => {
 
 // helper function to mint a token
 const mintOne = async (contract: Rmrk, signer: KeyringPair, token?: number): Promise<SignAndSendSuccessResponse> => {
-  // Query the contract message to get the gas required for minting
-  let { gasRequired: mintGas } = await contract.withSigner(signer).query.mint(
-    {
-      value: PRICE_PER_MINT
-    },
-  );
-
   // call mint function
   let mintResult = await contract
     .withSigner(signer)
     .tx.mint({
       value: PRICE_PER_MINT,
-      gasLimit: mintGas
     }
     );
   emit(mintResult, "Transfer", {
@@ -321,14 +296,9 @@ const mintOne = async (contract: Rmrk, signer: KeyringPair, token?: number): Pro
 // helper function to approve a token
 const approve = async (child: Rmrk, parent: Rmrk, signer: KeyringPair): Promise<SignAndSendSuccessResponse> => {
 
-  const approveGas = (
-    await child
-      .withSigner(signer)
-      .query.approve(parent.address, { u64: 1 }, true)
-  ).gasRequired;
   let approveResult = await child
     .withSigner(signer)
-    .tx.approve(parent.address, { u64: 1 }, true, { gasLimit: approveGas });
+    .tx.approve(parent.address, { u64: 1 }, true);
   expect(
     (await child.query.allowance(signer.address, parent.address, { u64: 1 }))
       .value.ok
@@ -344,16 +314,9 @@ const approve = async (child: Rmrk, parent: Rmrk, signer: KeyringPair): Promise<
 
 // helper function to add a child to parent contract
 const addChild = async (child: Rmrk, parent: Rmrk, signer: KeyringPair, parentToken?: number): Promise<SignAndSendSuccessResponse> => {
-  const addChildGas = (
-    await parent
-      .withSigner(signer)
-      .query.addChild({ u64: parentToken ? parentToken : 1 }, [child.address, { u64: 1 }])
-  ).gasRequired;
   const addChildResult = await parent
     .withSigner(signer)
-    .tx.addChild({ u64: parentToken ? parentToken : 1 }, [child.address, { u64: 1 }], {
-      gasLimit: addChildGas,
-    });
+    .tx.addChild({ u64: parentToken ? parentToken : 1 }, [child.address, { u64: 1 }]);
   emit(addChildResult, "ChildAdded", {
     to: { u64: parentToken ? parentToken : 1 },
     collection: child.address,
@@ -365,16 +328,9 @@ const addChild = async (child: Rmrk, parent: Rmrk, signer: KeyringPair, parentTo
 
 // helper function to accept a child on parent contract
 const acceptChild = async (child: Rmrk, parent: Rmrk, signer: KeyringPair): Promise<SignAndSendSuccessResponse> => {
-  const acceptChildGas = (
-    await parent
-      .withSigner(signer)
-      .query.acceptChild({ u64: 1 }, [child.address, { u64: 1 }])
-  ).gasRequired;
   const acceptChildResult = await parent
     .withSigner(signer)
-    .tx.acceptChild({ u64: 1 }, [child.address, { u64: 1 }], {
-      gasLimit: acceptChildGas,
-    });
+    .tx.acceptChild({ u64: 1 }, [child.address, { u64: 1 }]);
   emit(acceptChildResult, "ChildAccepted", {
     parent: { u64: 1 },
     collection: child.address,
@@ -388,16 +344,9 @@ const acceptChild = async (child: Rmrk, parent: Rmrk, signer: KeyringPair): Prom
 
 // helper function to accept a child on parent contract
 const removeChild = async (child: Rmrk, parent: Rmrk, signer: KeyringPair): Promise<SignAndSendSuccessResponse> => {
-  const removeChildGas = (
-    await parent
-      .withSigner(signer)
-      .query.removeChild({ u64: 1 }, [child.address, { u64: 1 }])
-  ).gasRequired;
   const removeChildResult = await parent
     .withSigner(signer)
-    .tx.removeChild({ u64: 1 }, [child.address, { u64: 1 }], {
-      gasLimit: removeChildGas,
-    });
+    .tx.removeChild({ u64: 1 }, [child.address, { u64: 1 }]);
   emit(removeChildResult, "ChildRemoved", {
     parent: { u64: 1 },
     childCollection: child.address,

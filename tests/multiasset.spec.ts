@@ -1,6 +1,5 @@
 import { expect, use } from "chai";
 import chaiAsPromised from "chai-as-promised";
-import { encodeAddress } from "@polkadot/keyring";
 import { KeyringPair } from "@polkadot/keyring/types";
 import { ApiPromise, WsProvider, Keyring } from "@polkadot/api";
 import BN from "bn.js";
@@ -13,8 +12,6 @@ use(chaiAsPromised);
 const MAX_SUPPLY = 888;
 const BASE_URI = "ipfs://tokenUriPrefix/";
 const COLLECTION_METADATA = "ipfs://collectionMetadata/data.json";
-const TOKEN_URI_1 = "ipfs://tokenUriPrefix/1.json";
-const TOKEN_URI_5 = "ipfs://tokenUriPrefix/5.json";
 const ONE = new BN(10).pow(new BN(18));
 const PRICE_PER_MINT = ONE;
 const ADMIN_ROLE = 0;
@@ -120,7 +117,6 @@ describe("RMRK Multi Asset tests", () => {
     const assetComposedId = 2;
     // bob mints 5 kanaria
 
-    const { gasRequired } = await kanaria.withSigner(bob).query.mintMany(5);
     let kanariaMintResult = await kanaria.withSigner(bob).tx.mintMany(5, {
       value: PRICE_PER_MINT.muln(5),
     });
@@ -131,7 +127,6 @@ describe("RMRK Multi Asset tests", () => {
     });
 
     // bob mints 15 gem
-    const gasRequiredGem = (await gem.withSigner(bob).query.mint()).gasRequired;
     for (let i = 1; i < 16; i++) {
       const gemMintResult = await gem.withSigner(bob).tx.mint({
         value: PRICE_PER_MINT,
@@ -145,16 +140,9 @@ describe("RMRK Multi Asset tests", () => {
     expect((await gem.query.balanceOf(bob.address)).value.unwrap()).to.equal(15);
 
     // deployer adds two asset entries for kanaria
-    const assetEntryGas = (
-      await kanaria
-        .withSigner(deployer)
-        .query.addAssetEntry(assetDefaultId, "1", ["ipfs://default.png"], [0])
-    ).gasRequired;
     const addAssetResult = await kanaria
       .withSigner(deployer)
-      .tx.addAssetEntry(assetDefaultId, "1", ["ipfs://default.png"], [0], {
-        gasLimit: assetEntryGas,
-      });
+      .tx.addAssetEntry(assetDefaultId, "1", ["ipfs://default.png"], [0])
     emit(addAssetResult, "AssetSet", { asset: 1 });
     const addAssetResult2 = await kanaria
       .withSigner(deployer)
@@ -163,7 +151,6 @@ describe("RMRK Multi Asset tests", () => {
         "1",
         ["ipfs://meta1.json"],
         [1, 3, 5, 7, 9, 10, 11],
-        { gasLimit: assetEntryGas }
       );
     emit(addAssetResult2, "AssetSet", { asset: 2 });
     expect(
@@ -190,16 +177,10 @@ describe("RMRK Multi Asset tests", () => {
     const equippableRefIdLeftGem = 1;
     const equippableRefIdMidGem = 2;
     const equippableRefIdRightGem = 3;
-    const gemAssetAddGas = (
-      await gem
-        .withSigner(deployer)
-        .query.addAssetEntry(0, 0, ["ipfs://gems/typeA/full.svg"], [0])
-    ).gasRequired;
+
     await gem
       .withSigner(deployer)
-      .tx.addAssetEntry(1, 0, ["ipfs://gems/typeA/full.svg"], [0], {
-        gasLimit: gemAssetAddGas,
-      });
+      .tx.addAssetEntry(1, 0, ["ipfs://gems/typeA/full.svg"], [0]);
     await gem
       .withSigner(deployer)
       .tx.addAssetEntry(
@@ -207,7 +188,6 @@ describe("RMRK Multi Asset tests", () => {
         equippableRefIdLeftGem,
         ["ipfs://gems/typeA/left.svg"],
         [0],
-        { gasLimit: gemAssetAddGas }
       );
     await gem
       .withSigner(deployer)
@@ -216,7 +196,6 @@ describe("RMRK Multi Asset tests", () => {
         equippableRefIdMidGem,
         ["ipfs://gems/typeA/mid.svg"],
         [0],
-        { gasLimit: gemAssetAddGas }
       );
     await gem
       .withSigner(deployer)
@@ -225,13 +204,10 @@ describe("RMRK Multi Asset tests", () => {
         equippableRefIdRightGem,
         ["ipfs://gems/typeA/right.svg"],
         [0],
-        { gasLimit: gemAssetAddGas }
       );
     await gem
       .withSigner(deployer)
-      .tx.addAssetEntry(5, 0, ["ipfs://gems/typeB/full.svg"], [0], {
-        gasLimit: gemAssetAddGas,
-      });
+      .tx.addAssetEntry(5, 0, ["ipfs://gems/typeB/full.svg"], [0]);
     await gem
       .withSigner(deployer)
       .tx.addAssetEntry(
@@ -239,7 +215,6 @@ describe("RMRK Multi Asset tests", () => {
         equippableRefIdLeftGem,
         ["ipfs://gems/typeB/left.svg"],
         [0],
-        { gasLimit: gemAssetAddGas }
       );
     await gem
       .withSigner(deployer)
@@ -248,7 +223,6 @@ describe("RMRK Multi Asset tests", () => {
         equippableRefIdMidGem,
         ["ipfs://gems/typeB/mid.svg"],
         [0],
-        { gasLimit: gemAssetAddGas }
       );
     await gem
       .withSigner(deployer)
@@ -257,7 +231,6 @@ describe("RMRK Multi Asset tests", () => {
         equippableRefIdRightGem,
         ["ipfs://gems/typeB/right.svg"],
         [0],
-        { gasLimit: gemAssetAddGas }
       );
     expect(
       (await gem.withSigner(deployer).query.totalAssets())?.value.unwrap().toString()
@@ -313,12 +286,8 @@ describe("RMRK Multi Asset tests", () => {
 
     // bob approves kanaria Contract on gem (for nesting gem on kanaria)
     for (let i = 1; i < 16; i++) {
-      let approveGas = (
-        await gem.withSigner(bob).query.approve(kanaria.address, { u64: 1 }, true)
-      ).gasRequired;
-      await gem.withSigner(bob).tx.approve(kanaria.address, { u64: i }, true, {
-        gasLimit: approveGas,
-      });
+
+      await gem.withSigner(bob).tx.approve(kanaria.address, { u64: i }, true);
       expect(
         (await gem.query.allowance(bob.address, kanaria.address, { u64: 1 }))
           .value.ok
@@ -327,16 +296,9 @@ describe("RMRK Multi Asset tests", () => {
     // bob adds 3 gem nfts to bob's 5 kanaria nfts (kanaria is now parent of gem tokens)
     for (let k = 1; k < 6; k++) {
       for (let g = 1; g < 4; g++) {
-        const addgemGas = (
-          await kanaria
-            .withSigner(bob)
-            .query.addChild({ u64: k }, [gem.address, { u64: g }])
-        ).gasRequired;
         const res = await kanaria
           .withSigner(bob)
-          .tx.addChild({ u64: k }, [gem.address, { u64: g }], {
-            gasLimit: addgemGas,
-          });
+          .tx.addChild({ u64: k }, [gem.address, { u64: g }]);
         const balance = (
           await kanaria.query.childrenBalance({ u64: k })
         )?.value.unwrap().ok.toString();
@@ -350,13 +312,9 @@ describe("RMRK Multi Asset tests", () => {
 
 // Helper function to add an asset to a token
 const addAssetToToken = async (contract: Rmrk, signer: KeyringPair, token: number, asset: number): Promise<void> => {
-  let { gasRequired: addAssetGas } = await contract
-    .withSigner(signer)
-    .query.addAssetToToken({ u64: token }, asset, null);
-
   const addAssetTokenResult = await contract
     .withSigner(signer)
-    .tx.addAssetToToken({ u64: token }, asset, null, { gasLimit: addAssetGas });
+    .tx.addAssetToToken({ u64: token }, asset, null);
 
   emit(addAssetTokenResult, "AssetAddedToToken", {
     token: { u64: token },
@@ -368,9 +326,7 @@ const addAssetToToken = async (contract: Rmrk, signer: KeyringPair, token: numbe
 
 // Helper function to accept an asset to a token
 const acceptAsset = async (contract: Rmrk, signer: KeyringPair, token: number, asset: number): Promise<void> => {
-  const { gasRequired: assetAcceptGas } = await contract.withSigner(signer)
-    .query.acceptAsset({ u64: token }, asset);
   const acceptAssetResult = await contract.withSigner(signer)
-    .tx.acceptAsset({ u64: token }, asset, { gasLimit: assetAcceptGas });
+    .tx.acceptAsset({ u64: token }, asset);
   emit(acceptAssetResult, "AssetAccepted", { token: { u64: token }, asset });
 }

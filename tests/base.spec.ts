@@ -1,6 +1,5 @@
 import { expect, use } from "chai";
 import chaiAsPromised from "chai-as-promised";
-import { encodeAddress } from "@polkadot/keyring";
 import BN from "bn.js";
 import Rmrk_factory from "../types/constructors/rmrk_example_equippable_lazy";
 import Rmrk from "../types/contracts/rmrk_example_equippable_lazy";
@@ -79,11 +78,9 @@ describe("RMRK Base tests", () => {
 
   it("Setup Base", async () => {
     // set Base metadata
-    const setupBaseGas = (await gem.query.setupBase([BASE_METADATA]))
-      .gasRequired;
     await gem
       .withSigner(deployer)
-      .tx.setupBase([BASE_METADATA], { gasLimit: setupBaseGas });
+      .tx.setupBase([BASE_METADATA]);
 
     // define 2 test Parts
     const PART_LIST: Part[] = [
@@ -104,35 +101,22 @@ describe("RMRK Base tests", () => {
     ];
 
     // add parts to base
-    const addPartListGas = (
-      await gem.withSigner(deployer).query.addPartList(PART_LIST)
-    ).gasRequired;
     await gem
       .withSigner(deployer)
-      .tx.addPartList(PART_LIST, { gasLimit: addPartListGas });
+      .tx.addPartList(PART_LIST);
     expect((await gem.query.getPartsCount())?.value.unwrap()).to.be.equal(2);
 
     // add/remove equippable addresses
-    const addEquipGas = (
-      await gem
-        .withSigner(deployer)
-        .query.addEquippableAddresses(0, [kanaria.address])
-    ).gasRequired;
     await gem
       .withSigner(deployer)
-      .tx.addEquippableAddresses(0, [kanaria.address], {
-        gasLimit: addEquipGas,
-      });
+      .tx.addEquippableAddresses(0, [kanaria.address]);
     expect((await gem.query.ensureEquippable(0, kanaria.address))?.value.unwrap()).to.be
       .ok;
     expect((await gem.query.ensureEquippable(1, kanaria.address))?.value.unwrap()).to.be
       .ok;
-    const removePartListGas = (
-      await gem.withSigner(deployer).query.resetEquippableAddresses(0)
-    ).gasRequired;
     await gem
       .withSigner(deployer)
-      .tx.resetEquippableAddresses(0, { gasLimit: removePartListGas });
+      .tx.resetEquippableAddresses(0);
 
     // should fail in attempt to add equippable address to fixed part.
     const failAddEquip = await gem

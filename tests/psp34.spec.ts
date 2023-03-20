@@ -8,7 +8,7 @@ import BN from "bn.js";
 import Rmrk_factory from "../types/constructors/rmrk_example_equippable_lazy";
 import Rmrk from "../types/contracts/rmrk_example_equippable_lazy";
 import { RmrkError } from "../types/types-returns/rmrk_example_equippable_lazy";
-import { emit, initialGasLimit } from "./helper";
+import { emit } from "./helper";
 
 import { SignAndSendSuccessResponse } from "@727-ventures/typechain-types";
 
@@ -17,8 +17,6 @@ use(chaiAsPromised);
 const MAX_SUPPLY = 888;
 const BASE_URI = "ipfs://tokenUriPrefix/";
 const COLLECTION_METADATA = "ipfs://collectionMetadata/data.json";
-const TOKEN_URI_1 = "ipfs://tokenUriPrefix/1.json";
-const TOKEN_URI_5 = "ipfs://tokenUriPrefix/5.json";
 const ONE = new BN(10).pow(new BN(18));
 const PRICE_PER_MINT = ONE;
 const ADMIN_ROLE = 0;
@@ -34,7 +32,6 @@ describe("Minting rmrk as psp34, using MintingLazy trait from rmrk_example_equip
   let deployer: KeyringPair;
   let bob: KeyringPair;
   let contract: Rmrk;
-  let initialGas: WeightV2;
 
   const ZERO_ADDRESS = encodeAddress(
     "0x0000000000000000000000000000000000000000000000000000000000000000"
@@ -42,7 +39,6 @@ describe("Minting rmrk as psp34, using MintingLazy trait from rmrk_example_equip
 
   beforeEach(async function () {
     api = await ApiPromise.create({ provider: wsProvider });
-    const initialGas = initialGasLimit(api);
     deployer = keyring.addFromUri("//Alice");
     bob = keyring.addFromUri("//Bob");
     rmrkFactory = new Rmrk_factory(api, deployer);
@@ -90,7 +86,7 @@ describe("Minting rmrk as psp34, using MintingLazy trait from rmrk_example_equip
       (await contract.query.totalSupply()).value.unwrap().toNumber()
     ).to.equal(0);
 
-    const mintResult = await mintOne(contract, initialGas, bob);
+    const mintResult = await mintOne(contract, bob);
 
     // verify minting result
     expect(
@@ -113,15 +109,9 @@ describe("Minting rmrk as psp34, using MintingLazy trait from rmrk_example_equip
       (await contract.query.totalSupply()).value.unwrap().toNumber()
     ).to.equal(0);
 
-    const { gasRequired: mintGas } = await contract.withSigner(bob).query.mintMany(toMint,
-      {
-        gasLimit: initialGas,
-        value: PRICE_PER_MINT.muln(toMint),
-      }
-    );
+
     await contract.withSigner(bob).tx.mintMany(toMint,
       {
-        gasLimit: mintGas,
         value: PRICE_PER_MINT.muln(toMint),
       }
     );
@@ -137,7 +127,7 @@ describe("Minting rmrk as psp34, using MintingLazy trait from rmrk_example_equip
 
   it("token transfer works", async () => {
     // Bob mints
-    const mintResult = await mintOne(contract, initialGas, bob);
+    const mintResult = await mintOne(contract, bob);
 
     // Bob transfers token to Deployer
     const transferGas = (
@@ -163,7 +153,7 @@ describe("Minting rmrk as psp34, using MintingLazy trait from rmrk_example_equip
 
   it("token approval works", async () => {
     // Bob mints
-    const mintResult = await mintOne(contract, initialGas, bob);
+    const mintResult = await mintOne(contract, bob);
 
     // Bob approves Deployer to be operator of the token
     const approveGas = (
@@ -199,7 +189,6 @@ describe("Minting rmrk as psp34, using MintingLazy trait from rmrk_example_equip
     // Bob tries to mint without funding
     const mintResult = await contract.withSigner(bob).query.mint(
       {
-        gasLimit: initialGas,
         value: 0
       },
     );
@@ -208,21 +197,12 @@ describe("Minting rmrk as psp34, using MintingLazy trait from rmrk_example_equip
 });
 
 // helper function to mint a token
-const mintOne = async (contract: Rmrk, initialGas: WeightV2, signer: KeyringPair): Promise<SignAndSendSuccessResponse> => {
-  // Query the contract message to get the gas required for minting
-  let { gasRequired: mintGas } = await contract.withSigner(signer).query.mint(
-    {
-      gasLimit: initialGas,
-      value: PRICE_PER_MINT
-    },
-  );
-
+const mintOne = async (contract: Rmrk, signer: KeyringPair): Promise<SignAndSendSuccessResponse> => {
   // call mint function
   let mintResult = await contract
     .withSigner(signer)
     .tx.mint({
       value: PRICE_PER_MINT,
-      gasLimit: mintGas
     }
     );
   return mintResult;
