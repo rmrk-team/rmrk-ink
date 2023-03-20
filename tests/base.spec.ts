@@ -8,7 +8,6 @@ import { RmrkError } from "../types/types-returns/rmrk_example_equippable_lazy";
 
 import { ApiPromise, WsProvider, Keyring } from "@polkadot/api";
 import { KeyringPair } from "@polkadot/keyring/types";
-import { ReturnNumber } from "@supercolony/typechain-types";
 import {
   PartType,
   Part,
@@ -33,20 +32,13 @@ describe("RMRK Base tests", () => {
   let gemFactory: Rmrk_factory;
   let api: ApiPromise;
   let deployer: KeyringPair;
-  let bob: KeyringPair;
   let dave: KeyringPair;
   let kanaria: Rmrk;
   let gem: Rmrk;
 
-  const ZERO_ADDRESS = encodeAddress(
-    "0x0000000000000000000000000000000000000000000000000000000000000000"
-  );
-  let gasRequired: bigint;
-
-  async function setup(): Promise<void> {
+  beforeEach(async function (): Promise<void> {
     api = await ApiPromise.create({ provider: wsProvider });
     deployer = keyring.addFromUri("//Alice");
-    bob = keyring.addFromUri("//Bob");
     dave = keyring.addFromUri("//Dave");
     kanariaFactory = new Rmrk_factory(api, deployer);
     kanaria = new Rmrk(
@@ -83,17 +75,15 @@ describe("RMRK Base tests", () => {
       deployer,
       api
     );
-  }
+  });
 
   it("Setup Base", async () => {
-    await setup();
-
     // set Base metadata
     const setupBaseGas = (await gem.query.setupBase([BASE_METADATA]))
       .gasRequired;
     await gem
       .withSigner(deployer)
-      .tx.setupBase([BASE_METADATA], { gasLimit: setupBaseGas * 2n });
+      .tx.setupBase([BASE_METADATA], { gasLimit: setupBaseGas });
 
     // define 2 test Parts
     const PART_LIST: Part[] = [
@@ -119,8 +109,8 @@ describe("RMRK Base tests", () => {
     ).gasRequired;
     await gem
       .withSigner(deployer)
-      .tx.addPartList(PART_LIST, { gasLimit: addPartListGas * 2n });
-    expect((await gem.query.getPartsCount())?.value).to.be.equal(2);
+      .tx.addPartList(PART_LIST, { gasLimit: addPartListGas });
+    expect((await gem.query.getPartsCount())?.value.unwrap()).to.be.equal(2);
 
     // add/remove equippable addresses
     const addEquipGas = (
@@ -131,46 +121,24 @@ describe("RMRK Base tests", () => {
     await gem
       .withSigner(deployer)
       .tx.addEquippableAddresses(0, [kanaria.address], {
-        gasLimit: addEquipGas * 2n,
+        gasLimit: addEquipGas,
       });
-    expect((await gem.query.ensureEquippable(0, kanaria.address))?.value).to.be
+    expect((await gem.query.ensureEquippable(0, kanaria.address))?.value.unwrap()).to.be
       .ok;
-    expect((await gem.query.ensureEquippable(1, kanaria.address))?.value).to.be
+    expect((await gem.query.ensureEquippable(1, kanaria.address))?.value.unwrap()).to.be
       .ok;
     const removePartListGas = (
       await gem.withSigner(deployer).query.resetEquippableAddresses(0)
     ).gasRequired;
     await gem
       .withSigner(deployer)
-      .tx.resetEquippableAddresses(0, { gasLimit: removePartListGas * 2n });
+      .tx.resetEquippableAddresses(0, { gasLimit: removePartListGas });
 
     // should fail in attempt to add equippable address to fixed part.
     const failAddEquip = await gem
       .withSigner(deployer)
       .query.addEquippableAddresses(1, [kanaria.address]);
-    expect(failAddEquip.value.err.rmrk).to.be.equal(RmrkError.partIsNotSlot);
+    expect(failAddEquip.value.unwrap().err.rmrk).to.be.equal(RmrkError.partIsNotSlot);
   });
 });
 
-// Helper function to parse Events
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function emit(result: { events?: any }, name: string, args: any): void {
-  const event = result.events.find(
-    (event: { name: string }) => event.name === name
-  );
-  for (const key of Object.keys(event.args)) {
-    if (event.args[key] instanceof ReturnNumber) {
-      event.args[key] = event.args[key].toNumber();
-    }
-  }
-  expect(event).eql({ name, args });
-}
-
-// Helper function to convert error code to string
-function hex2a(psp34CustomError: any): string {
-  var hex = psp34CustomError.toString(); //force conversion
-  var str = "";
-  for (var i = 0; i < hex.length; i += 2)
-    str += String.fromCharCode(parseInt(hex.substr(i, 2), 16));
-  return str.substring(1);
-}
