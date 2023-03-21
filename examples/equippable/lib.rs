@@ -241,7 +241,7 @@ pub mod rmrk_example_equippable {
             name: String,
             symbol: String,
             base_uri: String,
-            max_supply: u64,
+            max_supply: Option<u64>,
             collection_metadata: String,
         ) -> Self {
             let mut instance = Rmrk::default();
@@ -490,7 +490,7 @@ pub mod rmrk_example_equippable {
                 rmrk.get_attribute(collection_id, String::from("baseUri")),
                 Some(String::from(BASE_URI))
             );
-            assert_eq!(rmrk.max_supply(), MAX_SUPPLY);
+            assert_eq!(rmrk.max_supply(), Some(MAX_SUPPLY));
         }
 
         fn init() -> Rmrk {
@@ -498,7 +498,7 @@ pub mod rmrk_example_equippable {
                 String::from("Rmrk Project"),
                 String::from("RMK"),
                 String::from(BASE_URI),
-                MAX_SUPPLY,
+                Some(MAX_SUPPLY),
                 String::from(BASE_URI),
             )
         }

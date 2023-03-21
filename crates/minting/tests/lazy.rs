@@ -78,7 +78,7 @@ pub mod rmrk_contract_minting {
     impl Rmrk {
         #[allow(clippy::too_many_arguments)]
         #[ink(constructor)]
-        pub fn new(max_supply: u64, price_per_mint: Balance) -> Self {
+        pub fn new(max_supply: Option<u64>, price_per_mint: Balance) -> Self {
             let mut instance = Rmrk::default();
             instance._init_with_admin(instance.env().caller());
             instance._setup_role(CONTRIBUTOR, instance.env().caller());
@@ -167,7 +167,7 @@ pub mod rmrk_contract_minting {
         }
 
         fn init() -> Rmrk {
-            Rmrk::new(MAX_SUPPLY, PRICE)
+            Rmrk::new(Some(MAX_SUPPLY), PRICE)
         }
 
         fn purchase(amount: u64) {
@@ -181,7 +181,7 @@ pub mod rmrk_contract_minting {
         #[ink::test]
         fn init_with_price_works() {
             let rmrk = init();
-            assert_eq!(rmrk.max_supply(), MAX_SUPPLY);
+            assert_eq!(rmrk.max_supply(), Some(MAX_SUPPLY));
             assert_eq!(rmrk.price(), PRICE);
         }
 
@@ -274,8 +274,7 @@ pub mod rmrk_contract_minting {
 
         #[ink::test]
         fn mint_lazy_without_limit_works() {
-            // We set the max_supply to zero so that the supply is unlimited
-            let mut rmrk = Rmrk::new(0, PRICE);
+            let mut rmrk = Rmrk::new(None, PRICE);
 
             let accounts = default_accounts();
             let num_of_mints: u64 = 9;

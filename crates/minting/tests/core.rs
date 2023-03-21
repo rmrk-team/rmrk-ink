@@ -83,7 +83,12 @@ pub mod rmrk_contract_minting {
     impl Rmrk {
         #[allow(clippy::too_many_arguments)]
         #[ink(constructor)]
-        pub fn new(name: String, symbol: String, base_uri: String, max_supply: u64) -> Self {
+        pub fn new(
+            name: String,
+            symbol: String,
+            base_uri: String,
+            max_supply: Option<u64>,
+        ) -> Self {
             let mut instance = Rmrk::default();
             instance._init_with_admin(instance.env().caller());
             instance._setup_role(CONTRIBUTOR, instance.env().caller());
@@ -177,7 +182,7 @@ pub mod rmrk_contract_minting {
                 String::from("Rmrk Project"),
                 String::from("RMK"),
                 String::from(BASE_URI),
-                MAX_SUPPLY,
+                Some(MAX_SUPPLY),
             )
         }
 
@@ -258,7 +263,7 @@ pub mod rmrk_contract_minting {
                 String::from("Rmrk Project"),
                 String::from("RMK"),
                 String::from(BASE_URI),
-                0, // By setting the `max_supply` to zero the `max_supply` is infinite.
+                None,
             );
 
             let accounts = default_accounts();
