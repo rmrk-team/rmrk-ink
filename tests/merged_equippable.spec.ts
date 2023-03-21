@@ -39,7 +39,7 @@ describe("RMRK Merged Equippable", () => {
 
 
   beforeEach(async function (): Promise<void> {
-    api = await ApiPromise.create({ provider: wsProvider });
+    api = await ApiPromise.create({ provider: wsProvider, noInitWarn: true });
     deployer = keyring.addFromUri("//Alice");
     bob = keyring.addFromUri("//Bob");
     dave = keyring.addFromUri("//Dave");

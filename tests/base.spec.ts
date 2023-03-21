@@ -36,7 +36,7 @@ describe("RMRK Base tests", () => {
   let gem: Rmrk;
 
   beforeEach(async function (): Promise<void> {
-    api = await ApiPromise.create({ provider: wsProvider });
+    api = await ApiPromise.create({ provider: wsProvider, noInitWarn: true });
     deployer = keyring.addFromUri("//Alice");
     dave = keyring.addFromUri("//Dave");
     kanariaFactory = new Rmrk_factory(api, deployer);

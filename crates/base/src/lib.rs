@@ -57,8 +57,9 @@ pub struct BaseData {
 
 impl<T> Base for T
 where
-    T: Storage<BaseData> + Storage<access_control::Data>,
-{
+    T: Storage<BaseData> + Storage<access_control::Data>
+
+    {
     /// Add one or more parts to the base
     #[modifiers(only_role(CONTRIBUTOR))]
     default fn add_part_list(&mut self, parts: Vec<Part>) -> Result<()> {

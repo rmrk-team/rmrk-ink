@@ -38,7 +38,7 @@ describe("Minting rmrk as psp34, using MintingLazy trait from rmrk_example_equip
   );
 
   beforeEach(async function () {
-    api = await ApiPromise.create({ provider: wsProvider });
+    api = await ApiPromise.create({ provider: wsProvider, noInitWarn: true });
     deployer = keyring.addFromUri("//Alice");
     bob = keyring.addFromUri("//Bob");
     rmrkFactory = new Rmrk_factory(api, deployer);
