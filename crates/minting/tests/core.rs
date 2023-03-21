@@ -258,7 +258,26 @@ pub mod rmrk_contract_minting {
         }
 
         #[ink::test]
-        fn mint_without_limit_works() {
+        fn mint_single_without_limit_works() {
+            let mut rmrk = Rmrk::new(
+                String::from("Rmrk Project"),
+                String::from("RMK"),
+                String::from(BASE_URI),
+                None,
+            );
+
+            let accounts = default_accounts();
+            assert_eq!(rmrk.total_supply(), 0);
+            (0..MAX_SUPPLY + 1).for_each(|_| {
+                let _ = rmrk.mint(accounts.alice);
+            });
+
+            assert_eq!(rmrk._last_token_id(), MAX_SUPPLY + 1);
+        }
+
+
+        #[ink::test]
+        fn mint_many_without_limit_works() {
             let mut rmrk = Rmrk::new(
                 String::from("Rmrk Project"),
                 String::from("RMK"),
