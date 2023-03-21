@@ -277,9 +277,11 @@ pub mod rmrk_contract_minting {
             let mut rmrk = Rmrk::new(None, PRICE);
 
             let accounts = default_accounts();
-            let num_of_mints: u64 = 9;
+            let num_of_mints: u64 = MAX_SUPPLY + 42;
+
             set_sender(accounts.bob);
             assert_eq!(rmrk.total_supply(), 0);
+
             purchase(num_of_mints);
             assert!(rmrk.mint_many(num_of_mints).is_ok());
             check_mint_many_outcome(rmrk, accounts.bob, num_of_mints);

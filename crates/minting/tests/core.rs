@@ -268,10 +268,10 @@ pub mod rmrk_contract_minting {
 
             let accounts = default_accounts();
             assert_eq!(rmrk.total_supply(), 0);
-            let num_of_mints = 9;
+            let num_of_mints = MAX_SUPPLY + 42;
             assert_eq!(
                 rmrk.mint_many(accounts.alice, num_of_mints),
-                Ok((Id::U64(1), Id::U64(9)))
+                Ok((Id::U64(1), Id::U64(MAX_SUPPLY + 42)))
             );
         }
 
