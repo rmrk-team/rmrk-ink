@@ -1,30 +1,32 @@
 [package]
-name = "catalog_example"
-version = "0.6.0"
+name = "catalog"
+version = "0.5.0"
 authors = ["Stake Technologies <devops@stake.co.jp>"]
 edition = "2021"
 
 [dependencies]
-ink = { version = "4.0.0", default-features = false }
+ink = { version = "4.0.0", default-features = false } 
 scale = { package = "parity-scale-codec", version = "3", default-features = false, features = ["derive"] }
 scale-info = { version = "2.3", default-features = false, features = ["derive"], optional = true }
 openbrush = { tag = "3.0.0", git = "https://github.com/727-Ventures/openbrush-contracts", default-features = false, features = ["access_control", "reentrancy_guard", "psp34"] }
-catalog = { path = "../../crates/catalog", default-features = false  }
+
+rmrk_base = { path = "../base", default-features = false }
+rmrk_common = { path = "../common", default-features = false }
 
 [lib]
-path = "lib.rs"
-crate-type = [
-	# Used for normal contract Wasm blobs.
-	"cdylib",
-]
+path = "src/lib.rs"
+crate-type = ["rlib"]
 
 [features]
 default = ["std"]
 std = [
     "ink/std",
     "scale/std",
+    "scale-info",
     "scale-info/std",
     "openbrush/std",
-    "catalog/std",
+    "rmrk_common/std",
+    "rmrk_base/std",
 ]
-ink-as-dependency = []
+
+
