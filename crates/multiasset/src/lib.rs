@@ -35,6 +35,7 @@ use openbrush::{
     },
     modifiers,
     traits::{
+        AccountId,
         Storage,
         String,
     },
@@ -56,6 +57,9 @@ pub struct MultiAssetData {
 
     /// Mapping of tokenId to an array of pending assets
     pub pending_assets: Mapping<Id, Vec<AssetId>>,
+
+    /// Catalog assigned to assetId. Added with add_asset_entry
+    pub asset_catalog_address: Mapping<AssetId, Option<AccountId>>,
 }
 
 impl<T> MultiAsset for T
@@ -69,6 +73,7 @@ where
     #[modifiers(only_role(CONTRIBUTOR))]
     fn add_asset_entry(
         &mut self,
+        catalog_address: Option<AccountId>,
         asset_id: AssetId,
         equippable_group_id: EquippableGroupId,
         asset_uri: String,
@@ -88,6 +93,8 @@ where
         self.data::<MultiAssetData>()
             .collection_asset_ids
             .push(asset_id);
+        self.data::<MultiAssetData>()
+            .asset_catalog_address.insert(asset_id, &catalog_address);
         self._emit_asset_set_event(&asset_id);
 
         Ok(())
@@ -260,6 +267,14 @@ where
             .pending_assets
             .get(&token_id)
             .unwrap_or_default())
+    }
+
+    /// Fetch asset's catalog
+    fn get_asset_catalog(&self, asset_id: AssetId) -> Option<AccountId> {
+        self.data::<MultiAssetData>()
+            .asset_catalog_address
+            .get(asset_id)
+            .unwrap_or_default()
     }
 }
 

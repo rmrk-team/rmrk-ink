@@ -5,17 +5,19 @@ authors = ["Stake Technologies <devops@stake.co.jp>"]
 edition = "2021"
 
 [dependencies]
-ink = { version = "4.0.0", default-features = false } 
+ink = { version = "4.0.0", default-features = false }
 scale = { package = "parity-scale-codec", version = "3", default-features = false, features = ["derive"] }
 scale-info = { version = "2.3", default-features = false, features = ["derive"], optional = true }
 openbrush = { tag = "3.0.0", git = "https://github.com/727-Ventures/openbrush-contracts", default-features = false, features = ["access_control", "reentrancy_guard", "psp34"] }
 
-rmrk_base = { path = "../base", default-features = false }
 rmrk_minting = { path = "../minting", default-features = false }
 rmrk_multiasset = { path = "../multiasset", default-features = false }
 rmrk_nesting = { path = "../nesting", default-features = false }
 rmrk_common = { path = "../common", default-features = false }
 rmrk_equippable = { path = "../equippable", default-features = false }
+
+# external contracts
+catalog = { path = "../catalog", default-features = false, features = ["ink-as-dependency"]}
 
 [lib]
 path = "src/lib.rs"
@@ -30,7 +32,7 @@ std = [
     "scale-info/std",
     "openbrush/std",
     "rmrk_common/std",
-    "rmrk_base/std",
+    "catalog/std",
     "rmrk_minting/std",
     "rmrk_multiasset/std",
     "rmrk_nesting/std",

@@ -1,5 +1,3 @@
-use rmrk_base::BaseData;
-
 use rmrk_common::{
     errors::{
         Result,
@@ -63,7 +61,7 @@ where
         + Storage<MultiAssetData>
         + MultiAsset
         + MultiAssetInternal
-        + Storage<BaseData>
+        // + Storage<BaseData>
         + Utils,
 {
     /// Check if slot is already used/equipped.

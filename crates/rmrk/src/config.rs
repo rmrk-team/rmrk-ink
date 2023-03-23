@@ -17,7 +17,9 @@ use openbrush::{
     },
 };
 
-use rmrk_base::traits::Base;
+// use rmrk_base::traits::Base;
+// use catalog::traits::BaseRef;
+
 use rmrk_common::{
     roles::CONTRIBUTOR,
     types::*,
@@ -75,13 +77,12 @@ where
     instance._setup_role(CONTRIBUTOR, account);
 }
 
-pub fn with_parts<T>(instance: &mut T, parts: Vec<Part>) -> Result<(), PSP34Error>
-where
-    T: Storage<rmrk_base::BaseData> + Base,
-{
-    instance.add_part_list(parts)?;
-    Ok(())
-}
+// pub fn with_parts<T>(instance: &mut T, parts: Vec<Part>) -> Result<(), PSP34Error>
+
+// {
+//     BaseRef::add_part_list(parts)?;
+//     Ok(())
+// }
 
 fn _with_royalties<T>(_instance: &mut T, _royalty_receiver: AccountId, _royalty: u8) {
     todo!()

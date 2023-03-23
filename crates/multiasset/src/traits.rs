@@ -7,7 +7,7 @@ use rmrk_common::{
 use ink::prelude::vec::Vec;
 use openbrush::{
     contracts::psp34::Id,
-    traits::String,
+    traits::{AccountId, String},
 };
 
 #[openbrush::wrapper]
@@ -24,6 +24,7 @@ pub trait MultiAsset {
     #[ink(message)]
     fn add_asset_entry(
         &mut self,
+        catalog_address: Option<AccountId>,
         id: AssetId,
         equippable_group_id: EquippableGroupId,
         asset_uri: String,
@@ -119,6 +120,10 @@ pub trait MultiAsset {
     /// Remove the assets for the list of token assets
     #[ink(message)]
     fn remove_asset(&mut self, token_id: Id, asset_id: AssetId) -> Result<()>;
+
+    /// Used to retrieve asset's catalog
+    #[ink(message)]
+    fn get_asset_catalog(&self, asset_id: AssetId) -> Option<AccountId>;
 
     /// Check that asset id does not already exist.
     fn ensure_asset_id_is_available(&self, asset_id: AssetId) -> Result<()>;

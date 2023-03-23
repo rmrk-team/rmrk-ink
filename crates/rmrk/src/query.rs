@@ -1,11 +1,12 @@
 #![allow(clippy::inline_fn_without_body)]
 
 use crate::traits::{
-    BaseRef,
+    // BaseRef,
     MintingRef,
     MultiAssetRef,
     NestingRef,
 };
+use catalog::traits::BaseRef;
 
 use ink::prelude::vec::Vec;
 use openbrush::{

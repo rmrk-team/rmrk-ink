@@ -33,6 +33,8 @@ pub mod rmrk_example_equippable {
         types::*,
     };
 
+    use catalog::*;
+
     /// Event emitted when a token transfer occurs.
     #[ink(event)]
     pub struct Transfer {

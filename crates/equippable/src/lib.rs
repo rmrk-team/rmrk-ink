@@ -1,4 +1,4 @@
-//! RMRK Base implementation
+//! RMRK Equippable implementation
 #![cfg_attr(not(feature = "std"), no_std)]
 #![feature(min_specialization)]
 #![allow(clippy::inline_fn_without_body)]
@@ -7,10 +7,10 @@ pub mod internal;
 pub mod traits;
 
 use internal::Internal;
-use rmrk_base::{
-    traits::Base,
-    BaseData,
-};
+// use rmrk_base::{
+//     traits::Base,
+//     BaseData,
+// };
 
 use rmrk_common::{
     errors::{
@@ -20,6 +20,8 @@ use rmrk_common::{
     types::*,
     utils::Utils,
 };
+
+use catalog::traits;
 
 use rmrk_multiasset::{
     internal::Internal as MultiAssetInternal,
@@ -63,7 +65,7 @@ where
         + MultiAsset
         + MultiAssetInternal
         + Internal
-        + Storage<BaseData>
+        // + Storage<BaseData>
         + Utils,
 {
     /// Used to equip a child nft into a token.
@@ -86,8 +88,13 @@ where
         //     child_asset_id,
         //     slot_part_id)?;
 
-        // Check from base perspective
-        self.ensure_equippable(slot_part_id, child_nft.0)?;
+        // Check from base perspective.
+        if let Some(catalog_address) = self.data::<MultiAssetData>().asset_catalog_address.get(&asset_id) {
+            BaseRef::ensure_equippable(&catalog_address, slot_part_id, child_nft.0)?;
+        }
+        else {
+            return Err(RmrkError::CatalogNotFoundForAsset.into())
+        }
 
         // insert equipment
         let equipment = Equipment {
