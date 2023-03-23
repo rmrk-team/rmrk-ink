@@ -96,7 +96,7 @@ describe("RMRK Multi Asset tests", () => {
     expect(
       (await kanaria.query.hasRole(ADMIN_ROLE, deployer.address)).value
     ).to.equal(true);
-    expect((await kanaria.query.maxSupply()).value).to.equal(MAX_SUPPLY);
+    expect((await kanaria.query.maxSupply()).value.unwrap()).to.equal(MAX_SUPPLY);
     expect((await kanaria.query.price()).value.rawNumber.toString()).to.equal(
       PRICE_PER_MINT.toString()
     );
@@ -108,7 +108,7 @@ describe("RMRK Multi Asset tests", () => {
     expect(
       (await gem.query.hasRole(ADMIN_ROLE, deployer.address)).value
     ).to.equal(true);
-    expect((await gem.query.maxSupply()).value).to.equal(MAX_SUPPLY);
+    expect((await gem.query.maxSupply()).value.unwrap()).to.equal(MAX_SUPPLY);
     expect((await gem.query.price()).value.rawNumber.toString()).to.equal(
       PRICE_PER_MINT.toString()
     );

@@ -92,7 +92,7 @@ describe("RMRK Nesting tests", () => {
     expect(
       (await parent.query.hasRole(ADMIN_ROLE, deployer.address)).value
     ).to.equal(true);
-    expect((await parent.query.maxSupply()).value).to.equal(MAX_SUPPLY);
+    expect((await parent.query.maxSupply()).value.unwrap()).to.equal(MAX_SUPPLY);
     expect((await parent.query.price()).value.rawNumber.toString()).to.equal(
       PRICE_PER_MINT.toString()
     );
@@ -104,7 +104,7 @@ describe("RMRK Nesting tests", () => {
     expect(
       (await child.query.hasRole(ADMIN_ROLE, deployer.address)).value
     ).to.equal(true);
-    expect((await child.query.maxSupply()).value).to.equal(MAX_SUPPLY);
+    expect((await child.query.maxSupply()).value.unwrap()).to.equal(MAX_SUPPLY);
     expect((await child.query.price()).value.rawNumber.toString()).to.equal(
       PRICE_PER_MINT.toString()
     );
