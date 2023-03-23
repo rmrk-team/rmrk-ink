@@ -1,23 +1,22 @@
 import { expect, use } from "chai";
 import chaiAsPromised from "chai-as-promised";
 import { encodeAddress } from "@polkadot/keyring";
+import type { WeightV2 } from '@polkadot/types/interfaces'
+import { ApiPromise, WsProvider, Keyring } from "@polkadot/api";
+import { KeyringPair } from "@polkadot/keyring/types";
 import BN from "bn.js";
 import Rmrk_factory from "../types/constructors/rmrk_example_equippable_lazy";
 import Rmrk from "../types/contracts/rmrk_example_equippable_lazy";
 import { RmrkError } from "../types/types-returns/rmrk_example_equippable_lazy";
+import { emit } from "./helper";
 
-import { ApiPromise, WsProvider, Keyring } from "@polkadot/api";
-import { KeyringPair } from "@polkadot/keyring/types";
-// import { AccountId } from '../types/types-arguments/rmrk_example_equippable_lazy';
-import { ReturnNumber } from "@supercolony/typechain-types";
+import { SignAndSendSuccessResponse } from "@727-ventures/typechain-types";
 
 use(chaiAsPromised);
 
 const MAX_SUPPLY = 888;
 const BASE_URI = "ipfs://tokenUriPrefix/";
 const COLLECTION_METADATA = "ipfs://collectionMetadata/data.json";
-const TOKEN_URI_1 = "ipfs://tokenUriPrefix/1.json";
-const TOKEN_URI_5 = "ipfs://tokenUriPrefix/5.json";
 const ONE = new BN(10).pow(new BN(18));
 const PRICE_PER_MINT = ONE;
 const ADMIN_ROLE = 0;
@@ -27,20 +26,18 @@ const wsProvider = new WsProvider("ws://127.0.0.1:9944");
 // Create a keyring instance
 const keyring = new Keyring({ type: "sr25519" });
 
-describe("Minting rmrk as psp34 tests", () => {
+describe("Minting rmrk as psp34, using MintingLazy trait from rmrk_example_equippable_lazy", () => {
   let rmrkFactory: Rmrk_factory;
   let api: ApiPromise;
   let deployer: KeyringPair;
   let bob: KeyringPair;
   let contract: Rmrk;
 
-  const gasLimit = 18750000000;
   const ZERO_ADDRESS = encodeAddress(
     "0x0000000000000000000000000000000000000000000000000000000000000000"
   );
-  let gasRequired: bigint;
 
-  async function setup(): Promise<void> {
+  beforeEach(async function () {
     api = await ApiPromise.create({ provider: wsProvider });
     deployer = keyring.addFromUri("//Alice");
     bob = keyring.addFromUri("//Bob");
@@ -61,47 +58,42 @@ describe("Minting rmrk as psp34 tests", () => {
       deployer,
       api
     );
-  }
+    // console.log("contract address", contract.address);
+  });
 
   it("create collection works", async () => {
-    await setup();
-    const queryList = await contract.query;
     expect(
-      (await contract.query.totalSupply()).value.rawNumber.toNumber()
+      (await contract.query.totalSupply()).value.unwrap().toNumber()
     ).to.equal(0);
     expect(
-      (await contract.query.hasRole(ADMIN_ROLE, deployer.address)).value
+      (await contract.query.hasRole(ADMIN_ROLE, deployer.address)).value.unwrap()
     ).to.equal(true);
-    expect((await contract.query.maxSupply()).value).to.equal(MAX_SUPPLY);
-    expect((await contract.query.price()).value.rawNumber.toString()).to.equal(
+    expect((await contract.query.maxSupply()).value.unwrap()).to.equal(MAX_SUPPLY);
+    expect((await contract.query.price()).value.unwrap().toString()).to.equal(
       PRICE_PER_MINT.toString()
     );
-    const collectionId = await contract.query.collectionId();
 
-    // expect((await contract.query.getAttribute({u128: collectionId}, ["baseUri"])).value).to.equal(BASE_URI);
+    const collectionId = (await contract.query.collectionId()).value.unwrap().toString();
+
+    // expect((await contract.query.getAttribute(collectionId, ["baseUri"])).value).to.equal(BASE_URI);
     // expect((await contract.query.getAttribute(collectionId, ["baseUri"])).value).to.equal(BASE_URI);
   });
 
   it("mint works", async () => {
-    await setup();
     const tokenId = 1;
 
     expect(
-      (await contract.query.totalSupply()).value.rawNumber.toNumber()
+      (await contract.query.totalSupply()).value.unwrap().toNumber()
     ).to.equal(0);
 
-    // mint
-    const { gasRequired } = await contract.withSigner(bob).query.mint();
-    let mintResult = await contract
-      .withSigner(bob)
-      .tx.mint({ value: PRICE_PER_MINT, gasLimit: gasRequired * 2n });
+    const mintResult = await mintOne(contract, bob);
 
-    // verify minting results. The totalSupply value is BN
+    // verify minting result
     expect(
-      (await contract.query.totalSupply()).value.rawNumber.toNumber()
+      (await contract.query.totalSupply()).value.unwrap().toNumber()
     ).to.equal(1);
-    expect((await contract.query.balanceOf(bob.address)).value).to.equal(1);
-    expect((await contract.query.ownerOf({ u64: tokenId })).value).to.equal(
+    expect((await contract.query.balanceOf(bob.address)).value.unwrap()).to.equal(1);
+    expect((await contract.query.ownerOf({ u64: tokenId })).value.unwrap()).to.equal(
       bob.address
     );
     emit(mintResult, "Transfer", {
@@ -109,46 +101,33 @@ describe("Minting rmrk as psp34 tests", () => {
       to: bob.address,
       id: { u64: tokenId },
     });
-
-    // TODO verify tokenUri call
-    // console.log("tokenUri", (await contract.query.tokenUri(1)).value);
-    // expect((await contract.query.tokenUri(1))).to.equal(TOKEN_URI_1);
   });
 
   it("mint 5 tokens works", async () => {
-    await setup();
-
+    const toMint = 5;
     expect(
-      (await contract.query.totalSupply()).value.rawNumber.toNumber()
+      (await contract.query.totalSupply()).value.unwrap().toNumber()
     ).to.equal(0);
 
-    const { gasRequired } = await contract.withSigner(bob).query.mint();
-    await contract.withSigner(bob).tx.mintMany(5, {
-      value: PRICE_PER_MINT.muln(5),
-      gasLimit: gasRequired * 2n,
-    });
 
+    await contract.withSigner(bob).tx.mintMany(toMint,
+      {
+        value: PRICE_PER_MINT.muln(toMint),
+      }
+    );
+
+    // Verify minting result
     expect(
-      (await contract.query.totalSupply()).value.rawNumber.toNumber()
-    ).to.equal(5);
-    expect((await contract.query.ownerOf({ u64: 5 })).value).to.equal(
+      (await contract.query.totalSupply()).value.unwrap().toNumber()
+    ).to.equal(toMint);
+    expect((await contract.query.ownerOf({ u64: toMint })).value.unwrap()).to.equal(
       bob.address
     );
   });
 
   it("token transfer works", async () => {
-    await setup();
-
     // Bob mints
-    let { gasRequired } = await contract.withSigner(bob).query.mint();
-    let mintResult = await contract
-      .withSigner(bob)
-      .tx.mint({ value: PRICE_PER_MINT, gasLimit: gasRequired * 2n });
-    emit(mintResult, "Transfer", {
-      from: null,
-      to: bob.address,
-      id: { u64: 1 },
-    });
+    const mintResult = await mintOne(contract, bob);
 
     // Bob transfers token to Deployer
     const transferGas = (
@@ -161,10 +140,10 @@ describe("Minting rmrk as psp34 tests", () => {
       .tx.transfer(deployer.address, { u64: 1 }, [], { gasLimit: transferGas });
 
     // Verify transfer
-    expect((await contract.query.ownerOf({ u64: 1 })).value).to.equal(
+    expect((await contract.query.ownerOf({ u64: 1 })).value.unwrap()).to.equal(
       deployer.address
     );
-    expect((await contract.query.balanceOf(bob.address)).value).to.equal(0);
+    expect((await contract.query.balanceOf(bob.address)).value.ok).to.equal(0);
     emit(transferResult, "Transfer", {
       from: bob.address,
       to: deployer.address,
@@ -172,16 +151,11 @@ describe("Minting rmrk as psp34 tests", () => {
     });
   });
 
-  it("token aproval works", async () => {
-    await setup();
-
+  it("token approval works", async () => {
     // Bob mints
-    let { gasRequired } = await contract.withSigner(bob).query.mint();
-    await contract
-      .withSigner(bob)
-      .tx.mint({ value: PRICE_PER_MINT, gasLimit: gasRequired * 2n });
+    const mintResult = await mintOne(contract, bob);
 
-    // Bob approves deployer to be operator of the token
+    // Bob approves Deployer to be operator of the token
     const approveGas = (
       await contract
         .withSigner(bob)
@@ -192,7 +166,7 @@ describe("Minting rmrk as psp34 tests", () => {
       .tx.approve(deployer.address, { u64: 1 }, true, { gasLimit: approveGas });
 
     // Verify that Bob is still the owner and allowance is set
-    expect((await contract.query.ownerOf({ u64: 1 })).value).to.equal(
+    expect((await contract.query.ownerOf({ u64: 1 })).value.unwrap()).to.equal(
       bob.address
     );
     expect(
@@ -200,7 +174,7 @@ describe("Minting rmrk as psp34 tests", () => {
         await contract.query.allowance(bob.address, deployer.address, {
           u64: 1,
         })
-      ).value
+      ).value.ok
     ).to.equal(true);
     emit(approveResult, "Approval", {
       from: bob.address,
@@ -211,34 +185,26 @@ describe("Minting rmrk as psp34 tests", () => {
   });
 
   it("Minting token without funds should fail", async () => {
-    await setup();
 
-    // Bob trys to mint without funding
-    let mintResult = await contract.withSigner(bob).query.mint();
-
-    expect(mintResult.value.err.rmrk).to.be.equal(RmrkError.badMintValue);
+    // Bob tries to mint without funding
+    const mintResult = await contract.withSigner(bob).query.mint(
+      {
+        value: 0
+      },
+    );
+    expect(mintResult.value.unwrap().err.rmrk).to.be.equal(RmrkError.badMintValue);
   });
 });
 
-// Helper function to parse Events
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function emit(result: { events?: any }, name: string, args: any): void {
-  const event = result.events.find(
-    (event: { name: string }) => event.name === name
-  );
-  for (const key of Object.keys(event.args)) {
-    if (event.args[key] instanceof ReturnNumber) {
-      event.args[key] = event.args[key].toNumber();
+// helper function to mint a token
+const mintOne = async (contract: Rmrk, signer: KeyringPair): Promise<SignAndSendSuccessResponse> => {
+  // call mint function
+  let mintResult = await contract
+    .withSigner(signer)
+    .tx.mint({
+      value: PRICE_PER_MINT,
     }
-  }
-  expect(event).eql({ name, args });
+    );
+  return mintResult;
 }
 
-// Helper function to convert error code to string
-function hex2a(psp34CustomError: any): string {
-  var hex = psp34CustomError.toString(); //force conversion
-  var str = "";
-  for (var i = 0; i < hex.length; i += 2)
-    str += String.fromCharCode(parseInt(hex.substr(i, 2), 16));
-  return str.substring(1);
-}
