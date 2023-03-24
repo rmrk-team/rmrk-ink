@@ -1,4 +1,3 @@
-use ink::prelude::vec::Vec;
 use openbrush::{
     contracts::{
         access_control::*,
@@ -20,10 +19,7 @@ use openbrush::{
 // use rmrk_base::traits::Base;
 // use catalog::traits::BaseRef;
 
-use rmrk_common::{
-    roles::CONTRIBUTOR,
-    types::*,
-};
+use rmrk_common::roles::CONTRIBUTOR;
 use rmrk_minting::{
     self,
     traits::MintingLazy,

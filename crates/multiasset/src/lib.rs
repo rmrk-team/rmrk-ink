@@ -59,6 +59,7 @@ pub struct MultiAssetData {
     pub pending_assets: Mapping<Id, Vec<AssetId>>,
 
     /// Catalog assigned to assetId. Added with add_asset_entry
+    /// An asset can also have None as a catalog, therefore the Option
     pub asset_catalog_address: Mapping<AssetId, Option<AccountId>>,
 }
 
@@ -94,7 +95,8 @@ where
             .collection_asset_ids
             .push(asset_id);
         self.data::<MultiAssetData>()
-            .asset_catalog_address.insert(asset_id, &catalog_address);
+            .asset_catalog_address
+            .insert(asset_id, &catalog_address);
         self._emit_asset_set_event(&asset_id);
 
         Ok(())

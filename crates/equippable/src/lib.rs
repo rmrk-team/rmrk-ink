@@ -21,7 +21,7 @@ use rmrk_common::{
     utils::Utils,
 };
 
-use catalog::traits;
+use catalog::traits::BaseRef;
 
 use rmrk_multiasset::{
     internal::Internal as MultiAssetInternal,
@@ -65,8 +65,9 @@ where
         + MultiAsset
         + MultiAssetInternal
         + Internal
+        // + std::convert::From<std::option::Option<ink::primitives::AccountId>>
         // + Storage<BaseData>
-        + Utils,
+        + Utils, // + BaseWrapper,
 {
     /// Used to equip a child nft into a token.
     default fn equip(
@@ -88,12 +89,17 @@ where
         //     child_asset_id,
         //     slot_part_id)?;
 
-        // Check from base perspective.
-        if let Some(catalog_address) = self.data::<MultiAssetData>().asset_catalog_address.get(&asset_id) {
-            BaseRef::ensure_equippable(&catalog_address, slot_part_id, child_nft.0)?;
-        }
-        else {
-            return Err(RmrkError::CatalogNotFoundForAsset.into())
+        // Check from base perspective. If catalog for this asset is None, then it is not equippable.
+        match self
+            .data::<MultiAssetData>()
+            .asset_catalog_address
+            .get(&asset_id)
+            .ok_or(RmrkError::CatalogNotFoundForAsset)?
+        {
+            Some(catalog_address) => {
+                BaseRef::ensure_equippable(&catalog_address, slot_part_id, child_nft.0)?;
+            }
+            None => return Err(RmrkError::AssetIdNotEquippable.into()),
         }
 
         // insert equipment

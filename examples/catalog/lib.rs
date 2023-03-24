@@ -55,13 +55,7 @@ pub mod catalog_example {
             traits::Base,
             types::*,
         };
-        use openbrush::{
-            contracts::{
-                psp34::extensions::{
-                    enumerable::*,
-                },
-            },
-        };
+        use openbrush::contracts::psp34::extensions::enumerable::*;
 
         const METADATA: &str = "ipfs://myIpfsUri/";
         const EQUIPPABLE_ADDRESS1: [u8; 32] = [1; 32];
@@ -88,7 +82,7 @@ pub mod catalog_example {
             const PART_ID0: PartId = 0;
             const PART_ID1: PartId = 1;
 
-            // Create 2 parts, 
+            // Create 2 parts,
             // The first is equippable and can accept 2 equipment from 2 contracts
             // The second is fixed and can't accept any equipment
             let part_list = vec![
@@ -115,11 +109,17 @@ pub mod catalog_example {
             assert!(catalog.add_part_list(part_list.clone()).is_ok());
             assert_eq!(catalog.get_parts_count(), part_list.len() as u32);
             assert_eq!(catalog.get_part(PART_ID0).unwrap().z, part_list[0].z);
-            assert_eq!(catalog.get_part(PART_ID0).unwrap().part_uri, part_list[0].part_uri);
-            assert_eq!(catalog.get_part(PART_ID0).unwrap().part_uri, part_list[0].part_uri);
+            assert_eq!(
+                catalog.get_part(PART_ID0).unwrap().part_uri,
+                part_list[0].part_uri
+            );
+            assert_eq!(
+                catalog.get_part(PART_ID0).unwrap().part_uri,
+                part_list[0].part_uri
+            );
             assert_eq!(catalog.get_part(PART_ID0).unwrap().equippable.len(), 2);
             assert_eq!(catalog.get_part(PART_ID1).unwrap().equippable.len(), 0);
-            
+
             // verify array of equippable addresses
             assert!(catalog
                 .ensure_equippable(PART_ID0, EQUIPPABLE_ADDRESS1.into())
@@ -166,11 +166,10 @@ pub mod catalog_example {
             assert!(catalog
                 .ensure_equippable(PART_ID0, EQUIPPABLE_ADDRESS3.into())
                 .is_err());
-
         }
 
         #[ink::test]
-        fn test_bad_configuration(){
+        fn test_bad_configuration() {
             let mut catalog = init();
 
             // Create 2 part lists. Both have 1 part and are invalid,
@@ -200,7 +199,7 @@ pub mod catalog_example {
         }
 
         #[ink::test]
-        fn setting_metadata_works(){
+        fn setting_metadata_works() {
             let mut catalog = init();
 
             assert_eq!(catalog.get_base_metadata(), METADATA);

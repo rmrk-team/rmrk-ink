@@ -7,7 +7,10 @@ use rmrk_common::{
 use ink::prelude::vec::Vec;
 use openbrush::{
     contracts::psp34::Id,
-    traits::{AccountId, String},
+    traits::{
+        AccountId,
+        String,
+    },
 };
 
 #[openbrush::wrapper]
