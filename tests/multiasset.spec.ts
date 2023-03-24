@@ -85,7 +85,6 @@ describe("RMRK Multi Asset tests", () => {
       deployer,
       api
     );
-
   });
 
   it("Init two rmrk contracts works", async () => {
