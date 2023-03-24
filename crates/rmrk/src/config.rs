@@ -16,9 +16,6 @@ use openbrush::{
     },
 };
 
-// use rmrk_base::traits::Base;
-// use catalog::traits::BaseRef;
-
 use rmrk_common::roles::CONTRIBUTOR;
 use rmrk_minting::{
     self,

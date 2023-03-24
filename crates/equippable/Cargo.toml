@@ -13,7 +13,7 @@ rmrk_common = { path = "../common", default-features = false }
 rmrk_multiasset = { path = "../multiasset", default-features = false }
 
 # external contracts
-catalog = { path = "../catalog", default-features = false, features = ["ink-as-dependency"]}
+rmrk_catalog = { path = "../catalog", default-features = false, features = ["ink-as-dependency"]}
 
 [lib]
 path = "src/lib.rs"

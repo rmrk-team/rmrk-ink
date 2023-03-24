@@ -11,7 +11,6 @@ pub use rmrk_common::{
 };
 
 pub mod storage {
-    // pub use rmrk_base::*;
     pub use rmrk_equippable::*;
     pub use rmrk_minting::*;
     pub use rmrk_multiasset::*;
@@ -19,7 +18,6 @@ pub mod storage {
 }
 
 pub mod traits {
-    // pub use rmrk_base::traits::*;
     pub use rmrk_equippable::traits::*;
     pub use rmrk_minting::traits::*;
     pub use rmrk_multiasset::traits::*;

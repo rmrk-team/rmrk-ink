@@ -1,4 +1,4 @@
-use crate::BaseData;
+use crate::catalog::BaseData;
 
 use rmrk_common::{
     errors::{

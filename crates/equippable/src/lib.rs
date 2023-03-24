@@ -8,6 +8,7 @@ pub mod traits;
 
 use internal::Internal;
 
+use rmrk_catalog::traits::BaseRef;
 use rmrk_common::{
     errors::{
         Result,
@@ -16,8 +17,6 @@ use rmrk_common::{
     types::*,
     utils::Utils,
 };
-
-use catalog::traits::BaseRef;
 
 use rmrk_multiasset::{
     internal::Internal as MultiAssetInternal,

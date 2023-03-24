@@ -11,9 +11,9 @@ pub mod catalog_example {
         },
     };
 
-    use catalog::{
+    use rmrk_catalog::{
+        catalog::*,
         roles::*,
-        storage::*,
         traits::*,
     };
 
@@ -49,13 +49,13 @@ pub mod catalog_example {
 
         use ink::env::test;
 
-        use catalog::{
+        use openbrush::contracts::psp34::extensions::enumerable::*;
+        use rmrk_catalog::{
             errors::*,
             roles::ADMIN,
             traits::Base,
             types::*,
         };
-        use openbrush::contracts::psp34::extensions::enumerable::*;
 
         const METADATA: &str = "ipfs://myIpfsUri/";
         const EQUIPPABLE_ADDRESS1: [u8; 32] = [1; 32];

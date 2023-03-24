@@ -1,12 +1,10 @@
 #![allow(clippy::inline_fn_without_body)]
 
 use crate::traits::{
-    // BaseRef,
     MintingRef,
     MultiAssetRef,
     NestingRef,
 };
-use catalog::traits::BaseRef;
 
 use ink::prelude::vec::Vec;
 use openbrush::{
@@ -16,6 +14,7 @@ use openbrush::{
         String,
     },
 };
+use rmrk_catalog::traits::BaseRef;
 use rmrk_common::{
     errors::Error,
     types::*,

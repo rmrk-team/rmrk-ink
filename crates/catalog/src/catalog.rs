@@ -1,13 +1,10 @@
 //! RMRK Base implementation
 #![cfg_attr(not(feature = "std"), no_std)]
-#![feature(min_specialization)]
-#![allow(clippy::inline_fn_without_body)]
 
-pub mod internal;
-pub mod traits;
-
-use internal::Internal;
-use traits::Base;
+use crate::{
+    internal::Internal,
+    traits::Base,
+};
 
 use rmrk_common::{
     errors::{

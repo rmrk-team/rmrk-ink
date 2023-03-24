@@ -17,7 +17,7 @@ rmrk_common = { path = "../common", default-features = false }
 rmrk_equippable = { path = "../equippable", default-features = false }
 
 # external contracts
-catalog = { path = "../catalog", default-features = false, features = ["ink-as-dependency"]}
+rmrk_catalog = { path = "../catalog", default-features = false, features = ["ink-as-dependency"]}
 
 [lib]
 path = "src/lib.rs"
@@ -32,7 +32,7 @@ std = [
     "scale-info/std",
     "openbrush/std",
     "rmrk_common/std",
-    "catalog/std",
+    "rmrk_catalog/std",
     "rmrk_minting/std",
     "rmrk_multiasset/std",
     "rmrk_nesting/std",
