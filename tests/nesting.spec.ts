@@ -9,7 +9,6 @@ import Rmrk from "../types/contracts/rmrk_example_equippable_lazy";
 import { RmrkError } from "../types/types-returns/rmrk_example_equippable_lazy";
 import { SignAndSendSuccessResponse } from "@727-ventures/typechain-types";
 
-// import { AccountId } from '../types/types-arguments/rmrk_example_equippable_lazy';
 import { emit } from "./helper";
 
 

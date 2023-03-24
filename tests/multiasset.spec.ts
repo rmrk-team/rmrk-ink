@@ -5,6 +5,8 @@ import { ApiPromise, WsProvider, Keyring } from "@polkadot/api";
 import BN from "bn.js";
 import Rmrk_factory from "../types/constructors/rmrk_example_equippable_lazy";
 import Rmrk from "../types/contracts/rmrk_example_equippable_lazy";
+import Catalog_Factory from "../types/constructors/catalog_example";
+import Contract from "../types/contracts/catalog_example";
 import { emit } from "./helper";
 
 use(chaiAsPromised);
@@ -12,6 +14,7 @@ use(chaiAsPromised);
 const MAX_SUPPLY = 888;
 const BASE_URI = "ipfs://tokenUriPrefix/";
 const COLLECTION_METADATA = "ipfs://collectionMetadata/data.json";
+const CATALOG_METADATA = "ipfs://catalogMetadata/data.json";
 const ONE = new BN(10).pow(new BN(18));
 const PRICE_PER_MINT = ONE;
 const ADMIN_ROLE = 0;
@@ -24,12 +27,14 @@ const keyring = new Keyring({ type: "sr25519" });
 describe("RMRK Multi Asset tests", () => {
   let kanariaFactory: Rmrk_factory;
   let gemFactory: Rmrk_factory;
+  let catalogFactory: Catalog_Factory;
   let api: ApiPromise;
   let deployer: KeyringPair;
   let bob: KeyringPair;
   let dave: KeyringPair;
   let kanaria: Rmrk;
   let gem: Rmrk;
+  let catalog: Contract;
 
   beforeEach(async function (): Promise<void> {
     api = await ApiPromise.create({ provider: wsProvider, noInitWarn: true });
@@ -71,6 +76,16 @@ describe("RMRK Multi Asset tests", () => {
       deployer,
       api
     );
+
+    catalogFactory = new Catalog_Factory(api, deployer);
+    catalog = new Contract(
+      (
+        await catalogFactory.new([CATALOG_METADATA])
+      ).address,
+      deployer,
+      api
+    );
+
   });
 
   it("Init two rmrk contracts works", async () => {
@@ -142,11 +157,12 @@ describe("RMRK Multi Asset tests", () => {
     // deployer adds two asset entries for kanaria
     const addAssetResult = await kanaria
       .withSigner(deployer)
-      .tx.addAssetEntry(assetDefaultId, "1", ["ipfs://default.png"], [0])
+      .tx.addAssetEntry(catalog.address, assetDefaultId, "1", ["ipfs://default.png"], [0])
     emit(addAssetResult, "AssetSet", { asset: 1 });
     const addAssetResult2 = await kanaria
       .withSigner(deployer)
       .tx.addAssetEntry(
+        catalog.address,
         assetComposedId,
         "1",
         ["ipfs://meta1.json"],
@@ -180,10 +196,11 @@ describe("RMRK Multi Asset tests", () => {
 
     await gem
       .withSigner(deployer)
-      .tx.addAssetEntry(1, 0, ["ipfs://gems/typeA/full.svg"], [0]);
+      .tx.addAssetEntry(catalog.address, 1, 0, ["ipfs://gems/typeA/full.svg"], [0]);
     await gem
       .withSigner(deployer)
       .tx.addAssetEntry(
+        catalog.address,
         2,
         equippableRefIdLeftGem,
         ["ipfs://gems/typeA/left.svg"],
@@ -192,6 +209,7 @@ describe("RMRK Multi Asset tests", () => {
     await gem
       .withSigner(deployer)
       .tx.addAssetEntry(
+        catalog.address,
         3,
         equippableRefIdMidGem,
         ["ipfs://gems/typeA/mid.svg"],
@@ -200,6 +218,7 @@ describe("RMRK Multi Asset tests", () => {
     await gem
       .withSigner(deployer)
       .tx.addAssetEntry(
+        catalog.address,
         4,
         equippableRefIdRightGem,
         ["ipfs://gems/typeA/right.svg"],
@@ -207,10 +226,11 @@ describe("RMRK Multi Asset tests", () => {
       );
     await gem
       .withSigner(deployer)
-      .tx.addAssetEntry(5, 0, ["ipfs://gems/typeB/full.svg"], [0]);
+      .tx.addAssetEntry(catalog.address, 5, 0, ["ipfs://gems/typeB/full.svg"], [0]);
     await gem
       .withSigner(deployer)
       .tx.addAssetEntry(
+        catalog.address,
         6,
         equippableRefIdLeftGem,
         ["ipfs://gems/typeB/left.svg"],
@@ -219,6 +239,7 @@ describe("RMRK Multi Asset tests", () => {
     await gem
       .withSigner(deployer)
       .tx.addAssetEntry(
+        catalog.address,
         7,
         equippableRefIdMidGem,
         ["ipfs://gems/typeB/mid.svg"],
@@ -227,6 +248,7 @@ describe("RMRK Multi Asset tests", () => {
     await gem
       .withSigner(deployer)
       .tx.addAssetEntry(
+        catalog.address,
         8,
         equippableRefIdRightGem,
         ["ipfs://gems/typeB/right.svg"],
