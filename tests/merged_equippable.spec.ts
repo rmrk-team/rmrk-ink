@@ -8,7 +8,7 @@ import Contract from "../types/contracts/catalog_example";
 import {
   PartType,
   Part,
-} from "../types/types-arguments/rmrk_example_equippable_lazy";
+} from "../types/types-arguments/catalog_example";
 
 import { ApiPromise, WsProvider, Keyring } from "@polkadot/api";
 import { KeyringPair } from "@polkadot/keyring/types";
@@ -196,7 +196,7 @@ describe("RMRK Merged Equippable", () => {
       },
     ];
 
-    // add parts to base
+    // add parts to catalog
     await catalog
       .withSigner(deployer)
       .tx.addPartList(PART_LIST);
@@ -351,7 +351,7 @@ describe("RMRK Merged Equippable", () => {
       "Added 8 gem assets. 2 Types of gems with full, left, mid and right versions."
     );
 
-    // 9, 10 and 11 are the slot part ids for the gems, defined on the base.
+    // 9, 10 and 11 are the slot part ids for the gems, defined on the catalog.
     // e.g. Any asset on gem, which sets its equippableRefId to equippableRefIdLeftGem
     //      will be considered a valid equip into any kanaria on slot 9 (left gem).
     console.log("Setting valid parent reference IDs");

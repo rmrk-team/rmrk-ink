@@ -14,7 +14,6 @@ use openbrush::{
         String,
     },
 };
-use rmrk_catalog::traits::BaseRef;
 use rmrk_common::{
     errors::Error,
     types::*,
@@ -73,25 +72,10 @@ pub type QueryRef = dyn Query;
 #[openbrush::trait_definition]
 pub trait Query {
     #[ink(message)]
-    fn get_part(&self, collection_id: AccountId, part_id: PartId) -> Option<Part> {
-        nested_result_unwrap_or_default(
-            BaseRef::get_part_builder(&collection_id, part_id).try_invoke(),
-        )
-    }
-
-    #[ink(message)]
     fn get_asset(&self, collection_id: AccountId, asset_id: AssetId) -> Option<Asset> {
         nested_result_unwrap_or_default(
             MultiAssetRef::get_asset_builder(&collection_id, asset_id).try_invoke(),
         )
-    }
-
-    #[ink(message)]
-    fn get_parts(&self, collection_id: AccountId, part_ids: Vec<PartId>) -> Vec<Part> {
-        part_ids
-            .into_iter()
-            .filter_map(|id| self.get_part(collection_id, id))
-            .collect()
     }
 
     #[ink(message)]

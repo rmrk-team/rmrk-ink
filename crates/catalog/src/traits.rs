@@ -1,4 +1,4 @@
-//! RMRK Base traits
+//! RMRK Catalog traits
 
 use rmrk_common::{
     errors::Result,
@@ -15,12 +15,12 @@ use openbrush::traits::{
 };
 
 #[openbrush::wrapper]
-pub type BaseRef = dyn Base;
+pub type CatalogRef = dyn Catalog;
 
-/// Trait definitions for Base
+/// Trait definitions for Catalog
 #[openbrush::trait_definition]
-pub trait Base {
-    /// Add one or more parts to the base
+pub trait Catalog {
+    /// Add one or more parts to the Catalog
     #[ink(message)]
     fn add_part_list(&mut self, parts: Vec<Part>) -> Result<()>;
 
@@ -40,13 +40,13 @@ pub trait Base {
     #[ink(message)]
     fn set_equippable_by_all(&mut self, part_id: PartId) -> Result<()>;
 
-    //// Set the Base metadataURI.
+    //// Set the Catalog metadataURI.
     #[ink(message)]
-    fn setup_base(&mut self, base_metadata: String) -> Result<()>;
+    fn setup_catalog(&mut self, catalog_metadata: String) -> Result<()>;
 
-    //// Get the Base metadataURI.
+    //// Get the Catalog metadataURI.
     #[ink(message)]
-    fn get_base_metadata(&self) -> PreludeString;
+    fn get_catalog_metadata(&self) -> PreludeString;
 
     /// Get the list of all parts.
     #[ink(message)]

@@ -8,7 +8,7 @@ pub mod traits;
 
 use internal::Internal;
 
-use rmrk_catalog::traits::BaseRef;
+use rmrk_catalog::traits::CatalogRef;
 use rmrk_common::{
     errors::{
         Result,
@@ -60,9 +60,7 @@ where
         + MultiAsset
         + MultiAssetInternal
         + Internal
-        // + std::convert::From<std::option::Option<ink::primitives::AccountId>>
-        // + Storage<BaseData>
-        + Utils, // + BaseWrapper,
+        + Utils,
 {
     /// Used to equip a child nft into a token.
     default fn equip(
@@ -92,7 +90,7 @@ where
             .ok_or(RmrkError::CatalogNotFoundForAsset)?
         {
             Some(catalog_address) => {
-                BaseRef::ensure_equippable(&catalog_address, slot_part_id, child_nft.0)?;
+                CatalogRef::ensure_equippable(&catalog_address, slot_part_id, child_nft.0)?;
             }
             None => return Err(RmrkError::AssetIdNotEquippable.into()),
         }

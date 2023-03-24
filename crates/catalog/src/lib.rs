@@ -9,14 +9,6 @@ pub use rmrk_common::{
     utils,
 };
 
-// pub mod storage {
-//     pub use rmrk_base::*;
-// }
-
-// pub mod traits {
-//     pub use rmrk_base::traits::*;
-// }
-
 pub mod catalog;
 pub mod internal;
 pub mod traits;

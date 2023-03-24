@@ -15,7 +15,7 @@ pub type CollectionId = AccountId;
 // Nft is a tuple of collection and TokenId and refers to the Child nft
 pub type ChildNft = (CollectionId, Id);
 
-pub type BaseId = u32;
+pub type CatalogId = u32;
 pub type SlotId = u32;
 pub type PartId = u32;
 pub type AssetId = u32;

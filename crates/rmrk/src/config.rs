@@ -70,13 +70,6 @@ where
     instance._setup_role(CONTRIBUTOR, account);
 }
 
-// pub fn with_parts<T>(instance: &mut T, parts: Vec<Part>) -> Result<(), PSP34Error>
-
-// {
-//     BaseRef::add_part_list(parts)?;
-//     Ok(())
-// }
-
 fn _with_royalties<T>(_instance: &mut T, _royalty_receiver: AccountId, _royalty: u8) {
     todo!()
 }

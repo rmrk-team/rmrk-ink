@@ -58,7 +58,7 @@ describe("RMRK Catalog tests", () => {
       },
     ];
 
-    // add parts to base
+    // add parts to catalog
     await catalog
       .withSigner(deployer)
       .tx.addPartList(PART_LIST);

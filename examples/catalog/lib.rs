@@ -24,10 +24,10 @@ pub mod catalog_example {
         #[storage_field]
         access: access_control::Data,
         #[storage_field]
-        base: BaseData,
+        catalog: CatalogData,
     }
 
-    impl Base for CatalogContract {}
+    impl Catalog for CatalogContract {}
 
     impl CatalogContract {
         /// Instantiate new CatalogContract contract
@@ -37,7 +37,7 @@ pub mod catalog_example {
             let admin = Self::env().caller();
             instance._init_with_admin(admin);
             instance._setup_role(CONTRIBUTOR, admin);
-            _ = Base::setup_base(&mut instance, catalog_metadata);
+            _ = Catalog::setup_catalog(&mut instance, catalog_metadata);
 
             instance
         }
@@ -53,7 +53,7 @@ pub mod catalog_example {
         use rmrk_catalog::{
             errors::*,
             roles::ADMIN,
-            traits::Base,
+            traits::Catalog,
             types::*,
         };
 
@@ -74,7 +74,7 @@ pub mod catalog_example {
         }
 
         #[ink::test]
-        fn add_parts_to_base_works() {
+        fn add_parts_to_catalog_works() {
             const ASSET_URI: &str = "asset_uri/";
             const ASSET_ID: AssetId = 1;
             const TOKEN_ID1: Id = Id::U64(1);
@@ -202,11 +202,11 @@ pub mod catalog_example {
         fn setting_metadata_works() {
             let mut catalog = init();
 
-            assert_eq!(catalog.get_base_metadata(), METADATA);
+            assert_eq!(catalog.get_catalog_metadata(), METADATA);
             assert!(catalog
-                .setup_base(String::from("ipfs://base_metadata2"))
+                .setup_catalog(String::from("ipfs://catalog_metadata2"))
                 .is_ok());
-            assert_eq!(catalog.get_base_metadata(), "ipfs://base_metadata2");
+            assert_eq!(catalog.get_catalog_metadata(), "ipfs://catalog_metadata2");
         }
 
         fn default_accounts() -> test::DefaultAccounts<ink::env::DefaultEnvironment> {
