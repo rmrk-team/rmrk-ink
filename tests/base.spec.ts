@@ -1,87 +1,45 @@
 import { expect, use } from "chai";
 import chaiAsPromised from "chai-as-promised";
-import BN from "bn.js";
-import Rmrk_factory from "../types/constructors/rmrk_example_equippable_lazy";
-import Rmrk from "../types/contracts/rmrk_example_equippable_lazy";
-import { RmrkError } from "../types/types-returns/rmrk_example_equippable_lazy";
+import Catalog_Factory from "../types/constructors/catalog_example";
+import Contract from "../types/contracts/catalog_example";
+import { RmrkError } from "../types/types-returns/catalog_example";
 
 import { ApiPromise, WsProvider, Keyring } from "@polkadot/api";
 import { KeyringPair } from "@polkadot/keyring/types";
 import {
   PartType,
   Part,
-} from "../types/types-arguments/rmrk_example_equippable_lazy";
+} from "../types/types-arguments/catalog_example";
 
 use(chaiAsPromised);
 
-const MAX_SUPPLY = 888;
-const BASE_URI = "ipfs://tokenUriPrefix/";
-const COLLECTION_METADATA = "ipfs://collectionMetadata/data.json";
-const BASE_METADATA = "ipfs://baseMetadata";
-const ONE = new BN(10).pow(new BN(18));
-const PRICE_PER_MINT = ONE;
+const CATALOG_METADATA = "ipfs://catalogMetadata/data.json";
 
 // Create a new instance of contract
 const wsProvider = new WsProvider("ws://127.0.0.1:9944");
 // Create a keyring instance
 const keyring = new Keyring({ type: "sr25519" });
 
-describe("RMRK Base tests", () => {
-  let kanariaFactory: Rmrk_factory;
-  let gemFactory: Rmrk_factory;
+describe("RMRK Catalog tests", () => {
+  let catalogFactory: Catalog_Factory;
   let api: ApiPromise;
   let deployer: KeyringPair;
-  let dave: KeyringPair;
-  let kanaria: Rmrk;
-  let gem: Rmrk;
+  let catalog: Contract;
 
   beforeEach(async function (): Promise<void> {
     api = await ApiPromise.create({ provider: wsProvider, noInitWarn: true });
     deployer = keyring.addFromUri("//Alice");
-    dave = keyring.addFromUri("//Dave");
-    kanariaFactory = new Rmrk_factory(api, deployer);
-    kanaria = new Rmrk(
+    catalogFactory = new Catalog_Factory(api, deployer);
+    catalog = new Contract(
       (
-        await kanariaFactory.new(
-          ["Kanaria"],
-          ["KAN"],
-          [BASE_URI],
-          MAX_SUPPLY,
-          PRICE_PER_MINT,
-          [COLLECTION_METADATA],
-          deployer.address,
-          10
-        )
-      ).address,
-      deployer,
-      api
-    );
-
-    gemFactory = new Rmrk_factory(api, deployer);
-    gem = new Rmrk(
-      (
-        await gemFactory.new(
-          ["Gem"],
-          ["GM"],
-          [BASE_URI],
-          MAX_SUPPLY,
-          PRICE_PER_MINT,
-          [COLLECTION_METADATA],
-          dave.address,
-          100
-        )
+        await catalogFactory.new([CATALOG_METADATA])
       ).address,
       deployer,
       api
     );
   });
 
-  it("Setup Base", async () => {
-    // set Base metadata
-    await gem
-      .withSigner(deployer)
-      .tx.setupBase([BASE_METADATA]);
-
+  it("Add/Remove Catalog parts works", async () => {
     // define 2 test Parts
     const PART_LIST: Part[] = [
       {
@@ -101,27 +59,41 @@ describe("RMRK Base tests", () => {
     ];
 
     // add parts to base
-    await gem
+    await catalog
       .withSigner(deployer)
       .tx.addPartList(PART_LIST);
-    expect((await gem.query.getPartsCount())?.value.unwrap()).to.be.equal(2);
+    expect((await catalog.query.getPartsCount())?.value.unwrap()).to.be.equal(2);
 
-    // add/remove equippable addresses
-    await gem
+    // should fail since no addresses are added to equippable list for part 0
+    const failEnsure = await catalog
       .withSigner(deployer)
-      .tx.addEquippableAddresses(0, [kanaria.address]);
-    expect((await gem.query.ensureEquippable(0, kanaria.address))?.value.unwrap()).to.be
+      .query.ensureEquippable(0, catalog.address)
+    expect(failEnsure.value.unwrap().err.rmrk).to.be.equal(RmrkError.addressNotEquippable);
+
+    // add equippable addresses for part 0
+    await catalog
+      .withSigner(deployer)
+      .tx.addEquippableAddresses(0, [catalog.address]);
+    expect((await catalog.query.ensureEquippable(0, catalog.address))?.value.unwrap()).to.be
       .ok;
-    expect((await gem.query.ensureEquippable(1, kanaria.address))?.value.unwrap()).to.be
-      .ok;
-    await gem
+
+    // should fail since address is not added to equippable list for part 1
+    const failEnsure2 = await catalog
+      .withSigner(deployer)
+      .query.ensureEquippable(1, catalog.address)
+    expect(failEnsure2.value.unwrap().err.rmrk).to.be.equal(RmrkError.addressNotEquippable);
+
+    // remove all equippable addresses for part 0
+    expect((await catalog.query.getPart(0))?.value.unwrap().equippable.toString().length).to.be.greaterThan(1);
+    await catalog
       .withSigner(deployer)
       .tx.resetEquippableAddresses(0);
+    expect((await catalog.query.getPart(0))?.value.unwrap().equippable.toString()).to.be.equal("");
 
     // should fail in attempt to add equippable address to fixed part.
-    const failAddEquip = await gem
+    const failAddEquip = await catalog
       .withSigner(deployer)
-      .query.addEquippableAddresses(1, [kanaria.address]);
+      .query.addEquippableAddresses(1, [catalog.address]);
     expect(failAddEquip.value.unwrap().err.rmrk).to.be.equal(RmrkError.partIsNotSlot);
   });
 });

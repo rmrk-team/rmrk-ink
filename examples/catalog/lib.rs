@@ -137,6 +137,7 @@ pub mod catalog_example {
             assert!(catalog.is_equippable_by_all(PART_ID0));
             assert!(!catalog.is_equippable_by_all(42));
             assert!(catalog.reset_equippable_addresses(PART_ID0).is_ok());
+            assert_eq!(catalog.get_parts_count(), 0 as u32);
             assert!(!catalog.is_equippable_by_all(PART_ID0));
             assert!(catalog
                 .ensure_equippable(PART_ID0, EQUIPPABLE_ADDRESS1.into())
