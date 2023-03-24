@@ -526,4 +526,3 @@ pub mod rmrk_example_equippable {
         }
     }
 }
-e
