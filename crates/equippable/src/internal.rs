@@ -61,7 +61,6 @@ where
         + Storage<MultiAssetData>
         + MultiAsset
         + MultiAssetInternal
-        // + Storage<BaseData>
         + Utils,
 {
     /// Check if slot is already used/equipped.
