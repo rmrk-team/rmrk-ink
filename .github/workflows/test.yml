@@ -131,7 +131,7 @@ jobs:
       - name: Integration test on Swanky-node
         run: |
           sudo wget https://github.com/AstarNetwork/swanky-node/releases/download/${{ env.SWANKY_NODE_VER }}/swanky-node-${{ env.SWANKY_NODE_VER }}-ubuntu-x86_64.tar.gz
-          sudo tar -zxvf swanky-node-v${env:SWANKY_NODE_VER}-ubuntu-x86_64.tar.gz
+          sudo tar -zxvf swanky-node-${{ env.SWANKY_NODE_VER }}-ubuntu-x86_64.tar.gz
           sudo chmod +x swanky-node
           ./swanky-node -lerror,runtime::contracts=debug &
           sleep 10
