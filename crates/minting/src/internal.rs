@@ -65,7 +65,7 @@ where
         {
             return match self.data::<MintingData>().max_supply {
                 Some(max_supply) if amount <= max_supply => Ok(()),
-                None => Ok(()),
+                Some(0) | None => Ok(()),
                 _ => Err(RmrkError::CollectionIsFull.into()),
             }
         }
