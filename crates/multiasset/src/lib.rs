@@ -59,7 +59,7 @@ pub struct MultiAssetData {
     pub pending_assets: Mapping<Id, Vec<AssetId>>,
 
     /// Catalog assigned to assetId. Added with add_asset_entry
-    /// An asset can also have None as a catalog, therefore the Option
+    /// An asset can also have None as a catalog, hence the Option
     pub asset_catalog_address: Mapping<AssetId, Option<AccountId>>,
 }
 
