@@ -235,7 +235,7 @@ where
     fn get_pending_children(&self, parent_token_id: Id) -> Vec<ChildNft> {
         self.data::<NestingData>()
             .pending_children
-            .get(&parent_token_id)
+            .get(parent_token_id)
             .unwrap_or_default()
     }
 
@@ -243,7 +243,7 @@ where
     fn get_accepted_children(&self, parent_token_id: Id) -> Vec<ChildNft> {
         self.data::<NestingData>()
             .accepted_children
-            .get(&parent_token_id)
+            .get(parent_token_id)
             .unwrap_or_default()
     }
 }

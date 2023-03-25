@@ -88,7 +88,7 @@ where
             .nft_metadata
             .insert(token_id, &metadata);
 
-        return Ok(())
+        Ok(())
     }
 
     /// Get max supply of tokens.
@@ -118,7 +118,8 @@ where
         self._check_amount(1)?;
         self._check_value(Self::env().transferred_value(), 1)?;
         self._mint(Self::env().caller())?;
-        return Ok(())
+
+        Ok(())
     }
 
     /// Purchas many tokens.
@@ -127,6 +128,7 @@ where
         self._check_amount(mint_amount)?;
         self._check_value(Self::env().transferred_value(), mint_amount)?;
         self._mint_many(Self::env().caller(), mint_amount)?;
+
         Ok(())
     }
 

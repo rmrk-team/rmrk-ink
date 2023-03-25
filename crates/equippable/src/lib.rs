@@ -86,7 +86,7 @@ where
         match self
             .data::<MultiAssetData>()
             .asset_catalog_address
-            .get(&asset_id)
+            .get(asset_id)
             .ok_or(RmrkError::CatalogNotFoundForAsset)?
         {
             Some(catalog_address) => {
@@ -159,9 +159,9 @@ where
             .collection_asset_entries
             .get(asset_id)
         {
-            return Ok(asset)
+            Ok(asset)
         } else {
-            return Err(RmrkError::AssetIdNotFound.into())
+            Err(RmrkError::AssetIdNotFound.into())
         }
     }
 }

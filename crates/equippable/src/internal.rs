@@ -128,9 +128,9 @@ where
             .equipment
             .get((token_id, slot_part_id))
         {
-            return Ok(equipment)
+            Ok(equipment)
         } else {
-            return Err(RmrkError::NotEquipped.into())
+            Err(RmrkError::NotEquipped.into())
         }
     }
 }

@@ -236,7 +236,8 @@ where
         {
             return Err(RmrkError::AssetIdAlreadyExists.into())
         }
-        return Ok(())
+
+        Ok(())
     }
 
     /// Used to retrieve asset's uri

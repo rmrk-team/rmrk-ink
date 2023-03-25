@@ -63,7 +63,7 @@ where
             let part_id = self.data::<CatalogData>().next_part_id;
 
             if part.part_type == PartType::Fixed
-                && (part.equippable.len() != 0 || part.is_equippable_by_all)
+                && (!part.equippable.is_empty() || part.is_equippable_by_all)
             {
                 return Err(RmrkError::BadConfig.into())
             }
@@ -153,6 +153,6 @@ where
             return part.is_equippable_by_all
         }
 
-        return false
+        false
     }
 }

@@ -107,7 +107,7 @@ pub trait Query {
         );
 
         let children_accepted = nested_result_unwrap_or_default(
-            NestingRef::get_accepted_children_builder(&collection_id, id.clone()).try_invoke(),
+            NestingRef::get_accepted_children_builder(&collection_id, id).try_invoke(),
         );
 
         Token {

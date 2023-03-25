@@ -24,9 +24,9 @@ where
             if part.part_type != PartType::Slot {
                 return Err(RmrkError::PartIsNotSlot.into())
             }
-            return Ok(part)
+            Ok(part)
         } else {
-            return Err(RmrkError::UnknownPartId.into())
+            Err(RmrkError::UnknownPartId.into())
         }
     }
 }
