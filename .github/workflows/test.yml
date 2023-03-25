@@ -11,7 +11,7 @@ env:
   NODE_JS_VER: 18.x
   SWANKY_NODE_VER: v1.2.0
 jobs:
-  tests:
+  install:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout the source code
@@ -20,7 +20,7 @@ jobs:
       - name: Install & display rust toolchain
         run: |
           rustup show
-          rustup component add rust-src
+          rustup component add rust-src --toolchain nightly-x86_64-unknown-linux-gnu
           rustup toolchain install nightly
           rustup component add clippy --toolchain nightly-x86_64-unknown-linux-gnu
           rustup show
@@ -41,6 +41,23 @@ jobs:
         with:
           node-version: ${{ env.NODE_JS_VER }}
 
+      - name: Cargo check
+        run: cargo +nightly check
+
+      - name: Check Clippy
+        run: cargo +nightly clippy
+
+  unittest:
+    needs: install
+    runs-on: ubuntu-latest
+    steps:
+      - name: Unit test
+        run: cargo test
+
+  integration:
+    needs: [install, unittest]
+    runs-on: ubuntu-latest
+    steps:
       - name: Check if cargo-contract exists
         id: check-cargo-contract
         continue-on-error: true
@@ -51,15 +68,7 @@ jobs:
         run: |
           cargo install cargo-dylint dylint-link
           cargo install --force --locked cargo-contract
-
-      - name: Unit test
-        run: cargo test
-
-      - name: Cargo check
-        run: cargo +nightly check
-
-      - name: Check Clippy
-        run: cargo +nightly clippy
+          cargo contract --version
 
       - name: Compile contracts
         run: |
