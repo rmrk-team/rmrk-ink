@@ -11,7 +11,7 @@ env:
   NODE_JS_VER: 18.x
   SWANKY_NODE_VER: v1.2.0
 jobs:
-  build:
+  tests:
     runs-on: ubuntu-latest
     - name: Checkout the source code
       uses: actions/checkout@v3
