@@ -54,23 +54,43 @@ jobs:
 
       - name: Checkout the source code
         uses: actions/checkout@v3
-        
+
       - name: Unit test
         run: cargo test
 
-  integration:
-    needs: [install, unittest]
+  format:
+    needs: install
     runs-on: ubuntu-latest
     steps:
+      - name: Use cashed cargo
+        uses: actions/cache@v3
+        with:
+          path: ~/.cargo
+          key: ${{ runner.os }}-rust-${{ hashFiles('rust-toolchain.toml') }}
+
+      - name: Checkout the source code
+        uses: actions/checkout@v3
+
+      - name: Format rust code
+        run: cargo fmt --all
+
+  integration:
+    needs: install
+    runs-on: ubuntu-latest
+    steps:
+      - name: Use cashed cargo
+        uses: actions/cache@v3
+        with:
+          path: ~/.cargo
+          key: ${{ runner.os }}-rust-${{ hashFiles('rust-toolchain.toml') }}
+
+      - name: Checkout the source code
+        uses: actions/checkout@v3
+
       - name: Check if cargo-contract exists
         id: check-cargo-contract
         continue-on-error: true
         run: cargo contract --version
-
-      - name: Use Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: ${{ env.NODE_JS_VER }}
 
       - name: Install cargo contract
         if: ${{ steps.check-cargo-contract.outcome == 'failure' }}
@@ -79,12 +99,17 @@ jobs:
           cargo install --force --locked cargo-contract
           cargo contract --version
 
+      - name: Use Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ env.NODE_JS_VER }}
+
       - name: Compile contracts
         run: |
           yarn
           yarn compile
 
-      - name: integration test
+      - name: Integration test on Swanky-node
         run: |
           sudo wget https://github.com/AstarNetwork/swanky-node/releases/download/${{ env.SWANKY_NODE_VER }}/swanky-node-${{ env.SWANKY_NODE_VER }}-ubuntu-x86_64.tar.gz
           sudo tar -zxvf swanky-node-v${env:SWANKY_NODE_VER}-ubuntu-x86_64.tar.gz
