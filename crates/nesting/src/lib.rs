@@ -255,7 +255,6 @@ where
         let child_id = child_nft.1;
 
         let owner = self.ensure_exists_and_get_owner(&child_id)?;
-        let children = self.get_accepted_children(owner);
 
         Ok(Default::default())
     }
