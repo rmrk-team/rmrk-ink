@@ -42,7 +42,6 @@ pub const STORAGE_NESTING_KEY: u32 = openbrush::storage_unique_key!(NestingData)
 pub struct NestingData {
     pub pending_children: Mapping<Id, Vec<ChildNft>>,
     pub accepted_children: Mapping<Id, Vec<ChildNft>>,
-    pub children_parent: Mapping<ChildNft, Id>,
 }
 
 impl<T> Nesting for T
@@ -83,7 +82,6 @@ where
         self._emit_added_child_event(&to_parent_token_id, &child_nft.0, &child_nft.1);
         let caller = Self::env().caller();
         if caller == parent_owner {
-            self.add_parent_to_child(&child_nft, &to_parent_token_id);
             self.add_to_accepted(to_parent_token_id, child_nft);
         } else {
             self.add_to_pending(to_parent_token_id, child_nft);
@@ -117,7 +115,6 @@ where
         // Transfer child ownership from this contract to parent_token owner.
         // This call will fail if this contract is not child owner
         let token_owner = self.ensure_exists_and_get_owner(&parent_token_id)?;
-        self.remove_parent_from_child(&child_nft);
         self.transfer_child_ownership(token_owner, child_nft)?;
 
         Ok(())
@@ -142,7 +139,6 @@ where
         self.accepted(&parent_token_id, &child_nft)?;
 
         self.remove_from_pending(&parent_token_id, &child_nft)?;
-        self.add_parent_to_child(&child_nft, &parent_token_id);
         self.add_to_accepted(parent_token_id, child_nft);
 
         Ok(())
@@ -198,7 +194,6 @@ where
 
         self._emit_added_child_event(&new_parent, &child_nft.0, &child_nft.1);
         if current_parent_owner == new_parent_owner {
-            self.add_parent_to_child(&child_nft, &new_parent);
             self.add_to_accepted(new_parent, child_nft);
         } else {
             self.add_to_pending(new_parent, child_nft);
@@ -257,13 +252,12 @@ where
 
     /// Returns the parent token_id of a `child_nft`.
     fn get_owner_of_child(&self, child_nft: ChildNft) -> Result<Id> {
-        let parent_token_id = self
-            .data::<NestingData>()
-            .children_parent
-            .get(&child_nft)
-            .ok_or(PSP34Error::TokenNotExists)?;
+        let child_id = child_nft.1;
 
-        Ok(parent_token_id)
+        let owner = self.ensure_exists_and_get_owner(&child_id)?;
+        let children = self.get_accepted_children(owner);
+
+        Ok(Default::default())
     }
 }
 
