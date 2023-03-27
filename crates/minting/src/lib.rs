@@ -80,6 +80,8 @@ where
     /// Mint many tokens to the specified account.
     #[modifiers(only_role(CONTRIBUTOR), non_reentrant)]
     default fn mint_many(&mut self, to: AccountId, mint_amount: u64) -> Result<(Id, Id)> {
+        ink::env::debug_println!("************ mint_many {:?} ", mint_amount);
+
         self._check_amount(mint_amount)?;
         self._mint_many(to, mint_amount)
     }

@@ -92,15 +92,16 @@ where
     }
 
     /// Add a list of parent-child token pairs. The child NFT is from a different collection.
-    default fn add_many_children(&mut self, parent_child_pair: Vec<(Id, ChildNft)>) -> Result<()> {
+    default fn add_many_children(&mut self, child_contract: AccountId, parent_child_pair: Vec<(Id, Id)>) -> Result<()> {
         ensure!(
             parent_child_pair.len() <= MAX_BATCH_ADD_CHILDREN,
             RmrkError::TooManyTokenPairsInBatch
         );
-        for (parent_token_id, child_nft) in parent_child_pair {
-            self.add_child(parent_token_id, child_nft)?;
+        for (parent_id, child_id) in parent_child_pair {
+            self.add_child(parent_id, (child_contract, child_id))?;
         }
-
+            // let (parent_id, child_id) = &parent_child_pair[0];
+            // self.add_child(parent_id.clone(), (child_contract, child_id.clone()))?;
         Ok(())
     }
 
