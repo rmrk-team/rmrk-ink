@@ -461,6 +461,7 @@ pub mod rmrk_example_equippable {
         use rmrk::{
             errors::*,
             roles::ADMIN,
+            storage::MAX_BATCH_TOKENS_PER_ASSET,
             traits::{
                 Base,
                 Equippable,
@@ -472,7 +473,7 @@ pub mod rmrk_example_equippable {
         };
 
         const BASE_URI: &str = "ipfs://myIpfsUri/";
-        const MAX_SUPPLY: u64 = 10;
+        const MAX_SUPPLY: u64 = 1000;
 
         #[ink::test]
         fn init_works() {
@@ -663,6 +664,37 @@ pub mod rmrk_example_equippable {
             assert_eq!(10, ink::env::test::recorded_events().count());
             assert_eq!(rmrk.get_accepted_token_assets(TOKEN_ID2), Ok(vec![]));
             assert_eq!(rmrk.total_token_assets(TOKEN_ID2), Ok((0, 0)));
+        }
+
+        #[ink::test]
+        fn add_asset_to_many_tokens_works() {
+            let accounts = default_accounts();
+            const ASSET_URI: &str = "asset_uri/";
+            const ASSET_ID: AssetId = 1;
+            const TOKEN_ID1: Id = Id::U64(1);
+
+            let mut rmrk = init();
+            // Add new asset entry
+            assert!(rmrk
+                .add_asset_entry(ASSET_ID, 1, String::from(ASSET_URI), vec![])
+                .is_ok());
+
+            // mint many tokens and add asset to it. Should be accepted without approval
+            assert!(rmrk
+                .mint_many(accounts.alice, MAX_BATCH_TOKENS_PER_ASSET as u64)
+                .is_ok());
+            assert_eq!(
+                MAX_BATCH_TOKENS_PER_ASSET,
+                ink::env::test::recorded_events().count() - 1
+            );
+            assert_eq!(rmrk.total_supply(), MAX_BATCH_TOKENS_PER_ASSET as u128);
+
+            let mut token_vec = Vec::new();
+            for i in 1..(MAX_BATCH_TOKENS_PER_ASSET + 1) as u64 {
+                token_vec.push(Id::U64(i));
+            }
+
+            assert!(rmrk.add_asset_to_many_tokens(token_vec, ASSET_ID).is_ok());
         }
 
         #[ink::test]
@@ -1016,7 +1048,7 @@ pub mod rmrk_example_equippable {
                 Err(RmrkError::TargetAssetCannotReceiveSlot.into())
             );
 
-            // equip fails, SlotAlreayUsed
+            // equip fails, SlotAlreadyUsed
             assert_eq!(
                 kanaria.equip(
                     TOKEN_ID1,
@@ -1025,7 +1057,7 @@ pub mod rmrk_example_equippable {
                     (CHILD_COLLECTION_ADDRESS.into(), CHILD_TOKEN_ID),
                     CHILD_ASSET_ID,
                 ),
-                Err(RmrkError::SlotAlreayUsed.into())
+                Err(RmrkError::SlotAlreadyUsed.into())
             );
 
             // un-equip token

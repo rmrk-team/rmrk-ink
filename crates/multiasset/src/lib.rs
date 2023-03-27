@@ -9,6 +9,7 @@ pub mod traits;
 use internal::Internal;
 
 use rmrk_common::{
+    ensure,
     errors::{
         Result,
         RmrkError,
@@ -40,6 +41,7 @@ use openbrush::{
     },
 };
 
+pub const MAX_BATCH_TOKENS_PER_ASSET: usize = 50;
 pub const STORAGE_MULTIASSET_KEY: u32 = openbrush::storage_unique_key!(MultiAssetData);
 
 #[derive(Default, Debug)]
@@ -124,6 +126,22 @@ where
             } else {
                 self.add_to_pending_assets(&token_id, &asset_id);
             }
+        }
+
+        Ok(())
+    }
+
+    /// Used to add an asset to a vector of tokens.
+    /// tokenId - ID of the token to add the asset to
+    /// assetId - ID of the asset to add to the token
+    fn add_asset_to_many_tokens(&mut self, tokens: Vec<Id>, asset_id: AssetId) -> Result<()> {
+        ensure!(
+            tokens.len() <= MAX_BATCH_TOKENS_PER_ASSET,
+            RmrkError::TooManyTokensInBatch
+        );
+
+        for token_id in tokens {
+            self.add_asset_to_token(token_id, asset_id, None)?;
         }
 
         Ok(())

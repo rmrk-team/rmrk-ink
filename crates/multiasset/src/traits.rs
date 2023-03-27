@@ -42,7 +42,6 @@ pub trait MultiAsset {
     ///  * assetId ID of the asset to add to the token
     ///  * replacesAssetWithId ID of the asset to replace from the token's list of active assets
     /// Emits an {AssetAddedToToken} event.
-
     #[ink(message)]
     fn add_asset_to_token(
         &mut self,
@@ -50,6 +49,10 @@ pub trait MultiAsset {
         asset_id: AssetId,
         replaces_asset_with_id: Option<AssetId>,
     ) -> Result<()>;
+
+    /// Used to add an assets to multiple tokens.
+    /// Works the same as add_asset_to_token(), but for multiple tokens.
+    fn add_asset_to_many_tokens(&mut self, token_ids: Vec<Id>, asset_id: AssetId) -> Result<()>;
 
     /// Accepts an asset at from the pending array of given token.
     /// Migrates the asset from the token's pending asset array to the token's active asset array.

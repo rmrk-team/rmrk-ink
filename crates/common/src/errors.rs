@@ -93,8 +93,9 @@ pub enum RmrkError {
     NotEquipped,
     NotTokenOwner,
     PartIsNotSlot,
-    SlotAlreayUsed,
+    SlotAlreadyUsed,
     TargetAssetCannotReceiveSlot,
+    TooManyTokensInBatch,
     UnknownEquippableAsset,
     UnknownPart,
     UnknownPartId,
@@ -126,12 +127,25 @@ impl ToString for RmrkError {
             RmrkError::NotEquipped => String::from("NotEquipped"),
             RmrkError::NotTokenOwner => String::from("NotTokenOwner"),
             RmrkError::PartIsNotSlot => String::from("PartIsNotSlot"),
-            RmrkError::SlotAlreayUsed => String::from("SlotAlreayUsed"),
+            RmrkError::SlotAlreadyUsed => String::from("SlotAlreadyUsed"),
             RmrkError::TargetAssetCannotReceiveSlot => String::from("TargetAssetCannotReceiveSlot"),
+            RmrkError::TooManyTokensInBatch => String::from("TooManyTokensInBatch"),
             RmrkError::UnknownEquippableAsset => String::from("UnknownEquippableAsset"),
             RmrkError::UnknownPart => String::from("UnknownPart"),
             RmrkError::UnknownPartId => String::from("UnknownPartId"),
             RmrkError::WithdrawalFailed => String::from("WithdrawalFailed"),
         }
     }
+}
+
+/// Evaluate `$x:expr` and if not true return `Err($y:expr)`.
+///
+/// Used as `ensure!(expression_to_ensure, expression_to_return_on_false)`.
+#[macro_export]
+macro_rules! ensure {
+    ( $x:expr, $y:expr $(,)? ) => {{
+        if !$x {
+            return Err($y.into())
+        }
+    }};
 }

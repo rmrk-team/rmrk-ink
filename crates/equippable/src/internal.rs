@@ -74,7 +74,7 @@ where
             .get((token_id, part_id)))
         .is_some()
         {
-            return Err(RmrkError::SlotAlreayUsed.into())
+            return Err(RmrkError::SlotAlreadyUsed.into())
         }
         Ok(())
     }
