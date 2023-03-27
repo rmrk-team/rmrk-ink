@@ -461,7 +461,6 @@ pub mod rmrk_example_equippable {
         use rmrk::{
             errors::*,
             roles::ADMIN,
-            storage::MAX_BATCH_TOKENS_PER_ASSET,
             traits::{
                 Base,
                 Equippable,

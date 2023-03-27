@@ -273,6 +273,59 @@ describe("RMRK Nesting tests", () => {
     // bob now owns child token (in child contract). Remember that Dave originally minted it.
     expect((await child.query.ownerOf({ u64: 1 })).value.unwrap()).to.equal(bob.address);
   });
+
+  it("mint and transfer many works", async () => {
+    const PARENT_TOKENS = 2;
+    const CHILD_TOKENS = 2;
+    // bob mints token1 parent
+    let res = await mintMany(parent, deployer, PARENT_TOKENS);
+    console.log("mintMany", res);
+    // expect(
+    //   (await parent.query.totalSupply()).value.unwrap().toNumber()
+    // ).to.equal(PARENT_TOKENS);
+
+    // // dave mints token2 on parent
+    // await mintMany(child, deployer, CHILD_TOKENS);
+    // expect(
+    //   (await child.query.totalSupply()).value.unwrap().toNumber()
+    // ).to.equal(CHILD_TOKENS);
+    // // dave mints a child and approves parent's contract for child nft
+    // await mintOne(child, dave);
+    // await approve(child, parent, dave);
+
+    // // dave adds child nft to his parent token2
+    // await addChild(child, parent, dave, 2);
+
+    // // dave transfers his child-1 from parent-2 to bob's parent-1, bob accepts the child
+    // const transferChildResult = await parent
+    //   .withSigner(dave)
+    //   .tx.transferChild({ u64: 2 }, { u64: 1 }, [child.address, { u64: 1 }]);
+    // emit(transferChildResult, "ChildRemoved", {
+    //   parent: { u64: 2 },
+    //   childCollection: child.address,
+    //   childTokenId: { u64: 1 },
+    // });
+    // expect(
+    //   (await parent.query.childrenBalance({ u64: 2 }))?.value.unwrap().ok.toString()
+    // ).to.be.equal("0,0");
+    // expect(
+    //   (await parent.query.childrenBalance({ u64: 1 }))?.value.unwrap().ok.toString()
+    // ).to.be.equal("0,1");
+
+    // // bob accepts new child
+    // await acceptChild(child, parent, bob)
+
+    // // parent contract owns child token (in child contract)
+    // expect((await child.query.ownerOf({ u64: 1 })).value.unwrap()).to.equal(
+    //   parent.address
+    // );
+
+    // // bob removes child from parent token2
+    // await removeChild(child, parent, bob);
+
+    // // bob now owns child token (in child contract). Remember that Dave originally minted it.
+    // expect((await child.query.ownerOf({ u64: 1 })).value.unwrap()).to.equal(bob.address);
+  });
 });
 
 
@@ -290,6 +343,17 @@ const mintOne = async (contract: Rmrk, signer: KeyringPair, token?: number): Pro
     to: signer.address,
     id: { u64: token ? token : 1 },
   });
+  return mintResult;
+}
+
+// helper function to mint a token
+const mintMany = async (contract: Rmrk, signer: KeyringPair, amount: number): Promise<SignAndSendSuccessResponse> => {
+  // call mint function
+  let mintResult = await contract
+    .withSigner(signer)
+    .tx.mintMany(
+      amount,
+    );
   return mintResult;
 }
 

@@ -21,6 +21,10 @@ pub type PartId = u32;
 pub type AssetId = u32;
 pub type EquippableGroupId = u32;
 
+pub const MAX_BATCH_TOKENS_PER_ASSET: usize = 50;
+pub const MAX_BATCH_ADD_CHILDREN: usize = 50;
+pub const MAX_BATCH_TOKEN_TRANSFERS: usize = 50;
+
 /// Part's details
 #[derive(scale::Encode, scale::Decode, Default, Debug)]
 #[cfg_attr(

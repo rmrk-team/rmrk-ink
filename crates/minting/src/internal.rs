@@ -1,11 +1,18 @@
 use crate::MintingData;
 
-use rmrk_common::errors::{
-    Result,
-    RmrkError,
+use rmrk_common::{
+    ensure,
+    errors::{
+        Result,
+        RmrkError,
+    },
+    types::MAX_BATCH_TOKEN_TRANSFERS,
 };
 
-use ink::prelude::string::String as PreludeString;
+use ink::prelude::{
+    string::String as PreludeString,
+    vec::Vec,
+};
 
 use openbrush::{
     contracts::psp34::extensions::enumerable::*,
@@ -28,6 +35,9 @@ pub trait Internal {
 
     /// Mint many tokens to specified account
     fn _mint_many(&mut self, to: AccountId, mint_amount: u64) -> Result<(Id, Id)>;
+
+    /// Transfer many tokens to specified addresses
+    fn _transfer_many(&mut self, token_to_destination: Vec<(Id, AccountId)>) -> Result<()>;
 
     /// Get URI for the token Id.
     fn _token_uri(&self, token_id: u64) -> Result<PreludeString>;
@@ -95,6 +105,19 @@ where
         }
 
         Ok((Id::U64(next_to_mint), Id::U64(mint_offset - 1)))
+    }
+
+    /// Transfer many tokens to specified addresses
+    default fn _transfer_many(&mut self, token_to_destination: Vec<(Id, AccountId)>) -> Result<()> {
+        ensure!(
+            token_to_destination.len() <= MAX_BATCH_TOKEN_TRANSFERS,
+            RmrkError::TooManyTokensToTransfer
+        );
+        for (token_id, destination) in token_to_destination {
+            self._transfer_token(destination, token_id, Vec::new())?;
+        }
+
+        Ok(())
     }
 
     /// Get URI for the token Id.

@@ -40,6 +40,15 @@ pub trait Nesting {
     #[ink(message)]
     fn add_child(&mut self, parent_token_id: Id, child_nft: ChildNft) -> Result<()>;
 
+    /// Add a list of parent-child token pairs. The child NFT is from a different collection.
+    /// The parent in the pair is from this collection
+    /// Works the same as add_child(), but for multiple parent-child token pairs.
+    ///
+    /// # Arguments:
+    /// * `parent_child_pair`: is the list of parent-child pairs.
+    #[ink(message)]
+    fn add_many_children(&mut self, parent_child_pair: Vec<(Id, ChildNft)>) -> Result<()>;
+
     /// Remove a child NFT (from different collection) from token_id in this collection.
     /// The status of added child is `Pending` if caller is not owner of child NFT
     /// The status of added child is `Accepted` if caller is is owner of child NFT

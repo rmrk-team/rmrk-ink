@@ -41,7 +41,6 @@ use openbrush::{
     },
 };
 
-pub const MAX_BATCH_TOKENS_PER_ASSET: usize = 50;
 pub const STORAGE_MULTIASSET_KEY: u32 = openbrush::storage_unique_key!(MultiAssetData);
 
 #[derive(Default, Debug)]

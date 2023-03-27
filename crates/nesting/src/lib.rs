@@ -7,7 +7,11 @@ pub mod internal;
 pub mod traits;
 
 use rmrk_common::{
-    errors::Result,
+    ensure,
+    errors::{
+        Result,
+        RmrkError,
+    },
     types::*,
     utils::Utils,
 };
@@ -82,6 +86,19 @@ where
             self.add_to_accepted(to_parent_token_id, child_nft);
         } else {
             self.add_to_pending(to_parent_token_id, child_nft);
+        }
+
+        Ok(())
+    }
+
+    /// Add a list of parent-child token pairs. The child NFT is from a different collection.
+    default fn add_many_children(&mut self, parent_child_pair: Vec<(Id, ChildNft)>) -> Result<()> {
+        ensure!(
+            parent_child_pair.len() <= MAX_BATCH_ADD_CHILDREN,
+            RmrkError::TooManyTokenPairsInBatch
+        );
+        for (parent_token_id, child_nft) in parent_child_pair {
+            self.add_child(parent_token_id, child_nft)?;
         }
 
         Ok(())

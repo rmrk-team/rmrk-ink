@@ -15,7 +15,10 @@ use rmrk_common::{
 };
 
 use ink::{
-    prelude::string::String as PreludeString,
+    prelude::{
+        string::String as PreludeString,
+        vec::Vec,
+    },
     storage::Mapping,
 };
 
@@ -81,6 +84,14 @@ where
         self._mint_many(to, mint_amount)
     }
 
+    /// Transfer many tokens to the specified account.
+    #[modifiers(non_reentrant)]
+    default fn transfer_many(&mut self, token_to_destination: Vec<(Id, AccountId)>) -> Result<()> {
+        self._transfer_many(token_to_destination)?;
+
+        return Ok(())
+    }
+
     /// Assign metadata to specified token.
     #[modifiers(only_role(CONTRIBUTOR))]
     default fn assign_metadata(&mut self, token_id: Id, metadata: String) -> Result<()> {
@@ -127,6 +138,14 @@ where
         self._check_amount(mint_amount)?;
         self._check_value(Self::env().transferred_value(), mint_amount)?;
         self._mint_many(Self::env().caller(), mint_amount)?;
+        Ok(())
+    }
+
+    /// Transfer many tokens to the specified account.
+    #[modifiers(non_reentrant)]
+    default fn transfer_many(&mut self, token_to_destination: Vec<(Id, AccountId)>) -> Result<()> {
+        self._transfer_many(token_to_destination)?;
+
         Ok(())
     }
 
