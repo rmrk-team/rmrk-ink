@@ -273,7 +273,7 @@ where
     }
 
     /// Fetch asset's catalog
-    fn get_asset_catalog(&self, asset_id: AssetId) -> Option<AccountId> {
+    fn get_asset_catalog_address(&self, asset_id: AssetId) -> Option<AccountId> {
         self.data::<MultiAssetData>()
             .asset_catalog_address
             .get(asset_id)

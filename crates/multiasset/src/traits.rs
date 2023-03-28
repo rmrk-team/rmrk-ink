@@ -126,7 +126,7 @@ pub trait MultiAsset {
 
     /// Used to retrieve asset's catalog
     #[ink(message)]
-    fn get_asset_catalog(&self, asset_id: AssetId) -> Option<AccountId>;
+    fn get_asset_catalog_address(&self, asset_id: AssetId) -> Option<AccountId>;
 
     /// Check that asset id does not already exist.
     fn ensure_asset_id_is_available(&self, asset_id: AssetId) -> Result<()>;

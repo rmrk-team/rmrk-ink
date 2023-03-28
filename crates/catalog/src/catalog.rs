@@ -69,7 +69,10 @@ where
             }
             self.data::<CatalogData>().parts.insert(part_id, &part);
             self.data::<CatalogData>().part_ids.push(part_id);
-            self.data::<CatalogData>().next_part_id += 1;
+            match self.data::<CatalogData>().next_part_id.checked_add(1) {
+                Some(id) => self.data::<CatalogData>().next_part_id = id,
+                None => return Err(RmrkError::BadConfig.into()),
+            }
         }
 
         Ok(())
