@@ -1,25 +1,20 @@
 import { expect, use } from "chai";
 import chaiAsPromised from "chai-as-promised";
-import { encodeAddress } from "@polkadot/keyring";
 import { KeyringPair } from "@polkadot/keyring/types";
 import { ApiPromise, WsProvider, Keyring } from "@polkadot/api";
-import BN from "bn.js";
 import Rmrk_factory from "../types/constructors/rmrk_example_equippable";
 import Rmrk from "../types/contracts/rmrk_example_equippable";
-import { RmrkError } from "../types/types-returns/rmrk_example_equippable";
-import { SignAndSendSuccessResponse } from "@727-ventures/typechain-types";
+import type * as ArgumentTypes from '../types/types-arguments/rmrk_example_equippable';
+
+import { RequestArgumentType, SignAndSendSuccessResponse } from "@727-ventures/typechain-types";
 
 import { emit } from "./helper";
-
 
 use(chaiAsPromised);
 
 const MAX_SUPPLY = 888;
 const BASE_URI = "ipfs://tokenUriPrefix/";
 const COLLECTION_METADATA = "ipfs://collectionMetadata/data.json";
-const ONE = new BN(10).pow(new BN(18));
-const PRICE_PER_MINT = ONE;
-const ADMIN_ROLE = 0;
 
 // Create a new instance of contract
 const wsProvider = new WsProvider("ws://127.0.0.1:9944");
@@ -31,21 +26,13 @@ describe("RMRK Nesting tests", () => {
   let childFactory: Rmrk_factory;
   let api: ApiPromise;
   let deployer: KeyringPair;
-  let bob: KeyringPair;
-  let dave: KeyringPair;
-  let users: KeyringPair[];
   let parent: Rmrk;
   let child: Rmrk;
-
-  const ZERO_ADDRESS = encodeAddress(
-    "0x0000000000000000000000000000000000000000000000000000000000000000"
-  );
 
   beforeEach(async function (): Promise<void> {
     api = await ApiPromise.create({ provider: wsProvider });
     deployer = keyring.addFromUri("//Alice");
-    bob = keyring.addFromUri("//Bob");
-    dave = keyring.addFromUri("//Dave");
+
     parentFactory = new Rmrk_factory(api, deployer);
     parent = new Rmrk(
       (
@@ -127,13 +114,32 @@ describe("RMRK Nesting tests", () => {
       (await parent.query.childrenBalance({ u64: PARENT_TOKENS }))?.value.unwrap().ok.toString()
     ).to.be.equal("1,0");
 
+    // deployer transfers all tokens to users
+    const manyUsers = createBatchUsers(PARENT_TOKENS);
+    let tokenDestinationPair = new Array<[ArgumentTypes.Id, ArgumentTypes.AccountId]>();
+    for (let i = 1; i <= PARENT_TOKENS; i++) {
+      tokenDestinationPair.push([{ u64: i }, manyUsers[i - 1].address]);
+    }
+
+    let txResult = await parent
+      .withSigner(deployer)
+      .tx.transferMany(
+        tokenDestinationPair,
+      );
+    console.log("txResult", txResult.toString());
+    expect((await parent.query.ownerOf({ u64: 1 })).value.unwrap()).to.equal(
+      manyUsers[0].address
+    );
+    expect((await parent.query.ownerOf({ u64: PARENT_TOKENS })).value.unwrap()).to.equal(
+      manyUsers[PARENT_TOKENS - 1].address
+    );
+
   });
 });
 
 
-// helper function to mint a token
+// helper function to mint many tokens
 const mintMany = async (contract: Rmrk, signer: KeyringPair, mintAmount: number): Promise<void> => {
-  // call mint function
   let mintResult = await contract
     .withSigner(signer)
     .tx.mintMany(
@@ -144,8 +150,6 @@ const mintMany = async (contract: Rmrk, signer: KeyringPair, mintAmount: number)
 
 // helper function to add many children to many parents
 const addManyChildren = async (contract: Rmrk, signer: KeyringPair, child: Rmrk, parentChildPair: any): Promise<void> => {
-  console.log("parentChildPair", parentChildPair);
-
   let addResult = await contract
     .withSigner(signer)
     .tx.addManyChildren(
@@ -169,54 +173,8 @@ const approve = async (child: Rmrk, parent: Rmrk, signer: KeyringPair): Promise<
   return approveResult;
 }
 
-// helper function to add a child to parent contract
-const addChild = async (child: Rmrk, parent: Rmrk, signer: KeyringPair, parentToken?: number): Promise<SignAndSendSuccessResponse> => {
-  const addChildResult = await parent
-    .withSigner(signer)
-    .tx.addChild({ u64: parentToken ? parentToken : 1 }, [child.address, { u64: 1 }]);
-  emit(addChildResult, "ChildAdded", {
-    to: { u64: parentToken ? parentToken : 1 },
-    collection: child.address,
-    child: { u64: 1 },
-  });
-
-  return addChildResult;
-}
-
-// helper function to accept a child on parent contract
-const acceptChild = async (child: Rmrk, parent: Rmrk, signer: KeyringPair): Promise<SignAndSendSuccessResponse> => {
-  const acceptChildResult = await parent
-    .withSigner(signer)
-    .tx.acceptChild({ u64: 1 }, [child.address, { u64: 1 }]);
-  emit(acceptChildResult, "ChildAccepted", {
-    parent: { u64: 1 },
-    collection: child.address,
-    child: { u64: 1 },
-  });
-  expect(
-    (await parent.query.childrenBalance({ u64: 1 }))?.value.unwrap().ok.toString()
-  ).to.be.equal("1,0");
-  return acceptChildResult;
-}
-
-// helper function to accept a child on parent contract
-const removeChild = async (child: Rmrk, parent: Rmrk, signer: KeyringPair): Promise<SignAndSendSuccessResponse> => {
-  const removeChildResult = await parent
-    .withSigner(signer)
-    .tx.removeChild({ u64: 1 }, [child.address, { u64: 1 }]);
-  emit(removeChildResult, "ChildRemoved", {
-    parent: { u64: 1 },
-    childCollection: child.address,
-    childTokenId: { u64: 1 },
-  });
-  expect(
-    (await parent.query.childrenBalance({ u64: 1 }))?.value.unwrap().ok.toString()
-  ).to.be.equal("0,0");
-  return removeChildResult;
-}
-
 // helper function to create a batch of users
-const createBatchUsers = async (api: ApiPromise, keyring: Keyring, amount: number): Promise<KeyringPair[]> => {
+const createBatchUsers = (amount: number): KeyringPair[] => {
   const users = new Array();
   for (let i = 0; i < amount; i++) {
     users.push(keyring.addFromUri(`//user${i}`));
