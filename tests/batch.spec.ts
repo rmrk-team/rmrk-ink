@@ -33,6 +33,7 @@ describe("RMRK Nesting tests", () => {
   let deployer: KeyringPair;
   let bob: KeyringPair;
   let dave: KeyringPair;
+  let users: KeyringPair[];
   let parent: Rmrk;
   let child: Rmrk;
 
@@ -77,8 +78,10 @@ describe("RMRK Nesting tests", () => {
   });
 
   it("deployer mints and transfers many works", async () => {
-    const PARENT_TOKENS = 2;
-    const CHILD_TOKENS = 2;
+    const PARENT_TOKENS = 50;
+    const CHILD_TOKENS = 50;
+    const ASSET_ID1 = 1;
+
     // deployer mints many parent tokens
     await mintMany(parent, deployer, PARENT_TOKENS);
     expect(
@@ -91,12 +94,27 @@ describe("RMRK Nesting tests", () => {
       (await child.query.totalSupply()).value.unwrap().toNumber()
     ).to.equal(CHILD_TOKENS);
 
+    // create and add Asset to many tokens
+    await child
+      .withSigner(deployer)
+      .tx.addAssetEntry(1, 0, ["ipfs://gems/typeA/full.svg"], []);
+    var tokenList = new Array();
+    for (let i = 1; i <= CHILD_TOKENS; i++) {
+      tokenList.push([{ u64: i }]);
+    }
+    // await child
+    //   .withSigner(deployer)
+    //   .tx.addAssetToManyTokens(tokenList, ASSET_ID1);
+    // expect(
+    //   (await child.query.totalTokenAssets({ u64: 1 }))?.value.unwrap().ok.toString()
+    // ).to.be.equal("1,0");
+
     // deployer approves parent's Contract on child
     await approve(child, parent, deployer);
 
     // deployer adds each child nft to its parent
     var parentChildPair = new Array();
-    for (let i=1; i<=PARENT_TOKENS; i++) {
+    for (let i = 1; i <= PARENT_TOKENS; i++) {
       parentChildPair.push([{ u64: i }, { u64: i }]);
     }
     await addManyChildren(parent, deployer, child, parentChildPair);
@@ -109,35 +127,6 @@ describe("RMRK Nesting tests", () => {
       (await parent.query.childrenBalance({ u64: PARENT_TOKENS }))?.value.unwrap().ok.toString()
     ).to.be.equal("1,0");
 
-    // // dave transfers his child-1 from parent-2 to bob's parent-1, bob accepts the child
-    // const transferChildResult = await parent
-    //   .withSigner(dave)
-    //   .tx.transferChild({ u64: 2 }, { u64: 1 }, [child.address, { u64: 1 }]);
-    // emit(transferChildResult, "ChildRemoved", {
-    //   parent: { u64: 2 },
-    //   childCollection: child.address,
-    //   childTokenId: { u64: 1 },
-    // });
-    // expect(
-    //   (await parent.query.childrenBalance({ u64: 2 }))?.value.unwrap().ok.toString()
-    // ).to.be.equal("0,0");
-    // expect(
-    //   (await parent.query.childrenBalance({ u64: 1 }))?.value.unwrap().ok.toString()
-    // ).to.be.equal("0,1");
-
-    // // bob accepts new child
-    // await acceptChild(child, parent, bob)
-
-    // // parent contract owns child token (in child contract)
-    // expect((await child.query.ownerOf({ u64: 1 })).value.unwrap()).to.equal(
-    //   parent.address
-    // );
-
-    // // bob removes child from parent token2
-    // await removeChild(child, parent, bob);
-
-    // // bob now owns child token (in child contract). Remember that Dave originally minted it.
-    // expect((await child.query.ownerOf({ u64: 1 })).value.unwrap()).to.equal(bob.address);
   });
 });
 
@@ -224,4 +213,13 @@ const removeChild = async (child: Rmrk, parent: Rmrk, signer: KeyringPair): Prom
     (await parent.query.childrenBalance({ u64: 1 }))?.value.unwrap().ok.toString()
   ).to.be.equal("0,0");
   return removeChildResult;
+}
+
+// helper function to create a batch of users
+const createBatchUsers = async (api: ApiPromise, keyring: Keyring, amount: number): Promise<KeyringPair[]> => {
+  const users = new Array();
+  for (let i = 0; i < amount; i++) {
+    users.push(keyring.addFromUri(`//user${i}`));
+  }
+  return users;
 }
