@@ -1,5 +1,4 @@
 //! RMRK Catalog implementation
-#![cfg_attr(not(feature = "std"), no_std)]
 
 use crate::{
     internal::Internal,
