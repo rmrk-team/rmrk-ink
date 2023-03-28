@@ -208,8 +208,6 @@ pub mod rmrk_example_equippable {
         #[storage_field]
         minting: MintingData,
         #[storage_field]
-        base: BaseData,
-        #[storage_field]
         equippable: EquippableData,
     }
 
@@ -226,8 +224,6 @@ pub mod rmrk_example_equippable {
     impl Nesting for Rmrk {}
 
     impl MultiAsset for Rmrk {}
-
-    impl Base for Rmrk {}
 
     impl Equippable for Rmrk {}
 

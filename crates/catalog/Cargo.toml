@@ -1,5 +1,5 @@
 [package]
-name = "rmrk_example_equippable"
+name = "rmrk_catalog"
 version = "0.6.0"
 authors = ["Stake Technologies <devops@stake.co.jp>"]
 edition = "2021"
@@ -10,26 +10,22 @@ scale = { package = "parity-scale-codec", version = "3", default-features = fals
 scale-info = { version = "2.3", default-features = false, features = ["derive"], optional = true }
 openbrush = { tag = "3.0.0", git = "https://github.com/727-Ventures/openbrush-contracts", default-features = false, features = ["access_control", "reentrancy_guard", "psp34"] }
 
-# RMRK
-rmrk = { path = "../../crates/rmrk", default-features = false  }
-rmrk_catalog = { path = "../../crates/catalog", default-features = false  }
-
-
+rmrk_common = { path = "../common", default-features = false }
 
 [lib]
-path = "lib.rs"
-crate-type = [
-	# Used for normal contract Wasm blobs.
-	"cdylib",
-]
+path = "src/lib.rs"
+crate-type = ["rlib"]
 
 [features]
 default = ["std"]
 std = [
     "ink/std",
     "scale/std",
+    "scale-info",
     "scale-info/std",
     "openbrush/std",
-    "rmrk/std",
+    "rmrk_common/std",
 ]
+
 ink-as-dependency = []
+

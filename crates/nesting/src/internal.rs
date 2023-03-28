@@ -108,7 +108,7 @@ where
         let mut child_nfts = self
             .data::<NestingData>()
             .accepted_children
-            .get(&parent_token_id)
+            .get(parent_token_id)
             .ok_or(RmrkError::InvalidParentId)?;
 
         let index = child_nfts
@@ -119,9 +119,9 @@ where
 
         self.data::<NestingData>()
             .accepted_children
-            .insert(&parent_token_id, &child_nfts);
+            .insert(parent_token_id, &child_nfts);
 
-        self._emit_child_removed_event(&parent_token_id, &child_nft.0, &child_nft.1);
+        self._emit_child_removed_event(parent_token_id, &child_nft.0, &child_nft.1);
         Ok(())
     }
 
@@ -149,7 +149,7 @@ where
         let mut child_nfts = self
             .data::<NestingData>()
             .pending_children
-            .get(&parent_token_id)
+            .get(parent_token_id)
             .ok_or(RmrkError::InvalidParentId)?;
 
         let index = child_nfts
@@ -160,7 +160,7 @@ where
 
         self.data::<NestingData>()
             .pending_children
-            .insert(&parent_token_id, &child_nfts);
+            .insert(parent_token_id, &child_nfts);
 
         Ok(())
     }

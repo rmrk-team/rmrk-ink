@@ -1,13 +1,9 @@
-//! RMRK Base implementation
-#![cfg_attr(not(feature = "std"), no_std)]
-#![feature(min_specialization)]
-#![allow(clippy::inline_fn_without_body)]
+//! RMRK Catalog implementation
 
-pub mod internal;
-pub mod traits;
-
-use internal::Internal;
-use traits::Base;
+use crate::{
+    internal::Internal,
+    traits::Catalog,
+};
 
 use rmrk_common::{
     errors::{
@@ -36,43 +32,46 @@ use openbrush::{
     },
 };
 
-pub const STORAGE_BASE_KEY: u32 = openbrush::storage_unique_key!(BaseData);
+pub const STORAGE_BASE_KEY: u32 = openbrush::storage_unique_key!(CatalogData);
 
-/// The structure used to describe the Base
+/// The structure used to describe the Catalog
 #[derive(Default, Debug)]
 #[openbrush::upgradeable_storage(STORAGE_BASE_KEY)]
-pub struct BaseData {
-    /// List of all parts of Base.
+pub struct CatalogData {
+    /// List of all parts of Catalog.
     pub part_ids: Vec<PartId>,
 
     /// Mapping for all part details.
     pub parts: Mapping<PartId, Part>,
 
-    /// Counter for assigning new parts to Base.
+    /// Counter for assigning new parts to Catalog.
     pub next_part_id: PartId,
 
-    /// Metadata for Base
-    pub base_uri: String,
+    /// Metadata for Catalog
+    pub catalog_metadata: String,
 }
 
-impl<T> Base for T
+impl<T> Catalog for T
 where
-    T: Storage<BaseData> + Storage<access_control::Data>,
+    T: Storage<CatalogData> + Storage<access_control::Data>,
 {
-    /// Add one or more parts to the base
+    /// Add one or more parts to the Catalog
     #[modifiers(only_role(CONTRIBUTOR))]
     default fn add_part_list(&mut self, parts: Vec<Part>) -> Result<()> {
         for part in parts {
-            let part_id = self.data::<BaseData>().next_part_id;
+            let part_id = self.data::<CatalogData>().next_part_id;
 
             if part.part_type == PartType::Fixed
-                && (part.equippable.len() != 0 || part.is_equippable_by_all)
+                && (!part.equippable.is_empty() || part.is_equippable_by_all)
             {
                 return Err(RmrkError::BadConfig.into())
             }
-            self.data::<BaseData>().parts.insert(part_id, &part);
-            self.data::<BaseData>().part_ids.push(part_id);
-            self.data::<BaseData>().next_part_id += 1;
+            self.data::<CatalogData>().parts.insert(part_id, &part);
+            self.data::<CatalogData>().part_ids.push(part_id);
+            match self.data::<CatalogData>().next_part_id.checked_add(1) {
+                Some(id) => self.data::<CatalogData>().next_part_id = id,
+                None => return Err(RmrkError::BadConfig.into()),
+            }
         }
 
         Ok(())
@@ -87,7 +86,7 @@ where
     ) -> Result<()> {
         let mut part = self.ensure_only_slot(part_id)?;
         part.equippable.extend(equippable_address);
-        self.data::<BaseData>().parts.insert(part_id, &part);
+        self.data::<CatalogData>().parts.insert(part_id, &part);
 
         Ok(())
     }
@@ -98,7 +97,7 @@ where
         let mut part = self.ensure_only_slot(part_id)?;
         part.is_equippable_by_all = false;
         part.equippable.clear();
-        self.data::<BaseData>().parts.insert(part_id, &part);
+        self.data::<CatalogData>().parts.insert(part_id, &part);
 
         Ok(())
     }
@@ -108,22 +107,22 @@ where
     default fn set_equippable_by_all(&mut self, part_id: PartId) -> Result<()> {
         let mut part = self.ensure_only_slot(part_id)?;
         part.is_equippable_by_all = true;
-        self.data::<BaseData>().parts.insert(part_id, &part);
+        self.data::<CatalogData>().parts.insert(part_id, &part);
 
         Ok(())
     }
 
-    /// Sets the metadata URI for Base
+    /// Sets the metadata URI for Catalog
     #[modifiers(only_role(CONTRIBUTOR))]
-    default fn setup_base(&mut self, base_metadata: String) -> Result<()> {
-        self.data::<BaseData>().base_uri = base_metadata;
+    default fn setup_catalog(&mut self, catalog_metadata: String) -> Result<()> {
+        self.data::<CatalogData>().catalog_metadata = catalog_metadata;
 
         Ok(())
     }
 
-    /// Get the Base metadataURI.
-    default fn get_base_metadata(&self) -> PreludeString {
-        match PreludeString::from_utf8(self.data::<BaseData>().base_uri.clone()) {
+    /// Get the Catalog metadataURI.
+    default fn get_catalog_metadata(&self) -> PreludeString {
+        match PreludeString::from_utf8(self.data::<CatalogData>().catalog_metadata.clone()) {
             Ok(m) => m,
             _ => PreludeString::from(""),
         }
@@ -131,17 +130,17 @@ where
 
     /// Get the number of parts.
     default fn get_parts_count(&self) -> PartId {
-        self.data::<BaseData>().next_part_id
+        self.data::<CatalogData>().next_part_id
     }
 
     /// Get the part details for the given PartId.
     default fn get_part(&self, part_id: PartId) -> Option<Part> {
-        self.data::<BaseData>().parts.get(part_id)
+        self.data::<CatalogData>().parts.get(part_id)
     }
 
     /// Check whether the given address is allowed to equip the desired `PartId`.
     default fn ensure_equippable(&self, part_id: PartId, target_address: AccountId) -> Result<()> {
-        if let Some(part) = self.data::<BaseData>().parts.get(part_id) {
+        if let Some(part) = self.data::<CatalogData>().parts.get(part_id) {
             if !part.equippable.contains(&target_address) {
                 return Err(RmrkError::AddressNotEquippable.into())
             }
@@ -152,10 +151,10 @@ where
 
     /// Checks if the given `PartId` can be equipped by any collection
     default fn is_equippable_by_all(&self, part_id: PartId) -> bool {
-        if let Some(part) = self.data::<BaseData>().parts.get(part_id) {
+        if let Some(part) = self.data::<CatalogData>().parts.get(part_id) {
             return part.is_equippable_by_all
         }
 
-        return false
+        false
     }
 }

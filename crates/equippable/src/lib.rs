@@ -1,4 +1,4 @@
-//! RMRK Base implementation
+//! RMRK Equippable implementation
 #![cfg_attr(not(feature = "std"), no_std)]
 #![feature(min_specialization)]
 #![allow(clippy::inline_fn_without_body)]
@@ -7,11 +7,8 @@ pub mod internal;
 pub mod traits;
 
 use internal::Internal;
-use rmrk_base::{
-    traits::Base,
-    BaseData,
-};
 
+use rmrk_catalog::traits::CatalogRef;
 use rmrk_common::{
     errors::{
         Result,
@@ -63,7 +60,6 @@ where
         + MultiAsset
         + MultiAssetInternal
         + Internal
-        + Storage<BaseData>
         + Utils,
 {
     /// Used to equip a child nft into a token.
@@ -86,8 +82,18 @@ where
         //     child_asset_id,
         //     slot_part_id)?;
 
-        // Check from base perspective
-        self.ensure_equippable(slot_part_id, child_nft.0)?;
+        // Check from base perspective. If catalog for this asset is None, then it is not equippable.
+        match self
+            .data::<MultiAssetData>()
+            .asset_catalog_address
+            .get(asset_id)
+            .ok_or(RmrkError::CatalogNotFoundForAsset)?
+        {
+            Some(catalog_address) => {
+                CatalogRef::ensure_equippable(&catalog_address, slot_part_id, child_nft.0)?;
+            }
+            None => return Err(RmrkError::AssetIdNotEquippable.into()),
+        }
 
         // insert equipment
         let equipment = Equipment {
@@ -153,9 +159,9 @@ where
             .collection_asset_entries
             .get(asset_id)
         {
-            return Ok(asset)
+            Ok(asset)
         } else {
-            return Err(RmrkError::AssetIdNotFound.into())
+            Err(RmrkError::AssetIdNotFound.into())
         }
     }
 }
