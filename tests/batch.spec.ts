@@ -100,14 +100,14 @@ describe("RMRK Nesting tests", () => {
       .tx.addAssetEntry(1, 0, ["ipfs://gems/typeA/full.svg"], []);
     var tokenList = new Array();
     for (let i = 1; i <= CHILD_TOKENS; i++) {
-      tokenList.push([{ u64: i }]);
+      tokenList.push({ u64: i });
     }
-    // await child
-    //   .withSigner(deployer)
-    //   .tx.addAssetToManyTokens(tokenList, ASSET_ID1);
-    // expect(
-    //   (await child.query.totalTokenAssets({ u64: 1 }))?.value.unwrap().ok.toString()
-    // ).to.be.equal("1,0");
+    await child
+      .withSigner(deployer)
+      .tx.addAssetToManyTokens(tokenList, ASSET_ID1);
+    expect(
+      (await child.query.totalTokenAssets({ u64: 1 }))?.value.unwrap().ok.toString()
+    ).to.be.equal("1,0");
 
     // deployer approves parent's Contract on child
     await approve(child, parent, deployer);
