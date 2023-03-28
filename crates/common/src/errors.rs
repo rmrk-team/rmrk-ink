@@ -84,18 +84,20 @@ pub enum RmrkError {
     BadConfig,
     BadMintValue,
     BadPriorityLength,
+    BatchCallFailed,
     CannotMintZeroTokens,
     CatalogNotFoundForAsset,
     ChildNotFound,
     UriNotFound,
     CollectionIsFull,
+    InputVectorTooBig,
     InvalidAssetId,
     InvalidParentId,
     InvalidTokenId,
     NotEquipped,
     NotTokenOwner,
     PartIsNotSlot,
-    SlotAlreayUsed,
+    SlotAlreadyUsed,
     TargetAssetCannotReceiveSlot,
     UnknownEquippableAsset,
     UnknownPart,
@@ -119,18 +121,20 @@ impl ToString for RmrkError {
             RmrkError::BadConfig => String::from("BadConfig"),
             RmrkError::BadMintValue => String::from("BadMintValue"),
             RmrkError::BadPriorityLength => String::from("BadPriorityLength"),
+            RmrkError::BatchCallFailed => String::from("BatchCallFailed"),
             RmrkError::CannotMintZeroTokens => String::from("CannotMintZeroTokens"),
             RmrkError::CatalogNotFoundForAsset => String::from("CatalogNotFoundForAsset"),
             RmrkError::ChildNotFound => String::from("ChildNotFound"),
             RmrkError::UriNotFound => String::from("UriNotFound"),
             RmrkError::CollectionIsFull => String::from("CollectionIsFull"),
+            RmrkError::InputVectorTooBig => String::from("InputVectorTooBig"),
             RmrkError::InvalidAssetId => String::from("InvalidAssetId"),
             RmrkError::InvalidParentId => String::from("InvalidParentId"),
             RmrkError::InvalidTokenId => String::from("InvalidTokenId"),
             RmrkError::NotEquipped => String::from("NotEquipped"),
             RmrkError::NotTokenOwner => String::from("NotTokenOwner"),
             RmrkError::PartIsNotSlot => String::from("PartIsNotSlot"),
-            RmrkError::SlotAlreayUsed => String::from("SlotAlreayUsed"),
+            RmrkError::SlotAlreadyUsed => String::from("SlotAlreadyUsed"),
             RmrkError::TargetAssetCannotReceiveSlot => String::from("TargetAssetCannotReceiveSlot"),
             RmrkError::UnknownEquippableAsset => String::from("UnknownEquippableAsset"),
             RmrkError::UnknownPart => String::from("UnknownPart"),
@@ -138,4 +142,16 @@ impl ToString for RmrkError {
             RmrkError::WithdrawalFailed => String::from("WithdrawalFailed"),
         }
     }
+}
+
+/// Evaluate `$x:expr` and if not true return `Err($y:expr)`.
+///
+/// Used as `ensure!(expression_to_ensure, expression_to_return_on_false)`.
+#[macro_export]
+macro_rules! ensure {
+    ( $x:expr, $y:expr $(,)? ) => {{
+        if !$x {
+            return Err($y.into())
+        }
+    }};
 }

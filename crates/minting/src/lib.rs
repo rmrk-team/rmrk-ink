@@ -15,7 +15,10 @@ use rmrk_common::{
 };
 
 use ink::{
-    prelude::string::String as PreludeString,
+    prelude::{
+        string::String as PreludeString,
+        vec::Vec,
+    },
     storage::Mapping,
 };
 
@@ -87,6 +90,13 @@ where
         self.data::<MintingData>()
             .nft_metadata
             .insert(token_id, &metadata);
+
+        Ok(())
+    }
+
+    /// Assign metadata to specified token.
+    default fn transfer_token(&mut self, to: AccountId, id: Id, data: Vec<u8>) -> Result<()> {
+        self._transfer_token(to, id, data)?;
 
         Ok(())
     }

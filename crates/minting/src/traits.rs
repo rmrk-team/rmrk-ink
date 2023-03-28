@@ -2,7 +2,11 @@
 
 use rmrk_common::errors::Result;
 
-use ink::prelude::string::String as PreludeString;
+use ink::prelude::{
+    string::String as PreludeString,
+    vec::Vec,
+};
+
 use openbrush::{
     contracts::psp34::extensions::enumerable::*,
     traits::{
@@ -32,6 +36,10 @@ pub trait Minting {
     /// Assign metadata to specified token.
     #[ink(message)]
     fn assign_metadata(&mut self, token_id: Id, metadata: String) -> Result<()>;
+
+    /// Transfer token to new destination.
+    #[ink(message)]
+    fn transfer_token(&mut self, to: AccountId, id: Id, data: Vec<u8>) -> Result<()>;
 
     /// Get max supply of tokens.
     #[ink(message)]

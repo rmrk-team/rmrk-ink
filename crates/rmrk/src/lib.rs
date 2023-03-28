@@ -1,5 +1,6 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
+pub mod batch;
 pub mod config;
 pub mod query;
 

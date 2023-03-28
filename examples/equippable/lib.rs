@@ -26,6 +26,7 @@ pub mod rmrk_example_equippable {
     };
 
     use rmrk::{
+        batch::*,
         config,
         query::*,
         storage::*,
@@ -228,6 +229,8 @@ pub mod rmrk_example_equippable {
     impl Equippable for Rmrk {}
 
     impl Query for Rmrk {}
+
+    impl BatchCalls for Rmrk {}
 
     impl Rmrk {
         /// Instantiate new RMRK contract
