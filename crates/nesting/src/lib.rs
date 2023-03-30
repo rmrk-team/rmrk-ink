@@ -246,6 +246,12 @@ where
             .get(parent_token_id)
             .unwrap_or_default()
     }
+    fn get_accepted_children2(&self, parent_token_id: Id) -> Vec<ChildNft> {
+        self.data::<NestingData>()
+            .accepted_children
+            .get(parent_token_id)
+            .unwrap_or_default()
+    }
 }
 
 /// Event trait for Nesting
