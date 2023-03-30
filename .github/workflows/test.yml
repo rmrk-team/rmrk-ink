@@ -5,8 +5,7 @@ on:
     branches:
       - main
   push:
-    branches:
-      - main
+
 env:
   NODE_JS_VER: 18.x
   SWANKY_NODE_VER: v1.2.0
