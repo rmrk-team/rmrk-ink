@@ -17,6 +17,7 @@ const CATALOG_METADATA = "ipfs://catalogMetadata/data.json";
 
 // Create a new instance of contract
 const wsProvider = new WsProvider("ws://127.0.0.1:9944");
+
 // Create a keyring instance
 const keyring = new Keyring({ type: "sr25519" });
 
