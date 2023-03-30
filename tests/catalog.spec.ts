@@ -64,6 +64,7 @@ describe("RMRK Catalog tests", () => {
       .withSigner(deployer)
       .tx.addPartList(PART_LIST);
     expect((await catalog.query.getPartsCount())?.value.unwrap()).to.be.equal(2);
+    console.log("Parts added to catalog");
 
     // should fail since no addresses are added to equippable list for part 0
     const failEnsure = await catalog
