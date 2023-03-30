@@ -95,8 +95,7 @@ jobs:
     steps:
       - name: Install & display rust toolchain
         run: |
-          rustup toolchain install nightly
-          rustup component add rust-src --toolchain nightly-x86_64-unknown-linux-gnu
+          rustup component add rust-src 
           rustup show
 
       - name: Check targets are installed correctly
