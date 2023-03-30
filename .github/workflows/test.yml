@@ -3,40 +3,136 @@ name: Test
 on:
   pull_request:
     branches:
-    - main
+      - main
   push:
     branches:
-    - main
-
+      - main
+env:
+  NODE_JS_VER: 18.x
+  SWANKY_NODE_VER: v1.2.0
+  CONTRACTS_NODE: ./swanky-node
 jobs:
-  build:
+  install:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
-    - name: Cache cargo
-      uses: actions/cache@v2
-      with:
-        path: |
-          ~/.cargo/registry
-          ~/.cargo/git
-          target
-        key: ${{ runner.os }}-cargo
+      - name: Checkout the source code
+        uses: actions/checkout@v3
 
-    - name: Set-Up
-      run: sudo apt install -y git clang curl libssl-dev llvm libudev-dev protobuf-compiler
+      - name: Install & display rust toolchain
+        run: |
+          rustup show
+          rustup toolchain install nightly
+          rustup component add rust-src --toolchain nightly-x86_64-unknown-linux-gnu
+          rustup component add clippy --toolchain nightly-x86_64-unknown-linux-gnu
+          rustup show
 
-    - name: Install toolchain
-      # hacky way to install rust. Rustup is pre-installed on runners. Calling rustup show will detect the rust-toolchain.toml, and subsequently
-      # download the needed toolchain and components.
-      run: |
-        rustup toolchain install nightly
-        rustup component add clippy --toolchain nightly-x86_64-unknown-linux-gnu
-        rustup show
-    - name: Check
-      run: cargo +nightly check
+      - name: Check targets are installed correctly
+        run: rustup target list --installed
 
-    - name: Test
-      run: cargo +nightly test
+      - name: Cache Cargo
+        uses: actions/cache@v3
+        with:
+          path: ~/.cargo
+          key: ${{ runner.os }}-rust-${{ hashFiles('rust-toolchain.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-rust
 
-    - name: Lint
-      run: cargo +nightly clippy
+      - name: Cargo check
+        run: cargo +nightly check
+
+      - name: Check Clippy
+        run: cargo +nightly clippy
+
+  unittest:
+    needs: install
+    runs-on: ubuntu-latest
+    steps:
+      - name: Use cashed cargo
+        uses: actions/cache@v3
+        with:
+          path: ~/.cargo
+          key: ${{ runner.os }}-rust-${{ hashFiles('rust-toolchain.toml') }}
+
+      - name: Checkout the source code
+        uses: actions/checkout@v3
+
+      - name: Unit test
+        run: cargo test
+
+  # ink-e2e:
+  #   needs: [install, unittest]
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Use cashed cargo
+  #       uses: actions/cache@v3
+  #       with:
+  #         path: ~/.cargo
+  #         key: ${{ runner.os }}-rust-${{ hashFiles('rust-toolchain.toml') }}
+
+  #     - name: Checkout the source code
+  #       uses: actions/checkout@v3
+
+  #     - name: Ink e2e test
+  #       run: cargo test --features e2e-tests
+
+  format:
+    needs: install
+    runs-on: ubuntu-latest
+    steps:
+      - name: Use cashed cargo
+        uses: actions/cache@v3
+        with:
+          path: ~/.cargo
+          key: ${{ runner.os }}-rust-${{ hashFiles('rust-toolchain.toml') }}
+
+      - name: Checkout the source code
+        uses: actions/checkout@v3
+
+      - name: Format rust code
+        run: cargo fmt --all
+
+  integration:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install & display rust toolchain
+        run: |
+          rustup toolchain install nightly
+          rustup component add rust-src --toolchain nightly-x86_64-unknown-linux-gnu
+          rustup show
+
+      - name: Check targets are installed correctly
+        run: rustup target list --installed
+
+      - name: Checkout the source code
+        uses: actions/checkout@v3
+
+      - name: Check if cargo-contract exists
+        id: check-cargo-contract
+        continue-on-error: true
+        run: cargo contract --version
+
+      - name: Install cargo contract
+        if: ${{ steps.check-cargo-contract.outcome == 'failure' }}
+        run: |
+          cargo install cargo-dylint dylint-link
+          cargo install --force --locked cargo-contract
+          cargo contract --version
+
+      - name: Use Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ env.NODE_JS_VER }}
+
+      - name: Compile contracts
+        run: |
+          yarn
+          yarn compile
+
+      - name: Integration test on Swanky-node
+        run: |
+          sudo wget https://github.com/AstarNetwork/swanky-node/releases/download/${{ env.SWANKY_NODE_VER }}/swanky-node-${{ env.SWANKY_NODE_VER }}-ubuntu-x86_64.tar.gz
+          sudo tar -zxvf swanky-node-${{ env.SWANKY_NODE_VER }}-ubuntu-x86_64.tar.gz
+          sudo chmod +x swanky-node
+          ./swanky-node -lerror,runtime::contracts=debug &
+          sleep 10
+          yarn test

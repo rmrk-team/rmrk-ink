@@ -3,10 +3,12 @@ import chaiAsPromised from "chai-as-promised";
 import BN from "bn.js";
 import Rmrk_factory from "../types/constructors/rmrk_example_equippable_lazy";
 import Rmrk from "../types/contracts/rmrk_example_equippable_lazy";
+import Catalog_Factory from "../types/constructors/catalog_example";
+import Contract from "../types/contracts/catalog_example";
 import {
   PartType,
   Part,
-} from "../types/types-arguments/rmrk_example_equippable_lazy";
+} from "../types/types-arguments/catalog_example";
 
 import { ApiPromise, WsProvider, Keyring } from "@polkadot/api";
 import { KeyringPair } from "@polkadot/keyring/types";
@@ -18,6 +20,7 @@ use(chaiAsPromised);
 const MAX_SUPPLY = 888;
 const BASE_URI = "ipfs://tokenUriPrefix/";
 const COLLECTION_METADATA = "ipfs://collectionMetadata/data.json";
+const CATALOG_METADATA = "ipfs://catalogMetadata/data.json";
 const BASE_METADATA = "ipfs://baseMetadata";
 const ONE = new BN(10).pow(new BN(18));
 const PRICE_PER_MINT = ONE;
@@ -30,19 +33,22 @@ const keyring = new Keyring({ type: "sr25519" });
 describe("RMRK Merged Equippable", () => {
   let kanariaFactory: Rmrk_factory;
   let gemFactory: Rmrk_factory;
+  let catalogFactory: Catalog_Factory;
   let api: ApiPromise;
   let deployer: KeyringPair;
   let bob: KeyringPair;
   let dave: KeyringPair;
   let kanaria: Rmrk;
   let gem: Rmrk;
+  let catalog: Contract;
 
 
   beforeEach(async function (): Promise<void> {
-    api = await ApiPromise.create({ provider: wsProvider });
+    api = await ApiPromise.create({ provider: wsProvider, noInitWarn: true });
     deployer = keyring.addFromUri("//Alice");
     bob = keyring.addFromUri("//Bob");
     dave = keyring.addFromUri("//Dave");
+
     kanariaFactory = new Rmrk_factory(api, deployer);
     kanaria = new Rmrk(
       (
@@ -78,6 +84,16 @@ describe("RMRK Merged Equippable", () => {
       deployer,
       api
     );
+
+
+    catalogFactory = new Catalog_Factory(api, deployer);
+    catalog = new Contract(
+      (
+        await catalogFactory.new([CATALOG_METADATA])
+      ).address,
+      deployer,
+      api
+    );
   });
 
   it("Merged Equippable user journey", async () => {
@@ -88,12 +104,7 @@ describe("RMRK Merged Equippable", () => {
 
     const mintingKanariaCnt = 5;
 
-    // set Base metadata
-    console.log("Setting up Base");
-    await gem
-      .withSigner(deployer)
-      .tx.setupBase([BASE_METADATA]);
-    // define 2 test Parts
+    // define all parts of the NFT.
     const PART_LIST: Part[] = [
       // Background option 1
       {
@@ -185,12 +196,12 @@ describe("RMRK Merged Equippable", () => {
       },
     ];
 
-    // add parts to base
-    await gem
+    // add parts to catalog
+    await catalog
       .withSigner(deployer)
       .tx.addPartList(PART_LIST);
-    expect((await gem.query.getPartsCount())?.value.unwrap()).to.be.equal(11);
-    console.log("Base is set");
+    expect((await catalog.query.getPartsCount())?.value.unwrap()).to.be.equal(11);
+    console.log("Catalog is set");
 
     // minting tokens
     console.log("Minting tokens");
@@ -229,13 +240,14 @@ describe("RMRK Merged Equippable", () => {
     const assetComposedId = 2;
     const addAssetResult = await kanaria
       .withSigner(deployer)
-      .tx.addAssetEntry(assetDefaultId, "0", ["ipfs://kanariaAsset1.png"], [], {
+      .tx.addAssetEntry(catalog.address, assetDefaultId, "0", ["ipfs://kanariaAsset1.png"], [], {
       });
     emit(addAssetResult, "AssetSet", { asset: 1 });
     expect(
       await kanaria
         .withSigner(deployer)
         .tx.addAssetEntry(
+          catalog.address,
           assetComposedId,
           "0",
           ["ipfs://kanariaAsset2.json"],
@@ -273,10 +285,11 @@ describe("RMRK Merged Equippable", () => {
     const equippableRefIdRightGem = 3;
     await gem
       .withSigner(deployer)
-      .tx.addAssetEntry(1, 0, ["ipfs://gems/typeA/full.svg"], []);
+      .tx.addAssetEntry(catalog.address, 1, 0, ["ipfs://gems/typeA/full.svg"], []);
     await gem
       .withSigner(deployer)
       .tx.addAssetEntry(
+        catalog.address,
         2,
         equippableRefIdLeftGem,
         ["ipfs://gems/typeA/left.svg"],
@@ -285,6 +298,7 @@ describe("RMRK Merged Equippable", () => {
     await gem
       .withSigner(deployer)
       .tx.addAssetEntry(
+        catalog.address,
         3,
         equippableRefIdMidGem,
         ["ipfs://gems/typeA/mid.svg"],
@@ -293,6 +307,7 @@ describe("RMRK Merged Equippable", () => {
     await gem
       .withSigner(deployer)
       .tx.addAssetEntry(
+        catalog.address,
         4,
         equippableRefIdRightGem,
         ["ipfs://gems/typeA/right.svg"],
@@ -300,11 +315,12 @@ describe("RMRK Merged Equippable", () => {
       );
     await gem
       .withSigner(deployer)
-      .tx.addAssetEntry(5, 0, ["ipfs://gems/typeB/full.svg"], []
+      .tx.addAssetEntry(catalog.address, 5, 0, ["ipfs://gems/typeB/full.svg"], []
       );
     await gem
       .withSigner(deployer)
       .tx.addAssetEntry(
+        catalog.address,
         6,
         equippableRefIdLeftGem,
         ["ipfs://gems/typeB/left.svg"],
@@ -313,6 +329,7 @@ describe("RMRK Merged Equippable", () => {
     await gem
       .withSigner(deployer)
       .tx.addAssetEntry(
+        catalog.address,
         7,
         equippableRefIdMidGem,
         ["ipfs://gems/typeB/mid.svg"],
@@ -321,6 +338,7 @@ describe("RMRK Merged Equippable", () => {
     await gem
       .withSigner(deployer)
       .tx.addAssetEntry(
+        catalog.address,
         8,
         equippableRefIdRightGem,
         ["ipfs://gems/typeB/right.svg"],
@@ -333,7 +351,7 @@ describe("RMRK Merged Equippable", () => {
       "Added 8 gem assets. 2 Types of gems with full, left, mid and right versions."
     );
 
-    // 9, 10 and 11 are the slot part ids for the gems, defined on the base.
+    // 9, 10 and 11 are the slot part ids for the gems, defined on the catalog.
     // e.g. Any asset on gem, which sets its equippableRefId to equippableRefIdLeftGem
     //      will be considered a valid equip into any kanaria on slot 9 (left gem).
     console.log("Setting valid parent reference IDs");

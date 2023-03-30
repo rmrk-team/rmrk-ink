@@ -50,7 +50,8 @@ where
                 return Ok(())
             }
         }
-        return Err(RmrkError::BadMintValue.into())
+
+        Err(RmrkError::BadMintValue.into())
     }
 
     /// Check amount of tokens to be minted
@@ -69,7 +70,8 @@ where
                 _ => Err(RmrkError::CollectionIsFull.into()),
             }
         }
-        return Err(RmrkError::CollectionIsFull.into())
+
+        Err(RmrkError::CollectionIsFull.into())
     }
 
     /// Mint next token to specified account
