@@ -64,8 +64,10 @@ where
             .last_token_id
             .checked_add(mint_amount)
         {
-            if amount <= self.data::<MintingData>().max_supply {
-                return Ok(())
+            return match self.data::<MintingData>().max_supply {
+                Some(max_supply) if amount <= max_supply => Ok(()),
+                Some(0) | None => Ok(()),
+                _ => Err(RmrkError::CollectionIsFull.into()),
             }
         }
 

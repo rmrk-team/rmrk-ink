@@ -28,7 +28,7 @@ pub fn with_collection<T>(
     symbol: String,
     base_uri: String,
     metadata: String,
-    max_supply: u64,
+    max_supply: Option<u64>,
 ) where
     T: Storage<rmrk_minting::MintingData>
         + Storage<psp34::Data<enumerable::Balances>>

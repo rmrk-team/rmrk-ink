@@ -51,7 +51,7 @@ pub const STORAGE_MINTING_KEY: u32 = openbrush::storage_unique_key!(MintingData)
 #[openbrush::upgradeable_storage(STORAGE_MINTING_KEY)]
 pub struct MintingData {
     pub last_token_id: u64,
-    pub max_supply: u64,
+    pub max_supply: Option<u64>,
     pub price_per_mint: Balance,
     pub nft_metadata: Mapping<Id, String>,
 }
@@ -92,7 +92,7 @@ where
     }
 
     /// Get max supply of tokens.
-    default fn max_supply(&self) -> u64 {
+    default fn max_supply(&self) -> Option<u64> {
         self.data::<MintingData>().max_supply
     }
 
@@ -122,7 +122,7 @@ where
         Ok(())
     }
 
-    /// Purchas many tokens.
+    /// Purchase many tokens.
     #[modifiers(non_reentrant)]
     default fn mint_many(&mut self, mint_amount: u64) -> Result<()> {
         self._check_amount(mint_amount)?;
@@ -133,7 +133,7 @@ where
     }
 
     /// Get max supply of tokens.
-    default fn max_supply(&self) -> u64 {
+    default fn max_supply(&self) -> Option<u64> {
         self.data::<MintingData>().max_supply
     }
 

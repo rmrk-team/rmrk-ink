@@ -78,7 +78,7 @@ pub mod rmrk_contract_minting {
     impl Rmrk {
         #[allow(clippy::too_many_arguments)]
         #[ink(constructor)]
-        pub fn new(max_supply: u64, price_per_mint: Balance) -> Self {
+        pub fn new(max_supply: Option<u64>, price_per_mint: Balance) -> Self {
             let mut instance = Rmrk::default();
             instance._init_with_admin(instance.env().caller());
             instance._setup_role(CONTRIBUTOR, instance.env().caller());
@@ -167,7 +167,7 @@ pub mod rmrk_contract_minting {
         }
 
         fn init() -> Rmrk {
-            Rmrk::new(MAX_SUPPLY, PRICE)
+            Rmrk::new(Some(MAX_SUPPLY), PRICE)
         }
 
         fn purchase(amount: u64) {
@@ -181,7 +181,7 @@ pub mod rmrk_contract_minting {
         #[ink::test]
         fn init_with_price_works() {
             let rmrk = init();
-            assert_eq!(rmrk.max_supply(), MAX_SUPPLY);
+            assert_eq!(rmrk.max_supply(), Some(MAX_SUPPLY));
             assert_eq!(rmrk.price(), PRICE);
         }
 
@@ -270,6 +270,72 @@ pub mod rmrk_contract_minting {
                 rmrk.mint_many(num_of_mints),
                 Err(RmrkError::CollectionIsFull.into())
             );
+        }
+
+        #[ink::test]
+        fn mint_single_lazy_without_limit_works() {
+            let mut rmrk = Rmrk::new(None, PRICE);
+
+            let accounts = default_accounts();
+            let num_of_mints: u64 = MAX_SUPPLY + 1;
+
+            set_sender(accounts.bob);
+            assert_eq!(rmrk.total_supply(), 0);
+
+            (0..num_of_mints).for_each(|_| {
+                purchase(1);
+                assert!(rmrk.mint().is_ok());
+            });
+
+            check_mint_many_outcome(rmrk, accounts.bob, num_of_mints);
+        }
+
+        #[ink::test]
+        fn mint_single_lazy_with_limit_set_to_zero_works() {
+            let mut rmrk = Rmrk::new(Some(0), PRICE);
+
+            let accounts = default_accounts();
+            let num_of_mints: u64 = MAX_SUPPLY + 1;
+
+            set_sender(accounts.bob);
+            assert_eq!(rmrk.total_supply(), 0);
+
+            (0..num_of_mints).for_each(|_| {
+                purchase(1);
+                assert!(rmrk.mint().is_ok());
+            });
+
+            check_mint_many_outcome(rmrk, accounts.bob, num_of_mints);
+        }
+
+        #[ink::test]
+        fn mint_many_lazy_without_limit_works() {
+            let mut rmrk = Rmrk::new(None, PRICE);
+
+            let accounts = default_accounts();
+            let num_of_mints: u64 = MAX_SUPPLY + 42;
+
+            set_sender(accounts.bob);
+            assert_eq!(rmrk.total_supply(), 0);
+
+            purchase(num_of_mints);
+            assert!(rmrk.mint_many(num_of_mints).is_ok());
+            check_mint_many_outcome(rmrk, accounts.bob, num_of_mints);
+        }
+
+        #[ink::test]
+        fn mint_many_lazy_with_limit_set_to_zero_works() {
+            let mut rmrk = Rmrk::new(Some(0), PRICE);
+
+            let accounts = default_accounts();
+            let num_of_mints: u64 = MAX_SUPPLY + 42;
+
+            set_sender(accounts.bob);
+            assert_eq!(rmrk.total_supply(), 0);
+
+            purchase(num_of_mints);
+            assert!(rmrk.mint_many(num_of_mints).is_ok());
+            check_mint_many_outcome(rmrk, accounts.bob, num_of_mints);
         }
     }
 }
