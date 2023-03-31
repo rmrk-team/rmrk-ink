@@ -1,6 +1,6 @@
 {
   "name": "rmrk-project",
-  "version": "0.7.0",
+  "version": "0.6.0",
   "private": true,
   "dependencies": {
     "@727-ventures/typechain-compiler": "0.5.18",
@@ -16,7 +16,7 @@
     "eslint-plugin-import": "^2.22.1",
     "eslint-plugin-node": "^11.1.0",
     "eslint-plugin-promise": "^5.1.0",
-    "jest": "^29.3.1",
+    "mocha": "10.1.0",
     "patch-package": "^6.5.1",
     "ts-node": "^10.8.0"
   },
@@ -26,8 +26,8 @@
   "scripts": {
     "compile": "typechain-compiler --toolchain nightly-2023-01-10",
     "compile:release": "typechain-compiler --release --toolchain nightly-2023-01-10",
-    "test": "jest --testPathPattern \".spec.ts$\" --runInBand",
-    "test:single": "jest",
+    "test": "mocha --require ts-node/register --recursive ./tests --extension \".spec.ts\" --exit --timeout 2000000",
+    "test:single": "mocha --require ts-node/register --extension \".ts\" --exit --timeout 20000",
     "postinstall": "patch-package"
   },
   "resolutions": {
@@ -35,3 +35,4 @@
     "@polkadot/api-contract": "9.13.4"
   }
 }
+
