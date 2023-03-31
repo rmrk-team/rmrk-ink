@@ -90,47 +90,100 @@ jobs:
       - name: Format rust code
         run: cargo fmt --all
 
+  # integration:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Install & display rust toolchain
+  #       run: |
+  #         rustup component add rust-src 
+  #         rustup show
+
+  #     - name: Check targets are installed correctly
+  #       run: rustup target list --installed
+
+  #     - name: Checkout the source code
+  #       uses: actions/checkout@v3
+
+  #     - name: Check if cargo-contract exists
+  #       id: check-cargo-contract
+  #       continue-on-error: true
+  #       run: cargo contract --version
+
+  #     - name: Install cargo contract
+  #       if: ${{ steps.check-cargo-contract.outcome == 'failure' }}
+  #       run: |
+  #         cargo install cargo-dylint dylint-link
+  #         cargo install --force --locked cargo-contract
+  #         cargo contract --version
+
+  #     - name: Use Node.js
+  #       uses: actions/setup-node@v3
+  #       with:
+  #         node-version: ${{ env.NODE_JS_VER }}
+
+  #     - name: Compile contracts
+  #       run: |
+  #         yarn
+  #         yarn compile
+
+  #     - name: Integration test on Swanky-node
+  #       run: |
+  #         sudo wget https://github.com/AstarNetwork/swanky-node/releases/download/${{ env.SWANKY_NODE_VER }}/swanky-node-${{ env.SWANKY_NODE_VER }}-ubuntu-x86_64.tar.gz
+  #         sudo tar -zxvf swanky-node-${{ env.SWANKY_NODE_VER }}-ubuntu-x86_64.tar.gz
+  #         sudo chmod +x swanky-node
+  #         ./swanky-node -lerror,runtime::contracts=debug &
+  #         sleep 10
+  #         yarn test
+
   integration:
     runs-on: ubuntu-latest
     steps:
-      - name: Install & display rust toolchain
-        run: |
-          rustup component add rust-src 
-          rustup show
+    - name: Checkout the source code
+      uses: actions/checkout@v3
 
-      - name: Check targets are installed correctly
-        run: rustup target list --installed
+    - name: Install & display rust toolchain
+      run: |
+        rustup component add rust-src
+        rustup show
 
-      - name: Checkout the source code
-        uses: actions/checkout@v3
+    - name: Check targets are installed correctly
+      run: rustup target list --installed
 
-      - name: Check if cargo-contract exists
-        id: check-cargo-contract
-        continue-on-error: true
-        run: cargo contract --version
+    - name: Cache Crates
+      uses: actions/cache@v3
+      with:
+        path: ~/.cargo 
+        key: ${{ runner.os }}-rust-${{ hashFiles('rust-toolchain.toml') }}
+        restore-keys: |
+          ${{ runner.os }}-rust
 
-      - name: Install cargo contract
-        if: ${{ steps.check-cargo-contract.outcome == 'failure' }}
-        run: |
-          cargo install cargo-dylint dylint-link
-          cargo install --force --locked cargo-contract
-          cargo contract --version
+    - name: Check if cargo-contract exists
+      id: check-cargo-contract
+      continue-on-error: true
+      run: cargo contract --version
 
-      - name: Use Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: ${{ env.NODE_JS_VER }}
+    - name: Install cargo contract
+      if: ${{ steps.check-cargo-contract.outcome == 'failure' }}
+      run: |
+        cargo install cargo-dylint dylint-link
+        cargo install --force --locked cargo-contract
+        cargo contract --version
 
-      - name: Compile contracts
-        run: |
-          yarn
-          yarn compile
+    - name: Use Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ env.NODE_JS_VER }}
 
-      - name: Integration test on Swanky-node
-        run: |
-          sudo wget https://github.com/AstarNetwork/swanky-node/releases/download/${{ env.SWANKY_NODE_VER }}/swanky-node-${{ env.SWANKY_NODE_VER }}-ubuntu-x86_64.tar.gz
-          sudo tar -zxvf swanky-node-${{ env.SWANKY_NODE_VER }}-ubuntu-x86_64.tar.gz
-          sudo chmod +x swanky-node
-          ./swanky-node -lerror,runtime::contracts=debug &
-          sleep 10
-          yarn test
+    - name: Compile contracts
+      run: |
+        yarn
+        yarn compile
+
+    - name: Integration test on Swanky-node
+      run: |
+        sudo wget https://github.com/AstarNetwork/swanky-node/releases/download/${{ env.SWANKY_NODE_VER }}/swanky-node-${{ env.SWANKY_NODE_VER }}-ubuntu-x86_64.tar.gz
+        sudo tar -zxvf swanky-node-${{ env.SWANKY_NODE_VER }}-ubuntu-x86_64.tar.gz
+        sudo chmod +x swanky-node
+        ./swanky-node -lerror,runtime::contracts=debug &
+        sleep 10
+        yarn test
