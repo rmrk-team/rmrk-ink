@@ -28,14 +28,6 @@ jobs:
       - name: Check targets are installed correctly
         run: rustup target list --installed
 
-      - name: Cache Cargo
-        uses: actions/cache@v3
-        with:
-          path: ~/.cargo
-          key: ${{ runner.os }}-rust-${{ hashFiles('rust-toolchain.toml') }}
-          restore-keys: |
-            ${{ runner.os }}-rust
-
       - name: Cargo check
         run: cargo +nightly check
 
@@ -46,12 +38,6 @@ jobs:
     needs: install
     runs-on: ubuntu-latest
     steps:
-      - name: Use cashed cargo
-        uses: actions/cache@v3
-        with:
-          path: ~/.cargo
-          key: ${{ runner.os }}-rust-${{ hashFiles('rust-toolchain.toml') }}
-
       - name: Checkout the source code
         uses: actions/checkout@v3
 
@@ -103,14 +89,6 @@ jobs:
 
     - name: Check targets are installed correctly
       run: rustup target list --installed
-
-    - name: Cache Crates
-      uses: actions/cache@v3
-      with:
-        path: ~/.cargo 
-        key: ${{ runner.os }}-rust-${{ hashFiles('rust-toolchain.toml') }}
-        restore-keys: |
-          ${{ runner.os }}-rust
 
     - name: Use Node.js
       uses: actions/setup-node@v3
