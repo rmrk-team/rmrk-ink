@@ -1,6 +1,6 @@
 {
-  "name": "rmrm-project",
-  "version": "0.7.0",
+  "name": "rmrk-project",
+  "version": "0.6.0",
   "private": true,
   "dependencies": {
     "@727-ventures/typechain-compiler": "0.5.18",
@@ -24,7 +24,8 @@
     "node": ">=18.0.0"
   },
   "scripts": {
-    "compile": "typechain-compiler --release",
+    "compile": "typechain-compiler --toolchain nightly-2023-01-10",
+    "compile:release": "typechain-compiler --release --toolchain nightly-2023-01-10",
     "test": "mocha --require ts-node/register --recursive ./tests --extension \".spec.ts\" --exit --timeout 2000000",
     "test:single": "mocha --require ts-node/register --extension \".ts\" --exit --timeout 20000",
     "postinstall": "patch-package"
@@ -34,3 +35,4 @@
     "@polkadot/api-contract": "9.13.4"
   }
 }
+
