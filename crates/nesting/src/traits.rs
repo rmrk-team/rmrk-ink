@@ -123,7 +123,7 @@ pub trait Nesting {
 
     /// Returns the parent token_id of the provided child nft.
     #[ink(message)]
-    fn get_owner_of_child(&self, child_nft: ChildNft) -> Result<Id>;
+    fn get_owner_of_child(&self, child_nft: ChildNft) -> Option<Id>;
 }
 
 /// Trait definitions for Nesting ink events
