@@ -1,4 +1,3 @@
-use ink::prelude::vec::Vec;
 use openbrush::{
     contracts::{
         access_control::*,
@@ -17,11 +16,7 @@ use openbrush::{
     },
 };
 
-use rmrk_base::traits::Base;
-use rmrk_common::{
-    roles::CONTRIBUTOR,
-    types::*,
-};
+use rmrk_common::roles::CONTRIBUTOR;
 use rmrk_minting::{
     self,
     traits::MintingLazy,
@@ -33,7 +28,7 @@ pub fn with_collection<T>(
     symbol: String,
     base_uri: String,
     metadata: String,
-    max_supply: u64,
+    max_supply: Option<u64>,
 ) where
     T: Storage<rmrk_minting::MintingData>
         + Storage<psp34::Data<enumerable::Balances>>
@@ -73,14 +68,6 @@ where
     T: access_control::Internal + Storage<access_control::Data>,
 {
     instance._setup_role(CONTRIBUTOR, account);
-}
-
-pub fn with_parts<T>(instance: &mut T, parts: Vec<Part>) -> Result<(), PSP34Error>
-where
-    T: Storage<rmrk_base::BaseData> + Base,
-{
-    instance.add_part_list(parts)?;
-    Ok(())
 }
 
 fn _with_royalties<T>(_instance: &mut T, _royalty_receiver: AccountId, _royalty: u8) {

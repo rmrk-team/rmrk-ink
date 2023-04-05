@@ -1,6 +1,6 @@
 [package]
 name = "rmrk_nesting"
-version = "0.5.0"
+version = "0.6.0"
 authors = ["Stake Technologies <devops@stake.co.jp>"]
 edition = "2021"
 

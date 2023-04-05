@@ -35,7 +35,7 @@ pub trait Minting {
 
     /// Get max supply of tokens.
     #[ink(message)]
-    fn max_supply(&self) -> u64;
+    fn max_supply(&self) -> Option<u64>;
 
     /// Get URI for the token Id.
     #[ink(message)]
@@ -59,7 +59,7 @@ pub trait MintingLazy {
 
     /// Get max supply of tokens.
     #[ink(message)]
-    fn max_supply(&self) -> u64;
+    fn max_supply(&self) -> Option<u64>;
 
     /// Get URI for the token Id.
     #[ink(message)]

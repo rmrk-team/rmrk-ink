@@ -1,4 +1,4 @@
-//! RMRK Base implementation
+//! RMRK Minting implementation
 #![cfg_attr(not(feature = "std"), no_std)]
 #![feature(min_specialization)]
 #![allow(clippy::inline_fn_without_body)]
@@ -51,7 +51,7 @@ pub const STORAGE_MINTING_KEY: u32 = openbrush::storage_unique_key!(MintingData)
 #[openbrush::upgradeable_storage(STORAGE_MINTING_KEY)]
 pub struct MintingData {
     pub last_token_id: u64,
-    pub max_supply: u64,
+    pub max_supply: Option<u64>,
     pub price_per_mint: Balance,
     pub nft_metadata: Mapping<Id, String>,
 }
@@ -88,11 +88,11 @@ where
             .nft_metadata
             .insert(token_id, &metadata);
 
-        return Ok(())
+        Ok(())
     }
 
     /// Get max supply of tokens.
-    default fn max_supply(&self) -> u64 {
+    default fn max_supply(&self) -> Option<u64> {
         self.data::<MintingData>().max_supply
     }
 
@@ -118,20 +118,22 @@ where
         self._check_amount(1)?;
         self._check_value(Self::env().transferred_value(), 1)?;
         self._mint(Self::env().caller())?;
-        return Ok(())
+
+        Ok(())
     }
 
-    /// Purchas many tokens.
+    /// Purchase many tokens.
     #[modifiers(non_reentrant)]
     default fn mint_many(&mut self, mint_amount: u64) -> Result<()> {
         self._check_amount(mint_amount)?;
         self._check_value(Self::env().transferred_value(), mint_amount)?;
         self._mint_many(Self::env().caller(), mint_amount)?;
+
         Ok(())
     }
 
     /// Get max supply of tokens.
-    default fn max_supply(&self) -> u64 {
+    default fn max_supply(&self) -> Option<u64> {
         self.data::<MintingData>().max_supply
     }
 

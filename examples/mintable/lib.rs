@@ -89,7 +89,7 @@ pub mod rmrk_example_mintable {
             name: String,
             symbol: String,
             base_uri: String,
-            max_supply: u64,
+            max_supply: Option<u64>,
             collection_metadata: String,
         ) -> Self {
             let mut instance = Rmrk::default();

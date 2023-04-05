@@ -208,8 +208,6 @@ pub mod rmrk_example_equippable {
         #[storage_field]
         minting: MintingData,
         #[storage_field]
-        base: BaseData,
-        #[storage_field]
         equippable: EquippableData,
     }
 
@@ -227,8 +225,6 @@ pub mod rmrk_example_equippable {
 
     impl MultiAsset for Rmrk {}
 
-    impl Base for Rmrk {}
-
     impl Equippable for Rmrk {}
 
     impl Query for Rmrk {}
@@ -241,7 +237,7 @@ pub mod rmrk_example_equippable {
             name: String,
             symbol: String,
             base_uri: String,
-            max_supply: u64,
+            max_supply: Option<u64>,
             price_per_mint: Balance,
             collection_metadata: String,
             _royalty_receiver: AccountId,

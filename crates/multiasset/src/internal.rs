@@ -104,13 +104,13 @@ where
         let mut assets = self
             .data::<MultiAssetData>()
             .accepted_assets
-            .get(&token_id)
+            .get(token_id)
             .unwrap_or(Vec::new());
-        if !assets.contains(&asset_id) {
+        if !assets.contains(asset_id) {
             assets.push(*asset_id);
             self.data::<MultiAssetData>()
                 .accepted_assets
-                .insert(&token_id, &assets);
+                .insert(token_id, &assets);
         }
         self._emit_asset_accepted_event(token_id, asset_id);
     }
@@ -120,13 +120,13 @@ where
         let mut assets = self
             .data::<MultiAssetData>()
             .pending_assets
-            .get(&token_id)
+            .get(token_id)
             .unwrap_or(Vec::new());
-        if !assets.contains(&asset_id) {
+        if !assets.contains(asset_id) {
             assets.push(*asset_id);
             self.data::<MultiAssetData>()
                 .pending_assets
-                .insert(&token_id, &assets);
+                .insert(token_id, &assets);
         }
     }
 
@@ -139,7 +139,7 @@ where
         let mut assets = self
             .data::<MultiAssetData>()
             .pending_assets
-            .get(&token_id)
+            .get(token_id)
             .ok_or(RmrkError::InvalidAssetId)?;
 
         let index = assets
@@ -150,7 +150,7 @@ where
 
         self.data::<MultiAssetData>()
             .pending_assets
-            .insert(&token_id, &assets);
+            .insert(token_id, &assets);
 
         Ok(())
     }
@@ -164,7 +164,7 @@ where
         let mut assets = self
             .data::<MultiAssetData>()
             .accepted_assets
-            .get(&token_id)
+            .get(token_id)
             .ok_or(RmrkError::InvalidAssetId)?;
 
         let index = assets
@@ -175,7 +175,7 @@ where
 
         self.data::<MultiAssetData>()
             .accepted_assets
-            .insert(&token_id, &assets);
+            .insert(token_id, &assets);
 
         Ok(())
     }
@@ -203,7 +203,7 @@ where
         accepted_list[asset_index] = *asset_id;
         self.data::<MultiAssetData>()
             .accepted_assets
-            .insert(&token_id, &accepted_list);
+            .insert(token_id, &accepted_list);
 
         Ok(())
     }

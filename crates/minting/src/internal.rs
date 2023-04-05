@@ -50,7 +50,8 @@ where
                 return Ok(())
             }
         }
-        return Err(RmrkError::BadMintValue.into())
+
+        Err(RmrkError::BadMintValue.into())
     }
 
     /// Check amount of tokens to be minted
@@ -63,11 +64,14 @@ where
             .last_token_id
             .checked_add(mint_amount)
         {
-            if amount <= self.data::<MintingData>().max_supply {
-                return Ok(())
+            return match self.data::<MintingData>().max_supply {
+                Some(max_supply) if amount <= max_supply => Ok(()),
+                Some(0) | None => Ok(()),
+                _ => Err(RmrkError::CollectionIsFull.into()),
             }
         }
-        return Err(RmrkError::CollectionIsFull.into())
+
+        Err(RmrkError::CollectionIsFull.into())
     }
 
     /// Mint next token to specified account

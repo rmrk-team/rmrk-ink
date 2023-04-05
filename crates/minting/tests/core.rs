@@ -83,7 +83,12 @@ pub mod rmrk_contract_minting {
     impl Rmrk {
         #[allow(clippy::too_many_arguments)]
         #[ink(constructor)]
-        pub fn new(name: String, symbol: String, base_uri: String, max_supply: u64) -> Self {
+        pub fn new(
+            name: String,
+            symbol: String,
+            base_uri: String,
+            max_supply: Option<u64>,
+        ) -> Self {
             let mut instance = Rmrk::default();
             instance._init_with_admin(instance.env().caller());
             instance._setup_role(CONTRIBUTOR, instance.env().caller());
@@ -177,7 +182,7 @@ pub mod rmrk_contract_minting {
                 String::from("Rmrk Project"),
                 String::from("RMK"),
                 String::from(BASE_URI),
-                MAX_SUPPLY,
+                Some(MAX_SUPPLY),
             )
         }
 
@@ -249,6 +254,78 @@ pub mod rmrk_contract_minting {
             assert_eq!(
                 rmrk.mint_many(accounts.alice, num_of_mints),
                 Err(RmrkError::CollectionIsFull.into())
+            );
+        }
+
+        #[ink::test]
+        fn mint_single_without_limit_works() {
+            let mut rmrk = Rmrk::new(
+                String::from("Rmrk Project"),
+                String::from("RMK"),
+                String::from(BASE_URI),
+                None,
+            );
+
+            let accounts = default_accounts();
+            assert_eq!(rmrk.total_supply(), 0);
+            (0..MAX_SUPPLY + 1).for_each(|_| {
+                let _ = rmrk.mint(accounts.alice);
+            });
+
+            assert_eq!(rmrk._last_token_id(), MAX_SUPPLY + 1);
+        }
+
+        #[ink::test]
+        fn mint_single_with_limit_set_to_zero_works() {
+            let mut rmrk = Rmrk::new(
+                String::from("Rmrk Project"),
+                String::from("RMK"),
+                String::from(BASE_URI),
+                Some(0),
+            );
+
+            let accounts = default_accounts();
+            assert_eq!(rmrk.total_supply(), 0);
+            (0..MAX_SUPPLY + 1).for_each(|_| {
+                let _ = rmrk.mint(accounts.alice);
+            });
+
+            assert_eq!(rmrk._last_token_id(), MAX_SUPPLY + 1);
+        }
+
+        #[ink::test]
+        fn mint_many_without_limit_works() {
+            let mut rmrk = Rmrk::new(
+                String::from("Rmrk Project"),
+                String::from("RMK"),
+                String::from(BASE_URI),
+                None,
+            );
+
+            let accounts = default_accounts();
+            assert_eq!(rmrk.total_supply(), 0);
+            let num_of_mints = MAX_SUPPLY + 42;
+            assert_eq!(
+                rmrk.mint_many(accounts.alice, num_of_mints),
+                Ok((Id::U64(1), Id::U64(MAX_SUPPLY + 42)))
+            );
+        }
+
+        #[ink::test]
+        fn mint_many_with_limit_set_to_zero_works() {
+            let mut rmrk = Rmrk::new(
+                String::from("Rmrk Project"),
+                String::from("RMK"),
+                String::from(BASE_URI),
+                Some(0),
+            );
+
+            let accounts = default_accounts();
+            assert_eq!(rmrk.total_supply(), 0);
+            let num_of_mints = MAX_SUPPLY + 42;
+            assert_eq!(
+                rmrk.mint_many(accounts.alice, num_of_mints),
+                Ok((Id::U64(1), Id::U64(MAX_SUPPLY + 42)))
             );
         }
 
