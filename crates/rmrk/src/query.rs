@@ -8,7 +8,9 @@ use crate::traits::{
 
 use ink::prelude::vec::Vec;
 use openbrush::{
-    contracts::psp34::extensions::enumerable::*,
+    contracts::psp34::{
+        extensions::enumerable::*,
+    },
     traits::{
         AccountId,
         String,
@@ -66,6 +68,15 @@ fn nested_deep_result_unwrap_or_default<T: Default>(
     }
 }
 
+fn nested_deep_result_unwrap_or_none<T>(
+    res: Result<Result<Result<T, Error>, ink::LangError>, ink::env::Error>,
+) -> Option<T> {
+    match res {
+        Ok(Ok(Ok(v))) => Some(v),
+        _ => None,
+    }
+}
+
 #[openbrush::wrapper]
 pub type QueryRef = dyn Query;
 
@@ -118,6 +129,27 @@ pub trait Query {
             assets_accepted,
             children_pending: unpack_children_id(children_pending),
             children_accepted: unpack_children_id(children_accepted),
+        }
+    }
+
+    #[ink(message)]
+    fn get_parent_of_child(&self, child_nft: ChildNft) -> Option<Id> {
+        let child_collection = child_nft.clone().0;
+        let child_id = child_nft.clone().1;
+
+        let maybe_parent_collection = nested_deep_result_unwrap_or_none(
+            NestingRef::get_parent_collection_builder(&child_collection, child_id).try_invoke()
+        );
+
+        match maybe_parent_collection {
+            Some(parent_collection) => {
+                if let Some(parent_token_id) = NestingRef::get_parent_of_child(&parent_collection, child_nft) {
+                    Some(parent_token_id)
+                }else {
+                    None
+                }
+            },
+            None => None
         }
     }
 }
