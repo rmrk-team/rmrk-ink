@@ -173,11 +173,9 @@ where
 
     /// Set the owner of the child nft.
     default fn set_parent(&mut self, child_nft: &ChildNft, parent_token_id: Id) {
-        let _ = self
-            .data::<NestingData>()
+        self.data::<NestingData>()
             .parent_of
-            .get(child_nft)
-            .insert(parent_token_id);
+            .insert(child_nft, &parent_token_id);
     }
 
     /// Remove the owner of the child nft.

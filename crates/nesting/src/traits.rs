@@ -126,8 +126,10 @@ pub trait Nesting {
     fn get_parent_collection(&self, child_id: Id) -> Result<AccountId>;
 
     /// Returns the parent token id of the provided child nft.
+    ///
+    /// Only works if the child and parent are in the same collection.
     #[ink(message)]
-    fn get_parent_of_child(&self, child_nft: ChildNft) -> Option<Id>;
+    fn get_parent_of_child_in_collection(&self, child_nft: ChildNft) -> Option<Id>;
 }
 
 /// Trait definitions for Nesting ink events
