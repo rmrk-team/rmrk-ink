@@ -126,15 +126,10 @@ pub trait Query {
         let child_collection = child_nft.clone().0;
         let child_id = child_nft.clone().1;
 
-        let maybe_parent_collection = nested_result_unwrap_or_default(
+        let parent_collection = nested_result_unwrap_or_default(
             PSP34Ref::owner_of_builder(&child_collection, child_id).try_invoke(),
-        );
+        )?;
 
-        match maybe_parent_collection {
-            Some(parent_collection) => {
-                NestingRef::get_parent_of_child_in_collection(&parent_collection, child_nft)
-            }
-            None => None,
-        }
+        NestingRef::get_parent_of_child_in_collection(&parent_collection, child_nft)
     }
 }
