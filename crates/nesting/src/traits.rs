@@ -121,10 +121,6 @@ pub trait Nesting {
     #[ink(message)]
     fn get_accepted_children(&self, parent_token_id: Id) -> Vec<ChildNft>;
 
-    /// Returns the parent collection of the provided child.
-    #[ink(message)]
-    fn get_parent_collection(&self, child_id: Id) -> Result<AccountId>;
-
     /// Returns the parent token id of the provided child nft.
     ///
     /// Only works if the child and parent are in the same collection.

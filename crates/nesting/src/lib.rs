@@ -253,10 +253,6 @@ where
             .unwrap_or_default()
     }
 
-    fn get_parent_collection(&self, child_id: Id) -> Result<AccountId> {
-        self.ensure_exists_and_get_owner(&child_id)
-    }
-
     fn get_parent_of_child_in_collection(&self, child_nft: ChildNft) -> Option<Id> {
         self.data::<NestingData>().parent_of.get(&child_nft)
     }

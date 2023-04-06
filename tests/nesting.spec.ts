@@ -137,8 +137,11 @@ describe("RMRK Nesting tests", () => {
     await acceptChild(child, parent, bob);
 
     // owner of the child should be the parent.
-    const collection = await child.query.getParentCollection({ u64: 1 });
+    const collection = await child.query.ownerOf({ u64: 1 });
     console.log(collection);
+
+    const owner = await child.query.getParentOfChild([child.address, { u64: 1 }]);
+    console.log(owner);
 
     // bob fails to accept already accepted child
     const failAcceptResult = await parent

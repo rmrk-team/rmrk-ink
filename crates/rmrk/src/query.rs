@@ -66,15 +66,6 @@ fn nested_deep_result_unwrap_or_default<T: Default>(
     }
 }
 
-fn nested_deep_result_unwrap_or_none<T>(
-    res: Result<Result<Result<T, Error>, ink::LangError>, ink::env::Error>,
-) -> Option<T> {
-    match res {
-        Ok(Ok(Ok(v))) => Some(v),
-        _ => None,
-    }
-}
-
 #[openbrush::wrapper]
 pub type QueryRef = dyn Query;
 
@@ -135,8 +126,8 @@ pub trait Query {
         let child_collection = child_nft.clone().0;
         let child_id = child_nft.clone().1;
 
-        let maybe_parent_collection = nested_deep_result_unwrap_or_none(
-            NestingRef::get_parent_collection_builder(&child_collection, child_id).try_invoke(),
+        let maybe_parent_collection = nested_result_unwrap_or_default(
+            PSP34Ref::owner_of_builder(&child_collection, child_id).try_invoke(),
         );
 
         match maybe_parent_collection {
