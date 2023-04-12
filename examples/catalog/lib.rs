@@ -200,11 +200,14 @@ pub mod catalog_example {
         fn setting_metadata_works() {
             let mut catalog = init();
 
-            assert_eq!(catalog.get_catalog_metadata(), METADATA);
+            assert_eq!(catalog.get_catalog_metadata(), Ok(METADATA.to_string()));
             assert!(catalog
                 .setup_catalog(String::from("ipfs://catalog_metadata2"))
                 .is_ok());
-            assert_eq!(catalog.get_catalog_metadata(), "ipfs://catalog_metadata2");
+            assert_eq!(
+                catalog.get_catalog_metadata(),
+                Ok("ipfs://catalog_metadata2".to_string())
+            );
         }
 
         fn default_accounts() -> test::DefaultAccounts<ink::env::DefaultEnvironment> {

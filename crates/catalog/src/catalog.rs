@@ -121,11 +121,9 @@ where
     }
 
     /// Get the Catalog metadataURI.
-    default fn get_catalog_metadata(&self) -> PreludeString {
-        match PreludeString::from_utf8(self.data::<CatalogData>().catalog_metadata.clone()) {
-            Ok(m) => m,
-            _ => PreludeString::from(""),
-        }
+    default fn get_catalog_metadata(&self) -> Result<PreludeString> {
+        PreludeString::from_utf8(self.data::<CatalogData>().catalog_metadata.clone())
+            .map_err(|_| RmrkError::UriNotFound.into())
     }
 
     /// Get the number of parts.
