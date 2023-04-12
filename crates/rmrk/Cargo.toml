@@ -15,9 +15,7 @@ rmrk_multiasset = { path = "../multiasset", default-features = false }
 rmrk_nesting = { path = "../nesting", default-features = false }
 rmrk_common = { path = "../common", default-features = false }
 rmrk_equippable = { path = "../equippable", default-features = false }
-
-# external contracts
-rmrk_catalog = { path = "../catalog", default-features = false, features = ["ink-as-dependency"]}
+rmrk_catalog = { path = "../catalog", default-features = false }
 
 [lib]
 path = "src/lib.rs"

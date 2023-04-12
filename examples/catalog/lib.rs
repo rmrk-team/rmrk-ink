@@ -11,10 +11,9 @@ pub mod catalog_example {
         },
     };
 
-    use rmrk_catalog::{
-        catalog::*,
+    use rmrk::{
         roles::*,
-        traits::*,
+        storage::*,
     };
 
     // CatalogContract contract storage
@@ -49,13 +48,12 @@ pub mod catalog_example {
 
         use ink::env::test;
 
-        use openbrush::contracts::psp34::extensions::enumerable::*;
-        use rmrk_catalog::{
+        use rmrk::{
             errors::*,
-            roles::ADMIN,
-            traits::Catalog,
             types::*,
         };
+
+        // use openbrush::contracts::psp34::extensions::enumerable::*;
 
         const METADATA: &str = "ipfs://myIpfsUri/";
         const EQUIPPABLE_ADDRESS1: [u8; 32] = [1; 32];
@@ -75,10 +73,10 @@ pub mod catalog_example {
 
         #[ink::test]
         fn add_parts_to_catalog_works() {
-            const ASSET_URI: &str = "asset_uri/";
-            const ASSET_ID: AssetId = 1;
-            const TOKEN_ID1: Id = Id::U64(1);
-            const TOKEN_ID2: Id = Id::U64(2);
+            // const ASSET_URI: &str = "asset_uri/";
+            // const ASSET_ID: AssetId = 1;
+            // const TOKEN_ID1: Id = Id::U64(1);
+            // const TOKEN_ID2: Id = Id::U64(2);
             const PART_ID0: PartId = 0;
             const PART_ID1: PartId = 1;
 
