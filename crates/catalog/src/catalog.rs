@@ -114,7 +114,7 @@ where
 
     /// Sets the metadata URI for Catalog
     #[modifiers(only_role(CONTRIBUTOR))]
-    default fn setup_catalog(&mut self, catalog_metadata: String) -> Result<()> {
+    default fn set_catalog_metadata(&mut self, catalog_metadata: String) -> Result<()> {
         self.data::<CatalogData>().catalog_metadata = catalog_metadata;
 
         Ok(())

@@ -12,6 +12,7 @@ pub mod catalog_example {
     };
 
     use rmrk::{
+        errors::Result,
         roles::*,
         storage::*,
     };
@@ -31,14 +32,14 @@ pub mod catalog_example {
     impl CatalogContract {
         /// Instantiate new CatalogContract contract
         #[ink(constructor)]
-        pub fn new(catalog_metadata: String) -> Self {
+        pub fn new(catalog_metadata: String) -> Result<Self> {
             let mut instance = CatalogContract::default();
             let admin = Self::env().caller();
             instance._init_with_admin(admin);
             instance._setup_role(CONTRIBUTOR, admin);
-            _ = Catalog::setup_catalog(&mut instance, catalog_metadata);
+            Catalog::set_catalog_metadata(&mut instance, catalog_metadata)?;
 
-            instance
+            Ok(instance)
         }
     }
 
@@ -68,7 +69,7 @@ pub mod catalog_example {
         }
 
         fn init() -> CatalogContract {
-            CatalogContract::new(String::from(METADATA).into())
+            CatalogContract::new(String::from(METADATA).into()).expect("Contract instantiated")
         }
 
         #[ink::test]
@@ -202,7 +203,7 @@ pub mod catalog_example {
 
             assert_eq!(catalog.get_catalog_metadata(), Ok(METADATA.to_string()));
             assert!(catalog
-                .setup_catalog(String::from("ipfs://catalog_metadata2"))
+                .set_catalog_metadata(String::from("ipfs://catalog_metadata2"))
                 .is_ok());
             assert_eq!(
                 catalog.get_catalog_metadata(),
