@@ -136,6 +136,9 @@ describe("RMRK Nesting tests", () => {
     // bob accepts child
     await acceptChild(child, parent, bob);
 
+    const owner = await child.query.getParentOfChild([child.address, { u64: 1 }]);
+    console.log(owner);
+
     // bob fails to accept already accepted child
     const failAcceptResult = await parent
       .withSigner(bob)
