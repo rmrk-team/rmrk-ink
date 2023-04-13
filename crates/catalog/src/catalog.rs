@@ -114,18 +114,16 @@ where
 
     /// Sets the metadata URI for Catalog
     #[modifiers(only_role(CONTRIBUTOR))]
-    default fn setup_catalog(&mut self, catalog_metadata: String) -> Result<()> {
+    default fn set_catalog_metadata(&mut self, catalog_metadata: String) -> Result<()> {
         self.data::<CatalogData>().catalog_metadata = catalog_metadata;
 
         Ok(())
     }
 
     /// Get the Catalog metadataURI.
-    default fn get_catalog_metadata(&self) -> PreludeString {
-        match PreludeString::from_utf8(self.data::<CatalogData>().catalog_metadata.clone()) {
-            Ok(m) => m,
-            _ => PreludeString::from(""),
-        }
+    default fn get_catalog_metadata(&self) -> Result<PreludeString> {
+        PreludeString::from_utf8(self.data::<CatalogData>().catalog_metadata.clone())
+            .map_err(|_| RmrkError::UriNotFound.into())
     }
 
     /// Get the number of parts.

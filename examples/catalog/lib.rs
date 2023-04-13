@@ -11,10 +11,10 @@ pub mod catalog_example {
         },
     };
 
-    use rmrk_catalog::{
-        catalog::*,
+    use rmrk::{
+        errors::Result,
         roles::*,
-        traits::*,
+        storage::*,
     };
 
     // CatalogContract contract storage
@@ -32,14 +32,14 @@ pub mod catalog_example {
     impl CatalogContract {
         /// Instantiate new CatalogContract contract
         #[ink(constructor)]
-        pub fn new(catalog_metadata: String) -> Self {
+        pub fn new(catalog_metadata: String) -> Result<Self> {
             let mut instance = CatalogContract::default();
             let admin = Self::env().caller();
             instance._init_with_admin(admin);
             instance._setup_role(CONTRIBUTOR, admin);
-            _ = Catalog::setup_catalog(&mut instance, catalog_metadata);
+            Catalog::set_catalog_metadata(&mut instance, catalog_metadata)?;
 
-            instance
+            Ok(instance)
         }
     }
 
@@ -49,13 +49,12 @@ pub mod catalog_example {
 
         use ink::env::test;
 
-        use openbrush::contracts::psp34::extensions::enumerable::*;
-        use rmrk_catalog::{
+        use rmrk::{
             errors::*,
-            roles::ADMIN,
-            traits::Catalog,
             types::*,
         };
+
+        // use openbrush::contracts::psp34::extensions::enumerable::*;
 
         const METADATA: &str = "ipfs://myIpfsUri/";
         const EQUIPPABLE_ADDRESS1: [u8; 32] = [1; 32];
@@ -70,15 +69,15 @@ pub mod catalog_example {
         }
 
         fn init() -> CatalogContract {
-            CatalogContract::new(String::from(METADATA).into())
+            CatalogContract::new(String::from(METADATA).into()).expect("Contract instantiated")
         }
 
         #[ink::test]
         fn add_parts_to_catalog_works() {
-            const ASSET_URI: &str = "asset_uri/";
-            const ASSET_ID: AssetId = 1;
-            const TOKEN_ID1: Id = Id::U64(1);
-            const TOKEN_ID2: Id = Id::U64(2);
+            // const ASSET_URI: &str = "asset_uri/";
+            // const ASSET_ID: AssetId = 1;
+            // const TOKEN_ID1: Id = Id::U64(1);
+            // const TOKEN_ID2: Id = Id::U64(2);
             const PART_ID0: PartId = 0;
             const PART_ID1: PartId = 1;
 
@@ -202,11 +201,14 @@ pub mod catalog_example {
         fn setting_metadata_works() {
             let mut catalog = init();
 
-            assert_eq!(catalog.get_catalog_metadata(), METADATA);
+            assert_eq!(catalog.get_catalog_metadata(), Ok(METADATA.to_string()));
             assert!(catalog
-                .setup_catalog(String::from("ipfs://catalog_metadata2"))
+                .set_catalog_metadata(String::from("ipfs://catalog_metadata2"))
                 .is_ok());
-            assert_eq!(catalog.get_catalog_metadata(), "ipfs://catalog_metadata2");
+            assert_eq!(
+                catalog.get_catalog_metadata(),
+                Ok("ipfs://catalog_metadata2".to_string())
+            );
         }
 
         fn default_accounts() -> test::DefaultAccounts<ink::env::DefaultEnvironment> {
