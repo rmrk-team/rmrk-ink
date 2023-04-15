@@ -5,7 +5,9 @@
 
 pub mod internal;
 pub mod traits;
-
+pub mod extensions {
+    pub mod incremental;
+}
 use internal::Internal;
 
 use rmrk_common::{

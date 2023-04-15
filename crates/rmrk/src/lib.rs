@@ -25,3 +25,7 @@ pub mod traits {
     pub use rmrk_nesting::traits::*;
     pub use rmrk_catalog::traits::*;
 }
+
+pub mod extensions {
+    pub use rmrk_multiasset::extensions::incremental::*;
+}
