@@ -127,9 +127,14 @@ pub trait Query {
         let child_id = child_nft.clone().1;
 
         let parent_collection = nested_result_unwrap_or_default(
-            PSP34Ref::owner_of_builder(&child_collection, child_id).try_invoke(),
+            PSP34Ref::owner_of_builder(&child_collection, child_id)
+                .call_flags(ink::env::CallFlags::default().set_allow_reentry(true))
+                .try_invoke(),
         )?;
 
-        NestingRef::get_parent_of_child_in_collection(&parent_collection, child_nft)
+        nested_result_unwrap_or_default(
+            NestingRef::get_parent_of_child_in_collection_builder(&parent_collection, child_nft)
+                .try_invoke(),
+        )
     }
 }

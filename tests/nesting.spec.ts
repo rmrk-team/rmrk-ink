@@ -338,10 +338,13 @@ const acceptChild = async (child: Rmrk, parent: Rmrk, signer: KeyringPair): Prom
   expect(
     (await parent.query.childrenBalance({ u64: 1 }))?.value.unwrap().ok.toString()
   ).to.be.equal("1,0");
+  expect((await child.query.getParentOfChild([child.address, { u64: 1 }])).value.unwrap().u64)
+    .to.be.equal(1);
+
   return acceptChildResult;
 }
 
-// helper function to accept a child on parent contract
+// helper function to remove a child on parent contract
 const removeChild = async (child: Rmrk, parent: Rmrk, signer: KeyringPair): Promise<SignAndSendSuccessResponse> => {
   const removeChildResult = await parent
     .withSigner(signer)
@@ -354,5 +357,8 @@ const removeChild = async (child: Rmrk, parent: Rmrk, signer: KeyringPair): Prom
   expect(
     (await parent.query.childrenBalance({ u64: 1 }))?.value.unwrap().ok.toString()
   ).to.be.equal("0,0");
+  expect((await child.query.getParentOfChild([child.address, { u64: 1 }])).value.ok)
+    .to.be.equal(null);
+
   return removeChildResult;
 }
