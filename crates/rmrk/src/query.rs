@@ -133,8 +133,7 @@ pub trait Query {
         )?;
 
         nested_result_unwrap_or_default(
-            NestingRef::get_parent_of_child_in_collection_builder(&parent_collection, child_nft)
-                .try_invoke(),
+            NestingRef::get_parent_of_child_builder(&parent_collection, child_nft).try_invoke(),
         )
     }
 }
