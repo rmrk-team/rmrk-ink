@@ -123,8 +123,8 @@ pub trait Query {
 
     #[ink(message)]
     fn get_parent_of_child(&self, child_nft: ChildNft) -> Option<Id> {
-        let child_collection = child_nft.clone().0;
-        let child_id = child_nft.clone().1;
+        let child_collection = child_nft.0;
+        let child_id = child_nft.1.clone();
 
         let parent_collection = nested_result_unwrap_or_default(
             PSP34Ref::owner_of_builder(&child_collection, child_id)
