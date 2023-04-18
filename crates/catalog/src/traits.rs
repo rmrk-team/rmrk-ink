@@ -22,7 +22,7 @@ pub type CatalogRef = dyn Catalog;
 pub trait Catalog {
     /// Add one or more parts to the Catalog
     #[ink(message)]
-    fn add_part_list(&mut self, parts: Vec<Part>) -> Result<()>;
+    fn add_part_list(&mut self, part_ids: Vec<PartId>, parts: Vec<Part>) -> Result<()>;
 
     /// Add collection address(es) that can be used to equip given `PartId`.
     #[ink(message)]
@@ -50,7 +50,7 @@ pub trait Catalog {
 
     /// Get the list of all parts.
     #[ink(message)]
-    fn get_parts_count(&self) -> PartId;
+    fn get_parts_count(&self) -> u32;
 
     /// Get the part details for the given PartId.
     #[ink(message)]

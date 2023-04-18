@@ -23,11 +23,7 @@ pub type MintingLazyRef = dyn MintingLazy;
 pub trait Minting {
     /// Mint one or more tokens.
     #[ink(message)]
-    fn mint(&mut self, to: AccountId) -> Result<Id>;
-
-    /// Mint many to specified account.
-    #[ink(message)]
-    fn mint_many(&mut self, to: AccountId, mint_amount: u64) -> Result<(Id, Id)>;
+    fn mint(&mut self, to: AccountId, token_id: Id) -> Result<()>;
 
     /// Assign metadata to specified token.
     #[ink(message)]

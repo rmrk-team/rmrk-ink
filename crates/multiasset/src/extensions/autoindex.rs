@@ -1,48 +1,31 @@
-use crate::{
-    MultiAsset,
-    MultiAssetData,
-};
+use crate::MultiAsset;
 
-use ink::{
-    prelude::vec::Vec,
-    storage::Mapping,
-};
+use ink::prelude::vec::Vec;
 
-use openbrush::{
-    contracts::{
-        access_control::*,
-        psp34::extensions::enumerable::*,
-    },
-    modifiers,
-    traits::{
-        AccountId,
-        Storage,
-        String,
-    },
+use openbrush::traits::{
+    AccountId,
+    Storage,
+    String,
 };
 use rmrk_common::{
     counter::Counter,
-    errors::{
-        Error,
-        Result,
-        RmrkError,
-    },
+    errors::Result,
     types::*,
 };
 
-pub const STORAGE_KEY: u32 = openbrush::storage_unique_key!(MultiAssetIncremental);
+pub const STORAGE_KEY: u32 = openbrush::storage_unique_key!(MultiAssetAutoIndex);
 
 #[derive(Default, Debug)]
 #[openbrush::upgradeable_storage(STORAGE_KEY)]
-pub struct MultiAssetIncrementalData {
-    pub counter: Counter,
+pub struct MultiAssetAutoIndexData {
+    pub asset_id: Counter<AssetId>,
 }
 
 #[openbrush::wrapper]
-pub type MultiAssetEnumerableRef = dyn MultiAssetIncremental;
+pub type MultiAssetAutoIndexRef = dyn MultiAssetAutoIndex;
 
 #[openbrush::trait_definition]
-pub trait MultiAssetIncremental {
+pub trait MultiAssetAutoIndex {
     #[ink(message)]
     fn add_asset_entry(
         &mut self,
@@ -53,9 +36,9 @@ pub trait MultiAssetIncremental {
     ) -> Result<AssetId>;
 }
 
-impl<T> MultiAssetIncremental for T
+impl<T> MultiAssetAutoIndex for T
 where
-    T: Storage<MultiAssetIncrementalData> + MultiAsset,
+    T: Storage<MultiAssetAutoIndexData> + MultiAsset,
 {
     default fn add_asset_entry(
         &mut self,
@@ -64,7 +47,7 @@ where
         asset_uri: String,
         part_ids: Vec<PartId>,
     ) -> Result<AssetId> {
-        let next_id = self.data::<MultiAssetIncrementalData>().counter.next()?;
+        let next_id = self.data::<MultiAssetAutoIndexData>().asset_id.next()?;
         MultiAsset::add_asset_entry(
             self,
             catalog_address,

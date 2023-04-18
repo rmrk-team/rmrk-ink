@@ -101,7 +101,7 @@ pub enum RmrkError {
     UnknownPart,
     UnknownPartId,
     WithdrawalFailed,
-    Overflow
+    Overflow,
 }
 
 impl ToString for RmrkError {

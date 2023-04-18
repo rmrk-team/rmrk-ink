@@ -7,6 +7,7 @@ use crate::{
 
 use rmrk_common::{
     errors::{
+        Error,
         Result,
         RmrkError,
     },
@@ -44,9 +45,6 @@ pub struct CatalogData {
     /// Mapping for all part details.
     pub parts: Mapping<PartId, Part>,
 
-    /// Counter for assigning new parts to Catalog.
-    pub next_part_id: PartId,
-
     /// Metadata for Catalog
     pub catalog_metadata: String,
 }
@@ -57,21 +55,24 @@ where
 {
     /// Add one or more parts to the Catalog
     #[modifiers(only_role(CONTRIBUTOR))]
-    default fn add_part_list(&mut self, parts: Vec<Part>) -> Result<()> {
-        for part in parts {
-            let part_id = self.data::<CatalogData>().next_part_id;
+    default fn add_part_list(&mut self, part_ids: Vec<PartId>, parts: Vec<Part>) -> Result<()> {
+        if part_ids.len() != parts.len() {
+            return Err(RmrkError::BadConfig.into())
+        }
+
+        for (i, part) in parts.iter().enumerate() {
+            let part_id = part_ids
+                .get(i)
+                .ok_or(Error::Rmrk(RmrkError::BadConfig))?
+                .to_owned();
 
             if part.part_type == PartType::Fixed
                 && (!part.equippable.is_empty() || part.is_equippable_by_all)
             {
                 return Err(RmrkError::BadConfig.into())
             }
-            self.data::<CatalogData>().parts.insert(part_id, &part);
+            self.data::<CatalogData>().parts.insert(part_id, part);
             self.data::<CatalogData>().part_ids.push(part_id);
-            match self.data::<CatalogData>().next_part_id.checked_add(1) {
-                Some(id) => self.data::<CatalogData>().next_part_id = id,
-                None => return Err(RmrkError::BadConfig.into()),
-            }
         }
 
         Ok(())
@@ -127,8 +128,8 @@ where
     }
 
     /// Get the number of parts.
-    default fn get_parts_count(&self) -> PartId {
-        self.data::<CatalogData>().next_part_id
+    default fn get_parts_count(&self) -> u32 {
+        self.data::<CatalogData>().part_ids.len() as u32
     }
 
     /// Get the part details for the given PartId.

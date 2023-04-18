@@ -6,7 +6,7 @@
 pub mod internal;
 pub mod traits;
 pub mod extensions {
-    pub mod incremental;
+    pub mod autoindex;
 }
 
 

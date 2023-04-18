@@ -32,7 +32,8 @@ pub mod rmrk_example_equippable {
         config,
         errors::Result,
         extensions::{
-            MultiAssetIncrementalData,
+            MintingAutoIndexData,
+            MultiAssetAutoIndexData,
             *,
         },
         query::*,
@@ -59,7 +60,9 @@ pub mod rmrk_example_equippable {
         #[storage_field]
         minting: MintingData,
         #[storage_field]
-        multiasset_incremental: MultiAssetIncrementalData,
+        multiasset_autoindex: MultiAssetAutoIndexData,
+        #[storage_field]
+        minting_autoindex: MintingAutoIndexData,
     }
 
     impl PSP34 for Rmrk {}
@@ -72,9 +75,11 @@ pub mod rmrk_example_equippable {
 
     impl Minting for Rmrk {}
 
+    impl MintingAutoIndex for Rmrk {}
+
     impl MultiAsset for Rmrk {}
 
-    impl MultiAssetIncremental for Rmrk {}
+    impl MultiAssetAutoIndex for Rmrk {}
 
     impl Query for Rmrk {}
 
@@ -102,8 +107,14 @@ pub mod rmrk_example_equippable {
         }
 
         #[ink(message)]
-        pub fn example(&mut self) -> Result<()> {
-            let asset_id = MultiAssetIncremental::add_asset_entry(
+        pub fn mint_autoindex(&mut self) -> Result<()> {
+            let _token_id = MintingAutoIndex::mint(self, self.env().caller())?;
+            Ok(())
+        }
+
+        #[ink(message)]
+        pub fn add_asset_incremental(&mut self) -> Result<()> {
+            let _asset_id = MultiAssetAutoIndex::add_asset_entry(
                 self,
                 None,
                 0,

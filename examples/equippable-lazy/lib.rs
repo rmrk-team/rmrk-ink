@@ -27,6 +27,7 @@ pub mod rmrk_example_equippable {
 
     use rmrk::{
         config,
+        extensions::*,
         query::*,
         storage::*,
         traits::*,
@@ -208,6 +209,8 @@ pub mod rmrk_example_equippable {
         #[storage_field]
         minting: MintingData,
         #[storage_field]
+        minting_autoindex: MintingAutoIndexData,
+        #[storage_field]
         equippable: EquippableData,
     }
 
@@ -218,6 +221,8 @@ pub mod rmrk_example_equippable {
     impl PSP34Metadata for Rmrk {}
 
     impl PSP34Enumerable for Rmrk {}
+
+    impl Minting for Rmrk {}
 
     impl MintingLazy for Rmrk {}
 
