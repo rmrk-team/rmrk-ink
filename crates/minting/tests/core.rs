@@ -95,7 +95,7 @@ pub mod rmrk_contract_minting {
             let collection_id = instance.collection_id();
             instance._set_attribute(collection_id.clone(), String::from("name"), name);
             instance._set_attribute(collection_id.clone(), String::from("symbol"), symbol);
-            instance._set_attribute(collection_id.clone(), String::from("baseUri"), base_uri);
+            instance._set_attribute(collection_id, String::from("baseUri"), base_uri);
             instance.minting.max_supply = max_supply;
             instance
         }
@@ -241,7 +241,7 @@ pub mod rmrk_contract_minting {
             // token_uri for rmrk mint works
             assert_eq!(
                 rmrk.token_uri(2),
-                Ok(PreludeString::from(RMRK_METADATA.to_owned()))
+                Ok(RMRK_METADATA.to_owned())
             );
         }
 

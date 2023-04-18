@@ -37,7 +37,7 @@ pub fn check_mint_many_outcome<T: Accessor + PSP34>(
     for i in 0..num_of_mints {
         assert_eq!(
             <T as Accessor>::_owners_token_by_index(&rmrk, account, i as u128),
-            Ok(Id::U64((i + 1) as u64))
+            Ok(Id::U64(i + 1))
         );
     }
     assert_eq!(

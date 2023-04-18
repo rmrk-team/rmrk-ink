@@ -119,7 +119,6 @@ pub mod rmrk_contract_minting {
         use super::Rmrk;
         use openbrush::{
             contracts::{
-                access_control::*,
                 psp34::extensions::enumerable::*,
             },
             traits::{
@@ -129,7 +128,6 @@ pub mod rmrk_contract_minting {
         };
         use rmrk_minting::{
             extensions::autoindex::*,
-            traits::MintingLazy,
         };
 
         use crate::common::{

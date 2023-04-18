@@ -5,12 +5,10 @@
 pub mod rmrk_example_equippable {
     use ink::{
         codegen::{
-            EmitEvent,
             Env,
         },
         prelude::{
             vec,
-            vec::Vec,
         },
     };
     use openbrush::{
@@ -39,7 +37,6 @@ pub mod rmrk_example_equippable {
         query::*,
         storage::*,
         traits::*,
-        types::*,
     };
 
     /// Event emitted when a token transfer occurs.

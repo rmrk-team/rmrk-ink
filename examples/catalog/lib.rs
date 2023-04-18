@@ -76,7 +76,7 @@ pub mod catalog_example {
         }
 
         fn init() -> CatalogContract {
-            CatalogContract::new(String::from(METADATA).into()).expect("Contract instantiated")
+            CatalogContract::new(String::from(METADATA)).expect("Contract instantiated")
         }
 
         #[ink::test]
@@ -208,11 +208,11 @@ pub mod catalog_example {
             let part_ids = vec![PART_ID0, PART_ID1];
 
             assert_eq!(
-                Catalog::add_part_list(&mut catalog, part_ids.clone(), bad_part_list1.clone()),
+                Catalog::add_part_list(&mut catalog, part_ids.clone(), bad_part_list1),
                 Err(RmrkError::BadConfig.into())
             );
             assert_eq!(
-                Catalog::add_part_list(&mut catalog, part_ids.clone(), bad_part_list2.clone()),
+                Catalog::add_part_list(&mut catalog, part_ids, bad_part_list2),
                 Err(RmrkError::BadConfig.into())
             );
         }
@@ -253,7 +253,7 @@ pub mod catalog_example {
             assert_eq!(catalog.get_parts_count(), part_list.len() as u32);
 
             assert_eq!(
-                CatalogAutoIndex::add_part_list(&mut catalog, part_list.clone()),
+                CatalogAutoIndex::add_part_list(&mut catalog, part_list),
                 Ok((4, 6))
             );
 

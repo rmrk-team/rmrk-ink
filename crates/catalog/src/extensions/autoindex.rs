@@ -51,8 +51,8 @@ where
             part_ids.push(next_id);
         }
 
-        let range_start = part_ids.first().ok_or(RmrkError::BadConfig)?.clone();
-        let range_end = part_ids.last().ok_or(RmrkError::BadConfig)?.clone();
+        let range_start = *part_ids.first().ok_or(RmrkError::BadConfig)?;
+        let range_end = *part_ids.last().ok_or(RmrkError::BadConfig)?;
 
         Catalog::add_part_list(self, part_ids, parts)?;
 
