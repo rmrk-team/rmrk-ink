@@ -2,7 +2,14 @@ use crate::Catalog;
 
 use ink::prelude::vec::Vec;
 
-use openbrush::traits::Storage;
+use openbrush::{
+    contracts::access_control::{
+        self,
+        only_role,
+    },
+    modifiers,
+    traits::Storage,
+};
 
 use rmrk_common::{
     counter::Counter,
@@ -10,6 +17,7 @@ use rmrk_common::{
         Result,
         RmrkError,
     },
+    roles::CONTRIBUTOR,
     types::*,
 };
 
@@ -32,8 +40,9 @@ pub trait CatalogAutoIndex {
 
 impl<T> CatalogAutoIndex for T
 where
-    T: Storage<CatalogAutoIndexData> + Catalog,
+    T: Storage<access_control::Data> + Storage<CatalogAutoIndexData> + Catalog,
 {
+    #[modifiers(only_role(CONTRIBUTOR))]
     default fn add_part_list(&mut self, parts: Vec<Part>) -> Result<(PartId, PartId)> {
         let mut part_ids = vec![];
 
