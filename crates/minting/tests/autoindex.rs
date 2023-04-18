@@ -172,7 +172,7 @@ pub mod rmrk_contract_minting {
             let mut rmrk = init();
             let accounts = default_accounts();
             assert_eq!(
-                MintingAutoIndexInternal::mint_many(&mut rmrk, accounts.bob, 5),
+                MintingAutoIndex::mint_many(&mut rmrk, accounts.bob, 5),
                 Ok((Id::U64(1), Id::U64(5)))
             );
 

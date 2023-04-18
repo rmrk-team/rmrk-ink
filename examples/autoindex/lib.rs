@@ -113,7 +113,7 @@ pub mod rmrk_example_equippable {
         }
 
         #[ink(message)]
-        pub fn add_asset_incremental(&mut self) -> Result<()> {
+        pub fn add_asset_autoindex(&mut self) -> Result<()> {
             let _asset_id = MultiAssetAutoIndex::add_asset_entry(
                 self,
                 None,
