@@ -1,5 +1,7 @@
 use crate::internal::Internal;
 
+use ink::prelude::vec;
+
 use openbrush::{
     contracts::{
         access_control::{

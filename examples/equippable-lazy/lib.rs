@@ -222,8 +222,6 @@ pub mod rmrk_example_equippable {
 
     impl PSP34Enumerable for Rmrk {}
 
-    impl Minting for Rmrk {}
-
     impl MintingLazy for Rmrk {}
 
     impl Nesting for Rmrk {}

@@ -60,12 +60,7 @@ where
             return Err(RmrkError::BadConfig.into())
         }
 
-        for (i, part) in parts.iter().enumerate() {
-            let part_id = part_ids
-                .get(i)
-                .ok_or(Error::Rmrk(RmrkError::BadConfig))?
-                .to_owned();
-
+        for (part, part_id) in parts.iter().zip(part_ids) {
             if part.part_type == PartType::Fixed
                 && (!part.equippable.is_empty() || part.is_equippable_by_all)
             {

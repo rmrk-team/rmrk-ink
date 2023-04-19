@@ -1,6 +1,9 @@
 use crate::Catalog;
 
-use ink::prelude::vec::Vec;
+use ink::prelude::{
+    vec,
+    vec::Vec,
+};
 
 use openbrush::{
     contracts::access_control::{

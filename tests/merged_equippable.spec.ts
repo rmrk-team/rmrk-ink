@@ -43,7 +43,7 @@ describe("RMRK Merged Equippable", () => {
   let catalog: Contract;
 
 
-  beforeEach(async function (): Promise<void> {
+  beforeEach(async function(): Promise<void> {
     api = await ApiPromise.create({ provider: wsProvider, noInitWarn: true });
     deployer = keyring.addFromUri("//Alice");
     bob = keyring.addFromUri("//Bob");
@@ -196,10 +196,12 @@ describe("RMRK Merged Equippable", () => {
       },
     ];
 
+    const PART_IDS = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+
     // add parts to catalog
     await catalog
       .withSigner(deployer)
-      .tx.addPartList(PART_LIST);
+      .tx["catalog::addPartList"](PART_IDS, PART_LIST);
     expect((await catalog.query.getPartsCount())?.value.unwrap()).to.be.equal(11);
     console.log("Catalog is set");
 
@@ -438,6 +440,7 @@ describe("RMRK Merged Equippable", () => {
     await kanaria
       .withSigner(bob)
       .tx.equip({ u64: 1 }, assetComposedId, 10, [gem.address, { u64: 3 }], 8);
+
     expect(
       (await kanaria.withSigner(bob).query.getEquipment({ u64: 1 }, 8)).value.ok
     ).to.be.ok;

@@ -103,7 +103,6 @@ where
 impl<T> MintingLazy for T
 where
     T: Storage<MintingData>
-        + Minting
         + MintingAutoIndexInternal
         + Storage<psp34::Data<enumerable::Balances>>
         + Storage<reentrancy_guard::Data>
