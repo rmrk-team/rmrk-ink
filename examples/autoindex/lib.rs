@@ -4,12 +4,8 @@
 #[openbrush::contract]
 pub mod rmrk_example_equippable {
     use ink::{
-        codegen::{
-            Env,
-        },
-        prelude::{
-            vec,
-        },
+        self,
+        prelude::vec,
     };
     use openbrush::{
         contracts::{

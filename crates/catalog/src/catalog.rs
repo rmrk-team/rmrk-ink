@@ -7,7 +7,6 @@ use crate::{
 
 use rmrk_common::{
     errors::{
-        Error,
         Result,
         RmrkError,
     },
