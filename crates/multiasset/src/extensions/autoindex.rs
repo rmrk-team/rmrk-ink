@@ -15,6 +15,7 @@ use rmrk_common::{
 
 pub const STORAGE_KEY: u32 = openbrush::storage_unique_key!(MultiAssetAutoIndex);
 
+/// Storage for AutoIndex `AssetId` counter
 #[derive(Default, Debug)]
 #[openbrush::upgradeable_storage(STORAGE_KEY)]
 pub struct MultiAssetAutoIndexData {
@@ -26,6 +27,7 @@ pub type MultiAssetAutoIndexRef = dyn MultiAssetAutoIndex;
 
 #[openbrush::trait_definition]
 pub trait MultiAssetAutoIndex {
+    /// Add an asset entry, with auto-geenrated AssetId
     #[ink(message)]
     fn add_asset_entry(
         &mut self,
@@ -40,6 +42,7 @@ impl<T> MultiAssetAutoIndex for T
 where
     T: Storage<MultiAssetAutoIndexData> + MultiAsset,
 {
+    /// Add an asset entry, with auto-geenrated AssetId
     default fn add_asset_entry(
         &mut self,
         catalog_address: Option<AccountId>,

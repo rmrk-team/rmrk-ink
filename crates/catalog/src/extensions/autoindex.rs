@@ -26,6 +26,7 @@ use rmrk_common::{
 
 pub const STORAGE_KEY: u32 = openbrush::storage_unique_key!(CatalogAutoIndex);
 
+/// Storage for AutoIndex `PartId` counter
 #[derive(Default, Debug)]
 #[openbrush::upgradeable_storage(STORAGE_KEY)]
 pub struct CatalogAutoIndexData {
@@ -37,6 +38,7 @@ pub type CatalogAutoIndexRef = dyn CatalogAutoIndex;
 
 #[openbrush::trait_definition]
 pub trait CatalogAutoIndex {
+    /// Add one or more parts to the Catalog, with auto-generated PartIds
     #[ink(message)]
     fn add_part_list(&mut self, parts: Vec<Part>) -> Result<(PartId, PartId)>;
 }
@@ -45,6 +47,8 @@ impl<T> CatalogAutoIndex for T
 where
     T: Storage<access_control::Data> + Storage<CatalogAutoIndexData> + Catalog,
 {
+    /// Add one or more parts to the Catalog, with auto-generated PartIds
+    /// The returned range provides the first and last generated PartId
     #[modifiers(only_role(CONTRIBUTOR))]
     default fn add_part_list(&mut self, parts: Vec<Part>) -> Result<(PartId, PartId)> {
         let mut part_ids = vec![];

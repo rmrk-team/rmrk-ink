@@ -27,6 +27,7 @@ use rmrk_common::{
 
 pub const STORAGE_KEY: u32 = openbrush::storage_unique_key!(MintingAutoIndex);
 
+/// Storage for AutoIndex `Id` counter
 #[derive(Default, Debug)]
 #[openbrush::upgradeable_storage(STORAGE_KEY)]
 pub struct MintingAutoIndexData {
@@ -38,9 +39,11 @@ pub type MintingAutoIndexRef = dyn MintingAutoIndex;
 
 #[openbrush::trait_definition]
 pub trait MintingAutoIndex {
+    /// Mint one token to the specified account, with auto-generated Id
     #[ink(message)]
     fn mint(&mut self, to: AccountId) -> Result<Id>;
 
+    /// Mint one or more tokens to the specified account, with auto-generated Ids
     #[ink(message)]
     fn mint_many(&mut self, to: AccountId, mint_amount: u64) -> Result<(Id, Id)>;
 }
@@ -53,11 +56,14 @@ where
         + psp34::Internal
         + Internal,
 {
+    /// Mint one token to the specified account, with auto-generated Id
     #[modifiers(only_role(CONTRIBUTOR))]
     default fn mint(&mut self, to: AccountId) -> Result<Id> {
         MintingAutoIndexInternal::mint(self, to)
     }
 
+    /// Mint one or more tokens to the specified account, with auto-generated Ids
+    /// The returned range provides the first and last generated Id
     #[modifiers(only_role(CONTRIBUTOR))]
     default fn mint_many(&mut self, to: AccountId, mint_amount: u64) -> Result<(Id, Id)> {
         MintingAutoIndexInternal::mint_many(self, to, mint_amount)
@@ -65,7 +71,10 @@ where
 }
 
 pub trait MintingAutoIndexInternal {
+    /// Mint one token to the specified account, with auto-generated Id
     fn mint(&mut self, to: AccountId) -> Result<Id>;
+
+    /// Mint one or more tokens to the specified account, with auto-generated Ids
     fn mint_many(&mut self, to: AccountId, mint_amount: u64) -> Result<(Id, Id)>;
 }
 
@@ -76,6 +85,7 @@ where
         + psp34::Internal
         + Internal,
 {
+    /// Mint one token to the specified account, with auto-generated Id
     fn mint(&mut self, to: AccountId) -> Result<Id> {
         let next_id = self.data::<MintingAutoIndexData>().token_id.next()?;
         self._check_amount(1)?;
@@ -83,6 +93,8 @@ where
         Ok(next_id)
     }
 
+    /// Mint one or more tokens to the specified account, with auto-generated Ids
+    /// The returned range provides the first and last generated Id
     fn mint_many(&mut self, to: AccountId, mint_amount: u64) -> Result<(Id, Id)> {
         let mut token_ids = vec![];
 
