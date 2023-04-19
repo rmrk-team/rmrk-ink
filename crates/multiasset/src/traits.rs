@@ -16,6 +16,9 @@ use openbrush::{
 #[openbrush::wrapper]
 pub type MultiAssetRef = dyn MultiAsset;
 
+#[openbrush::wrapper]
+pub type MultiAssetAutoIndexRef = dyn MultiAssetAutoIndex;
+
 /// Trait definitions for MultiAsset ink! messages
 #[openbrush::trait_definition]
 pub trait MultiAsset {
@@ -178,4 +181,18 @@ pub trait MultiAssetEvents {
     /// # Arguments
     /// * tokenId ID of the token that had the asset priority array updated
     fn _emit_asset_priority_set_event(&self, token_id: &Id, priorities: Vec<AssetId>);
+}
+
+/// Trait definitions for MultiAssetAutoIndex functions
+#[openbrush::trait_definition]
+pub trait MultiAssetAutoIndex {
+    /// Add an asset entry, with auto-geenrated AssetId
+    #[ink(message)]
+    fn add_asset_entry(
+        &mut self,
+        catalog_address: Option<AccountId>,
+        equippable_group_id: EquippableGroupId,
+        asset_uri: String,
+        part_ids: Vec<PartId>,
+    ) -> Result<AssetId>;
 }

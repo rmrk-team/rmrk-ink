@@ -25,6 +25,7 @@ pub mod rmrk_contract_minting {
     use rmrk_common::roles::CONTRIBUTOR;
     use rmrk_minting::{
         extensions::autoindex::*,
+        traits::*,
         MintingData,
     };
     /// Event emitted when a token approve occurs.
@@ -115,15 +116,11 @@ pub mod rmrk_contract_minting {
 
     #[cfg(test)]
     mod tests {
-        use super::Rmrk;
-        use openbrush::{
-            contracts::psp34::extensions::enumerable::*,
-            traits::{
-                AccountId,
-                Balance,
-            },
+        use super::*;
+        use openbrush::traits::{
+            AccountId,
+            Balance,
         };
-        use rmrk_minting::extensions::autoindex::*;
 
         use crate::common::{
             check_mint_many_outcome,

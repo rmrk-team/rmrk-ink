@@ -1,4 +1,7 @@
-use crate::internal::Internal;
+use crate::{
+    internal::Internal,
+    traits::MintingAutoIndex,
+};
 
 use ink::prelude::vec;
 
@@ -32,20 +35,6 @@ pub const STORAGE_KEY: u32 = openbrush::storage_unique_key!(MintingAutoIndex);
 #[openbrush::upgradeable_storage(STORAGE_KEY)]
 pub struct MintingAutoIndexData {
     pub token_id: Counter<Id>,
-}
-
-#[openbrush::wrapper]
-pub type MintingAutoIndexRef = dyn MintingAutoIndex;
-
-#[openbrush::trait_definition]
-pub trait MintingAutoIndex {
-    /// Mint one token to the specified account, with auto-generated Id
-    #[ink(message)]
-    fn mint(&mut self, to: AccountId) -> Result<Id>;
-
-    /// Mint one or more tokens to the specified account, with auto-generated Ids
-    #[ink(message)]
-    fn mint_many(&mut self, to: AccountId, mint_amount: u64) -> Result<(Id, Id)>;
 }
 
 impl<T> MintingAutoIndex for T

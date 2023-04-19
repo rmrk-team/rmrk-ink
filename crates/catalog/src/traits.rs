@@ -17,6 +17,9 @@ use openbrush::traits::{
 #[openbrush::wrapper]
 pub type CatalogRef = dyn Catalog;
 
+#[openbrush::wrapper]
+pub type CatalogAutoIndexRef = dyn CatalogAutoIndex;
+
 /// Trait definitions for Catalog
 #[openbrush::trait_definition]
 pub trait Catalog {
@@ -63,4 +66,12 @@ pub trait Catalog {
     /// Checks if the given `PartId` can be equipped by any collection
     #[ink(message)]
     fn is_equippable_by_all(&self, part_id: PartId) -> bool;
+}
+
+/// Trait definition for CatalogAutoIndex functions
+#[openbrush::trait_definition]
+pub trait CatalogAutoIndex {
+    /// Add one or more parts to the Catalog, with auto-generated PartIds
+    #[ink(message)]
+    fn add_part_list(&mut self, parts: Vec<Part>) -> Result<(PartId, PartId)>;
 }

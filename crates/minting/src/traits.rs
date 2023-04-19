@@ -18,6 +18,9 @@ pub type MintingRef = dyn Minting;
 #[openbrush::wrapper]
 pub type MintingLazyRef = dyn MintingLazy;
 
+#[openbrush::wrapper]
+pub type MintingAutoIndexRef = dyn MintingAutoIndex;
+
 /// Trait definitions for core Minting functions
 #[openbrush::trait_definition]
 pub trait Minting {
@@ -61,3 +64,16 @@ pub trait MintingLazy {
     #[ink(message)]
     fn token_uri(&self, token_id: u64) -> Result<PreludeString>;
 }
+
+/// Trait definitions for MintingAutoIndex functions
+#[openbrush::trait_definition]
+pub trait MintingAutoIndex {
+    /// Mint one token to the specified account, with auto-generated Id
+    #[ink(message)]
+    fn mint(&mut self, to: AccountId) -> Result<Id>;
+
+    /// Mint one or more tokens to the specified account, with auto-generated Ids
+    #[ink(message)]
+    fn mint_many(&mut self, to: AccountId, mint_amount: u64) -> Result<(Id, Id)>;
+}
+

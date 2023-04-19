@@ -1,4 +1,7 @@
-use crate::Catalog;
+use crate::{
+    traits::CatalogAutoIndex,
+    Catalog,
+};
 
 use ink::prelude::{
     vec,
@@ -31,16 +34,6 @@ pub const STORAGE_KEY: u32 = openbrush::storage_unique_key!(CatalogAutoIndex);
 #[openbrush::upgradeable_storage(STORAGE_KEY)]
 pub struct CatalogAutoIndexData {
     pub part_id: Counter<PartId>,
-}
-
-#[openbrush::wrapper]
-pub type CatalogAutoIndexRef = dyn CatalogAutoIndex;
-
-#[openbrush::trait_definition]
-pub trait CatalogAutoIndex {
-    /// Add one or more parts to the Catalog, with auto-generated PartIds
-    #[ink(message)]
-    fn add_part_list(&mut self, parts: Vec<Part>) -> Result<(PartId, PartId)>;
 }
 
 impl<T> CatalogAutoIndex for T

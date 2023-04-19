@@ -1,4 +1,7 @@
-use crate::MultiAsset;
+use crate::{
+    traits::MultiAssetAutoIndex,
+    MultiAsset,
+};
 
 use ink::prelude::vec::Vec;
 
@@ -20,22 +23,6 @@ pub const STORAGE_KEY: u32 = openbrush::storage_unique_key!(MultiAssetAutoIndex)
 #[openbrush::upgradeable_storage(STORAGE_KEY)]
 pub struct MultiAssetAutoIndexData {
     pub asset_id: Counter<AssetId>,
-}
-
-#[openbrush::wrapper]
-pub type MultiAssetAutoIndexRef = dyn MultiAssetAutoIndex;
-
-#[openbrush::trait_definition]
-pub trait MultiAssetAutoIndex {
-    /// Add an asset entry, with auto-geenrated AssetId
-    #[ink(message)]
-    fn add_asset_entry(
-        &mut self,
-        catalog_address: Option<AccountId>,
-        equippable_group_id: EquippableGroupId,
-        asset_uri: String,
-        part_ids: Vec<PartId>,
-    ) -> Result<AssetId>;
 }
 
 impl<T> MultiAssetAutoIndex for T
