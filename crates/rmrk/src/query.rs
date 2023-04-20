@@ -11,6 +11,7 @@ use openbrush::{
     contracts::psp34::extensions::enumerable::*,
     traits::{
         AccountId,
+        DefaultEnv,
         String,
     },
 };
@@ -56,30 +57,32 @@ fn nested_deep_result_unwrap_or_default<T: Default>(
 pub type QueryRef = dyn Query;
 
 #[openbrush::trait_definition]
-pub trait Query {
+pub trait Query: DefaultEnv {
     #[ink(message)]
-    fn get_asset(&self, collection_id: AccountId, asset_id: AssetId) -> Option<Asset> {
+    fn get_asset(&self, asset_id: AssetId) -> Option<Asset> {
         nested_result_unwrap_or_default(
-            MultiAssetRef::get_asset_builder(&collection_id, asset_id)
+            MultiAssetRef::get_asset_builder(&<Self as DefaultEnv>::env().account_id(), asset_id)
                 .call_flags(ink::env::CallFlags::default().set_allow_reentry(true))
                 .try_invoke(),
         )
     }
 
     #[ink(message)]
-    fn get_assets(&self, collection_id: AccountId, asset_ids: Vec<AssetId>) -> Vec<Asset> {
+    fn get_assets(&self, asset_ids: Vec<AssetId>) -> Vec<Asset> {
         asset_ids
             .into_iter()
-            .filter_map(|id| self.get_asset(collection_id, id))
+            .filter_map(|id| self.get_asset(id))
             .collect()
     }
 
     #[ink(message)]
-    fn get_token(&self, collection_id: AccountId, id: Id) -> Token {
+    fn get_token(&self, id: Id) -> Token {
         let id_u64 = match id {
             Id::U64(id) => id.clone(),
             _ => panic!("expecting Id::U64"),
         };
+
+        let collection_id = <Self as DefaultEnv>::env().account_id();
 
         let token_uri = nested_deep_result_unwrap_or_default(
             MintingRef::token_uri_builder(&collection_id, id_u64)
