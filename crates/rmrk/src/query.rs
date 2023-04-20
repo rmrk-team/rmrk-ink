@@ -25,27 +25,13 @@ use rmrk_common::{
     derive(scale_info::TypeInfo, ink::storage::traits::StorageLayout)
 )]
 pub struct Token {
-    id: u64,
+    id: Id,
     collection_id: CollectionId,
     token_uri: String,
     assets_pending: Vec<AssetId>,
     assets_accepted: Vec<AssetId>,
-    children_pending: Vec<(AccountId, u64)>,
-    children_accepted: Vec<(AccountId, u64)>,
-}
-
-fn unsafe_id_to_u64(id: Id) -> u64 {
-    match id {
-        Id::U64(id) => id,
-        _ => panic!("Id not u64"),
-    }
-}
-
-fn unpack_children_id(children: Vec<(AccountId, Id)>) -> Vec<(AccountId, u64)> {
-    children
-        .into_iter()
-        .map(|(account_id, id)| (account_id, unsafe_id_to_u64(id)))
-        .collect()
+    children_pending: Vec<(AccountId, Id)>,
+    children_accepted: Vec<(AccountId, Id)>,
 }
 
 fn nested_result_unwrap_or_default<T: Default>(
@@ -74,7 +60,9 @@ pub trait Query {
     #[ink(message)]
     fn get_asset(&self, collection_id: AccountId, asset_id: AssetId) -> Option<Asset> {
         nested_result_unwrap_or_default(
-            MultiAssetRef::get_asset_builder(&collection_id, asset_id).try_invoke(),
+            MultiAssetRef::get_asset_builder(&collection_id, asset_id)
+                .call_flags(ink::env::CallFlags::default().set_allow_reentry(true))
+                .try_invoke(),
         )
     }
 
@@ -87,37 +75,50 @@ pub trait Query {
     }
 
     #[ink(message)]
-    fn get_token(&self, collection_id: AccountId, id_u64: u64) -> Token {
-        let id = Id::U64(id_u64);
+    fn get_token(&self, collection_id: AccountId, id: Id) -> Token {
+        let id_u64 = match id {
+            Id::U64(id) => id.clone(),
+            _ => panic!("expecting Id::U64"),
+        };
 
-        let token_uri = MintingRef::token_uri(&collection_id, id_u64).unwrap_or_default();
+        let token_uri = nested_deep_result_unwrap_or_default(
+            MintingRef::token_uri_builder(&collection_id, id_u64)
+                .call_flags(ink::env::CallFlags::default().set_allow_reentry(true))
+                .try_invoke(),
+        );
 
         let assets_pending = nested_deep_result_unwrap_or_default(
             MultiAssetRef::get_pending_token_assets_builder(&collection_id, id.clone())
+                .call_flags(ink::env::CallFlags::default().set_allow_reentry(true))
                 .try_invoke(),
         );
 
         let assets_accepted = nested_deep_result_unwrap_or_default(
             MultiAssetRef::get_accepted_token_assets_builder(&collection_id, id.clone())
+                .call_flags(ink::env::CallFlags::default().set_allow_reentry(true))
                 .try_invoke(),
         );
 
         let children_pending = nested_result_unwrap_or_default(
-            NestingRef::get_pending_children_builder(&collection_id, id.clone()).try_invoke(),
+            NestingRef::get_pending_children_builder(&collection_id, id.clone())
+                .call_flags(ink::env::CallFlags::default().set_allow_reentry(true))
+                .try_invoke(),
         );
 
         let children_accepted = nested_result_unwrap_or_default(
-            NestingRef::get_accepted_children_builder(&collection_id, id).try_invoke(),
+            NestingRef::get_accepted_children_builder(&collection_id, id.clone())
+                .call_flags(ink::env::CallFlags::default().set_allow_reentry(true))
+                .try_invoke(),
         );
 
         Token {
-            id: id_u64,
+            id,
             collection_id,
             token_uri: String::from(token_uri),
             assets_pending,
             assets_accepted,
-            children_pending: unpack_children_id(children_pending),
-            children_accepted: unpack_children_id(children_accepted),
+            children_pending,
+            children_accepted,
         }
     }
 }
