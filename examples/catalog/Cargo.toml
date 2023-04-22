@@ -5,13 +5,11 @@ authors = ["Stake Technologies <devops@stake.co.jp>"]
 edition = "2021"
 
 [dependencies]
-ink = { version = "4.0.0", default-features = false }
+ink = { version = "4.1.0", default-features = false }
 scale = { package = "parity-scale-codec", version = "3", default-features = false, features = ["derive"] }
 scale-info = { version = "2.3", default-features = false, features = ["derive"], optional = true }
-openbrush = { tag = "3.0.0", git = "https://github.com/727-Ventures/openbrush-contracts", default-features = false, features = ["access_control", "reentrancy_guard", "psp34"] }
-
-# RMRK
-rmrk_catalog = { path = "../../crates/catalog", default-features = false  }
+openbrush = { tag = "3.1.0", git = "https://github.com/727-Ventures/openbrush-contracts", default-features = false, features = ["access_control", "reentrancy_guard", "psp34"] }
+rmrk = { path = "../../crates/rmrk", default-features = false  }
 
 [lib]
 path = "lib.rs"
@@ -27,6 +25,6 @@ std = [
     "scale/std",
     "scale-info/std",
     "openbrush/std",
-    "rmrk_catalog/std",
+    "rmrk/std",
 ]
 ink-as-dependency = []

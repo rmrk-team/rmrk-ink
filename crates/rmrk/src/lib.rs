@@ -15,6 +15,7 @@ pub mod storage {
     pub use rmrk_minting::*;
     pub use rmrk_multiasset::*;
     pub use rmrk_nesting::*;
+    pub use rmrk_catalog::*;
 }
 
 pub mod traits {
@@ -22,4 +23,5 @@ pub mod traits {
     pub use rmrk_minting::traits::*;
     pub use rmrk_multiasset::traits::*;
     pub use rmrk_nesting::traits::*;
+    pub use rmrk_catalog::traits::*;
 }

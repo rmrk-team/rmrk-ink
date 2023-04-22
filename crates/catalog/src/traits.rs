@@ -42,11 +42,11 @@ pub trait Catalog {
 
     //// Set the Catalog metadataURI.
     #[ink(message)]
-    fn setup_catalog(&mut self, catalog_metadata: String) -> Result<()>;
+    fn set_catalog_metadata(&mut self, catalog_metadata: String) -> Result<()>;
 
     //// Get the Catalog metadataURI.
     #[ink(message)]
-    fn get_catalog_metadata(&self) -> PreludeString;
+    fn get_catalog_metadata(&self) -> Result<PreludeString>;
 
     /// Get the list of all parts.
     #[ink(message)]
