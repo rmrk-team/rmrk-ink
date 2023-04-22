@@ -39,6 +39,7 @@ pub const STORAGE_NESTING_KEY: u32 = openbrush::storage_unique_key!(NestingData)
 pub struct NestingData {
     pub pending_children: Mapping<Id, Vec<ChildNft>>,
     pub accepted_children: Mapping<Id, Vec<ChildNft>>,
+    pub parent_of: Mapping<ChildNft, Id>,
 }
 
 impl<T> Nesting for T
@@ -79,6 +80,7 @@ where
         self._emit_added_child_event(&to_parent_token_id, &child_nft.0, &child_nft.1);
         let caller = Self::env().caller();
         if caller == parent_owner {
+            self.set_parent(&child_nft, to_parent_token_id.clone());
             self.add_to_accepted(to_parent_token_id, child_nft);
         } else {
             self.add_to_pending(to_parent_token_id, child_nft);
@@ -107,6 +109,7 @@ where
         self.is_caller_parent_owner(caller, &parent_token_id)?;
 
         // Remove child nft
+        self.remove_parent(&child_nft);
         self.remove_accepted(&parent_token_id, &child_nft)?;
 
         // Transfer child ownership from this contract to parent_token owner.
@@ -136,6 +139,8 @@ where
         self.accepted(&parent_token_id, &child_nft)?;
 
         self.remove_from_pending(&parent_token_id, &child_nft)?;
+
+        self.set_parent(&child_nft, parent_token_id.clone());
         self.add_to_accepted(parent_token_id, child_nft);
 
         Ok(())
@@ -191,6 +196,7 @@ where
 
         self._emit_added_child_event(&new_parent, &child_nft.0, &child_nft.1);
         if current_parent_owner == new_parent_owner {
+            self.set_parent(&child_nft, new_parent.clone());
             self.add_to_accepted(new_parent, child_nft);
         } else {
             self.add_to_pending(new_parent, child_nft);
@@ -245,6 +251,10 @@ where
             .accepted_children
             .get(parent_token_id)
             .unwrap_or_default()
+    }
+
+    fn get_parent_of_child(&self, child_nft: ChildNft) -> Option<Id> {
+        self.data::<NestingData>().parent_of.get(&child_nft)
     }
 }
 

@@ -120,4 +120,20 @@ pub trait Query {
             children_accepted: unpack_children_id(children_accepted),
         }
     }
+
+    #[ink(message)]
+    fn get_parent_of_child(&self, child_nft: ChildNft) -> Option<Id> {
+        let child_collection = child_nft.0;
+        let child_id = child_nft.1.clone();
+
+        let parent_collection = nested_result_unwrap_or_default(
+            PSP34Ref::owner_of_builder(&child_collection, child_id)
+                .call_flags(ink::env::CallFlags::default().set_allow_reentry(true))
+                .try_invoke(),
+        )?;
+
+        nested_result_unwrap_or_default(
+            NestingRef::get_parent_of_child_builder(&parent_collection, child_nft).try_invoke(),
+        )
+    }
 }
