@@ -1,17 +1,24 @@
 #![allow(clippy::inline_fn_without_body)]
 
-use crate::traits::{
-    MintingRef,
-    MultiAssetRef,
-    NestingRef,
+use crate::{
+    storage::*,
+    traits::*,
 };
 
 use ink::prelude::vec::Vec;
 use openbrush::{
-    contracts::psp34::extensions::enumerable::*,
+    contracts::{
+        access_control,
+        psp34::extensions::{
+            enumerable::*,
+            metadata::*,
+        },
+        reentrancy_guard::*,
+    },
     traits::{
         AccountId,
         DefaultEnv,
+        Storage,
     },
 };
 use rmrk_common::{
@@ -19,6 +26,8 @@ use rmrk_common::{
     errors::RmrkError,
     types::*,
 };
+use rmrk_multiasset::MultiAssetData;
+use rmrk_nesting::NestingData;
 
 pub const MAX_BATCH_TOKENS_PER_ASSET: usize = 50;
 pub const MAX_BATCH_ADD_CHILDREN: usize = 50;
@@ -28,7 +37,19 @@ pub const MAX_BATCH_TOKEN_TRANSFERS: usize = 50;
 pub type BatchCallsRef = dyn BatchCalls;
 
 #[openbrush::trait_definition]
-pub trait BatchCalls: DefaultEnv {
+pub trait BatchCalls:
+    DefaultEnv
+    + Nesting
+    + MultiAsset
+    + Minting
+    + Storage<MultiAssetData>
+    + Storage<NestingData>
+    + Storage<MintingData>
+    + Storage<reentrancy_guard::Data>
+    + Storage<metadata::Data>
+    + Storage<access_control::Data>
+    + Storage<psp34::Data<enumerable::Balances>>
+{
     #[ink(message)]
     fn add_asset_to_many_tokens(
         &mut self,
@@ -40,14 +61,7 @@ pub trait BatchCalls: DefaultEnv {
             RmrkError::InputVectorTooBig
         );
         for token_id in tokens {
-            _ = MultiAssetRef::add_asset_to_token_builder(
-                &<Self as DefaultEnv>::env().account_id(),
-                token_id.clone(),
-                asset_id,
-                None,
-            )
-            .call_flags(ink::env::CallFlags::default().set_allow_reentry(true))
-            .try_invoke();
+            _ = MultiAsset::add_asset_to_token(self, token_id.clone(), asset_id, None);
         }
         Ok(())
     }
@@ -55,13 +69,7 @@ pub trait BatchCalls: DefaultEnv {
     /// Add the child NFT.
     #[ink(message)]
     fn add_single_child(&mut self, parent_id: Id, child_contract: AccountId, child_id: Id) {
-        _ = NestingRef::add_child_builder(
-            &<Self as DefaultEnv>::env().account_id(),
-            parent_id,
-            (child_contract, child_id),
-        )
-        .call_flags(ink::env::CallFlags::default().set_allow_reentry(true))
-        .try_invoke();
+        let _ = Nesting::add_child(self, parent_id, (child_contract, child_id));
     }
 
     /// Add a list of parent-child token pairs. The child NFT is from a different collection.
@@ -85,14 +93,7 @@ pub trait BatchCalls: DefaultEnv {
     /// Transfer a single token to specified address
     #[ink(message)]
     fn transfer_single_token(&mut self, destination: AccountId, token_id: Id) {
-        _ = MintingRef::transfer_token_builder(
-            &<Self as DefaultEnv>::env().account_id(),
-            destination,
-            token_id,
-            Vec::new(),
-        )
-        .call_flags(ink::env::CallFlags::default().set_allow_reentry(true))
-        .try_invoke();
+        _ = Minting::transfer_token(self, destination, token_id, Vec::new());
     }
 
     /// Transfer many tokens to specified addresses
