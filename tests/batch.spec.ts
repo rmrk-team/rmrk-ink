@@ -122,7 +122,7 @@ describe("RMRK Nesting tests", () => {
         expect((await child.query.ownerOf({ u64: 1 })).value.unwrap()).to.equal(
             deployer.address
         );
-        
+
         // create and add Asset to many tokens
         await child
             .withSigner(deployer)
@@ -133,21 +133,16 @@ describe("RMRK Nesting tests", () => {
         }
         // const res = await child.query.getAssets(child.address, ASSET_ID1);
         console.log("tokenList", child.address, tokenList, ASSET_ID1)
-        // try{
-        const re1 = await child
-            .withSigner(deployer)
-            .tx.addAssetToManyTokens(tokenList, ASSET_ID1);
-        console.log("addAssetToManyTokens", re1.result.toHuman());
-        // } catch (e) {
-        //     console.log("addAssetToManyTokens", e);
-        // }
 
-        expect(
-            (await child.query.totalTokenAssets({ u64: 1 }))?.value.unwrap().ok.toString()
-        ).to.be.equal("0,1");
-        expect(
-            (await child.query.totalTokenAssets({ u64: 2 }))?.value.unwrap().ok.toString()
-        ).to.be.equal("0,1");
+        expect((await child
+            .withSigner(deployer)
+            .tx.addAssetToManyTokens(tokenList, ASSET_ID1))?.result).to.be.ok;
+
+        for (let i = 1; i <= CHILD_TOKENS; i++) {
+            expect(
+                (await child.query.totalTokenAssets({ u64: i }))?.value.unwrap().ok.toString()
+            ).to.be.equal("1,0");
+        }
 
         // // deployer approves parent's Contract on child
         // await approve(child, parent, deployer);
