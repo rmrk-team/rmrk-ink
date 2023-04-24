@@ -31,14 +31,20 @@ pub type BatchCallsRef = dyn BatchCalls;
 pub trait BatchCalls: DefaultEnv {
     #[ink(message)]
     fn add_single_asset_to_token(&mut self, token_id: Id, asset_id: AssetId) {
-        _ = MultiAssetRef::add_asset_to_token_builder(
+        let result = MultiAssetRef::add_asset_to_token_builder(
             &<Self as DefaultEnv>::env().account_id(),
-            token_id,
+            token_id.clone(),
             asset_id,
             None,
         )
         .call_flags(ink::env::CallFlags::default().set_allow_reentry(true))
         .try_invoke();
+        if let Err(err) = result {
+            ink::env::debug_println!("---------------------Error adding asset to token: {:?}, {:?}", token_id, err);
+        }
+        else {            
+            ink::env::debug_println!("+++++++++++++++++++++++++++Added asset to token: {:?}, {:?}", token_id, asset_id);
+        }
     }
 
     #[ink(message)]
@@ -51,8 +57,24 @@ pub trait BatchCalls: DefaultEnv {
             tokens.len() <= MAX_BATCH_TOKENS_PER_ASSET,
             RmrkError::InputVectorTooBig
         );
+        ink::env::debug_println!("+++++++++++++++++++++++++++Add asset to token: {:?}", asset_id);
         for token_id in tokens {
-            self.add_single_asset_to_token(token_id, asset_id);
+            ink::env::debug_println!("+++++++++++++++++++++++++++Add asset to token: {:?}, {:?}", token_id, asset_id);
+            // self.add_single_asset_to_token(token_id, asset_id);
+            let result = MultiAssetRef::add_asset_to_token_builder(
+                &<Self as DefaultEnv>::env().account_id(),
+                token_id.clone(),
+                asset_id,
+                None,
+            )
+            .call_flags(ink::env::CallFlags::default().set_allow_reentry(true))
+            .try_invoke();
+            if let Err(err) = result {
+                ink::env::debug_println!("---------------------Error adding asset to token: {:?}, {:?}", token_id, err);
+            }
+            else {            
+                ink::env::debug_println!("+++++++++++++++++++++++++++Added asset to token: {:?}, {:?}", token_id, asset_id);
+            }
         }
         Ok(())
     }

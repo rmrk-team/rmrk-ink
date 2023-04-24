@@ -8,8 +8,8 @@ import type * as ArgumentTypes from '../types/types-arguments/rmrk_example_equip
 import Catalog_Factory from "../types/constructors/catalog_example";
 import Contract from "../types/contracts/catalog_example";
 import {
-  PartType,
-  Part,
+    PartType,
+    Part,
 } from "../types/types-arguments/catalog_example";
 import { RequestArgumentType, SignAndSendSuccessResponse } from "@727-ventures/typechain-types";
 
@@ -85,7 +85,7 @@ describe("RMRK Nesting tests", () => {
 
     it("deployer mints and transfers many works", async () => {
         const PARENT_TOKENS = 1;
-        const CHILD_TOKENS = 1;
+        const CHILD_TOKENS = 2;
         const ASSET_ID1 = 1;
 
         // add part for catalog
@@ -110,13 +110,19 @@ describe("RMRK Nesting tests", () => {
         expect(
             (await parent.query.totalSupply()).value.unwrap().toNumber()
         ).to.equal(PARENT_TOKENS);
+        expect((await parent.query.ownerOf({ u64: 1 })).value.unwrap()).to.equal(
+            deployer.address
+        );
 
         // deployer mints many child tokens
         await mintMany(child, deployer, CHILD_TOKENS);
         expect(
             (await child.query.totalSupply()).value.unwrap().toNumber()
         ).to.equal(CHILD_TOKENS);
-
+        expect((await child.query.ownerOf({ u64: 1 })).value.unwrap()).to.equal(
+            deployer.address
+        );
+        
         // create and add Asset to many tokens
         await child
             .withSigner(deployer)
@@ -130,15 +136,18 @@ describe("RMRK Nesting tests", () => {
         // try{
         const re1 = await child
             .withSigner(deployer)
-            .query.addAssetToManyTokens(tokenList, ASSET_ID1);
-            console.log("addAssetToManyTokens", re1);
+            .tx.addAssetToManyTokens(tokenList, ASSET_ID1);
+        console.log("addAssetToManyTokens", re1.result.toHuman());
         // } catch (e) {
         //     console.log("addAssetToManyTokens", e);
         // }
 
         expect(
             (await child.query.totalTokenAssets({ u64: 1 }))?.value.unwrap().ok.toString()
-        ).to.be.equal("1,0");
+        ).to.be.equal("0,1");
+        expect(
+            (await child.query.totalTokenAssets({ u64: 2 }))?.value.unwrap().ok.toString()
+        ).to.be.equal("0,1");
 
         // // deployer approves parent's Contract on child
         // await approve(child, parent, deployer);
