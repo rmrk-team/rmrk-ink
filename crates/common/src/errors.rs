@@ -89,7 +89,6 @@ pub enum RmrkError {
     ChildNotFound,
     UriNotFound,
     CollectionIsFull,
-    InputVectorTooBig,
     InvalidAssetId,
     InvalidParentId,
     InvalidTokenId,
@@ -125,7 +124,6 @@ impl ToString for RmrkError {
             RmrkError::ChildNotFound => String::from("ChildNotFound"),
             RmrkError::UriNotFound => String::from("UriNotFound"),
             RmrkError::CollectionIsFull => String::from("CollectionIsFull"),
-            RmrkError::InputVectorTooBig => String::from("InputVectorTooBig"),
             RmrkError::InvalidAssetId => String::from("InvalidAssetId"),
             RmrkError::InvalidParentId => String::from("InvalidParentId"),
             RmrkError::InvalidTokenId => String::from("InvalidTokenId"),
@@ -140,16 +138,4 @@ impl ToString for RmrkError {
             RmrkError::WithdrawalFailed => String::from("WithdrawalFailed"),
         }
     }
-}
-
-/// Evaluate `$x:expr` and if not true return `Err($y:expr)`.
-///
-/// Used as `ensure!(expression_to_ensure, expression_to_return_on_false)`.
-#[macro_export]
-macro_rules! ensure {
-    ( $x:expr, $y:expr $(,)? ) => {{
-        if !$x {
-            return Err($y.into())
-        }
-    }};
 }
