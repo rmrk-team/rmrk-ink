@@ -27,16 +27,11 @@ use openbrush::{
     },
 };
 use rmrk_common::{
-    ensure,
-    errors::RmrkError,
+    errors::Result,
     types::*,
 };
 use rmrk_multiasset::MultiAssetData;
 use rmrk_nesting::NestingData;
-
-pub const MAX_BATCH_TOKENS_PER_ASSET: usize = 50;
-pub const MAX_BATCH_ADD_CHILDREN: usize = 50;
-pub const MAX_BATCH_TOKEN_TRANSFERS: usize = 50;
 
 #[openbrush::wrapper]
 pub type BatchCallsRef = dyn BatchCalls;
@@ -54,19 +49,12 @@ pub trait BatchCalls:
     + Storage<metadata::Data>
     + Storage<access_control::Data>
     + Storage<psp34::Data<enumerable::Balances>>
+    + psp34::Internal
 {
     #[ink(message)]
-    fn add_asset_to_many_tokens(
-        &mut self,
-        tokens: Vec<Id>,
-        asset_id: AssetId,
-    ) -> Result<(), RmrkError> {
-        ensure!(
-            tokens.len() <= MAX_BATCH_TOKENS_PER_ASSET,
-            RmrkError::InputVectorTooBig
-        );
+    fn add_asset_to_many_tokens(&mut self, tokens: Vec<Id>, asset_id: AssetId) -> Result<()> {
         for token_id in tokens {
-            _ = MultiAsset::add_asset_to_token(self, token_id.clone(), asset_id, None);
+            MultiAsset::add_asset_to_token(self, token_id.clone(), asset_id, None)?;
         }
         Ok(())
     }
@@ -77,13 +65,9 @@ pub trait BatchCalls:
         &mut self,
         child_contract: AccountId,
         parent_child_pair: Vec<(Id, Id)>,
-    ) -> Result<(), RmrkError> {
-        ensure!(
-            parent_child_pair.len() <= MAX_BATCH_ADD_CHILDREN,
-            RmrkError::InputVectorTooBig
-        );
+    ) -> Result<()> {
         for (parent_id, child_id) in parent_child_pair {
-            _ = Nesting::add_child(self, parent_id, (child_contract, child_id));
+            Nesting::add_child(self, parent_id, (child_contract, child_id))?;
         }
 
         Ok(())
@@ -91,16 +75,9 @@ pub trait BatchCalls:
 
     /// Transfer many tokens to specified addresses
     #[ink(message)]
-    fn transfer_many(
-        &mut self,
-        token_to_destination: Vec<(Id, AccountId)>,
-    ) -> Result<(), RmrkError> {
-        ensure!(
-            token_to_destination.len() <= MAX_BATCH_TOKEN_TRANSFERS,
-            RmrkError::InputVectorTooBig
-        );
+    fn transfer_many(&mut self, token_to_destination: Vec<(Id, AccountId)>) -> Result<()> {
         for (token_id, destination) in token_to_destination {
-            _ = Minting::transfer_token(self, destination, token_id, Vec::new());
+            psp34::Internal::_transfer_token(self, destination, token_id, Vec::new())?;
         }
 
         Ok(())
