@@ -11,9 +11,7 @@ import {
     PartType,
     Part,
 } from "../types/types-arguments/catalog_example";
-import { RequestArgumentType, SignAndSendSuccessResponse } from "@727-ventures/typechain-types";
-
-import { emit } from "./helper";
+import { SignAndSendSuccessResponse } from "@727-ventures/typechain-types";
 
 use(chaiAsPromised);
 
@@ -27,7 +25,7 @@ const wsProvider = new WsProvider("ws://127.0.0.1:9944");
 // Create a keyring instance
 const keyring = new Keyring({ type: "sr25519" });
 
-describe("RMRK Nesting tests", () => {
+describe("RMRK Batch calls test", () => {
     let parentFactory: Rmrk_factory;
     let childFactory: Rmrk_factory;
     let catalogFactory: Catalog_Factory;
@@ -39,7 +37,7 @@ describe("RMRK Nesting tests", () => {
 
 
     beforeEach(async function (): Promise<void> {
-        api = await ApiPromise.create({ provider: wsProvider });
+        api = await ApiPromise.create({ provider: wsProvider, noInitWarn: true });
         deployer = keyring.addFromUri("//Alice");
 
         parentFactory = new Rmrk_factory(api, deployer);
@@ -131,7 +129,6 @@ describe("RMRK Nesting tests", () => {
         for (let i = 1; i <= CHILD_TOKENS; i++) {
             tokenList.push({ u64: i });
         }
-        // console.log("tokenList", child.address, tokenList, ASSET_ID1)
 
         expect((await child
             .withSigner(deployer)
@@ -166,18 +163,16 @@ describe("RMRK Nesting tests", () => {
             tokenDestinationPair.push([{ u64: i }, manyUsers[i - 1].address]);
         }
 
-        let txResult = await parent
+        await parent
             .withSigner(deployer)
             .tx.transferMany(
                 tokenDestinationPair,
             );
-        console.log("txResult", txResult.toString());
         for (let i = 1; i <= PARENT_TOKENS; i++) {
             expect((await parent.query.ownerOf({ u64: i })).value.unwrap()).to.equal(
                 manyUsers[i - 1].address
             );
         }
-
     });
 });
 
