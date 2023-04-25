@@ -84,8 +84,8 @@ describe("RMRK Nesting tests", () => {
     });
 
     it("deployer mints and transfers many works", async () => {
-        const PARENT_TOKENS = 1;
-        const CHILD_TOKENS = 2;
+        const PARENT_TOKENS = 50;
+        const CHILD_TOKENS = 50;
         const ASSET_ID1 = 1;
 
         // add part for catalog
@@ -131,8 +131,7 @@ describe("RMRK Nesting tests", () => {
         for (let i = 1; i <= CHILD_TOKENS; i++) {
             tokenList.push({ u64: i });
         }
-        // const res = await child.query.getAssets(child.address, ASSET_ID1);
-        console.log("tokenList", child.address, tokenList, ASSET_ID1)
+        // console.log("tokenList", child.address, tokenList, ASSET_ID1)
 
         expect((await child
             .withSigner(deployer)
@@ -144,48 +143,43 @@ describe("RMRK Nesting tests", () => {
             ).to.be.equal("1,0");
         }
 
-        // // deployer approves parent's Contract on child
-        // await approve(child, parent, deployer);
+        // deployer approves parent's Contract on child
+        await approve(child, parent, deployer);
 
-        // // deployer adds each child nft to its parent
-        // var parentChildPair = new Array();
-        // for (let i = 1; i <= PARENT_TOKENS; i++) {
-        //     parentChildPair.push([{ u64: i }, { u64: i }]);
-        // }
-        // await addManyChildren(parent, deployer, child, parentChildPair);
-        // // check that first token has 1 child
-        // expect(
-        //     (await parent.query.childrenBalance({ u64: 1 }))?.value.unwrap().ok.toString()
-        // ).to.be.equal("1,0");
-        // // check that last token has 1 child
-        // expect(
-        //     (await parent.query.childrenBalance({ u64: PARENT_TOKENS }))?.value.unwrap().ok.toString()
-        // ).to.be.equal("1,0");
+        // deployer adds each child nft to its parent
+        var parentChildPair = new Array();
+        for (let i = 1; i <= PARENT_TOKENS; i++) {
+            parentChildPair.push([{ u64: i }, { u64: i }]);
+        }
+        await addManyChildren(parent, deployer, child, parentChildPair);
+        // check that all parent tokens have 1 child
+        for (let i = 1; i <= PARENT_TOKENS; i++) {
+            expect(
+                (await parent.query.childrenBalance({ u64: i }))?.value.unwrap().ok.toString()
+            ).to.be.equal("1,0");
+        }
 
-        // // deployer transfers all tokens to users
-        // const manyUsers = createBatchUsers(PARENT_TOKENS);
-        // let tokenDestinationPair = new Array<[ArgumentTypes.Id, ArgumentTypes.AccountId]>();
-        // for (let i = 1; i <= PARENT_TOKENS; i++) {
-        //     tokenDestinationPair.push([{ u64: i }, manyUsers[i - 1].address]);
-        // }
+        // deployer transfers all tokens to users
+        const manyUsers = createBatchUsers(PARENT_TOKENS);
+        let tokenDestinationPair = new Array<[ArgumentTypes.Id, ArgumentTypes.AccountId]>();
+        for (let i = 1; i <= PARENT_TOKENS; i++) {
+            tokenDestinationPair.push([{ u64: i }, manyUsers[i - 1].address]);
+        }
 
-        // let txResult = await parent
-        //     .withSigner(deployer)
-        //     .tx.transferMany(
-        //         parent.address,
-        //         tokenDestinationPair,
-        //     );
-        // console.log("txResult", txResult.toString());
-        // expect((await parent.query.ownerOf({ u64: 1 })).value.unwrap()).to.equal(
-        //     manyUsers[0].address
-        // );
-        // expect((await parent.query.ownerOf({ u64: PARENT_TOKENS })).value.unwrap()).to.equal(
-        //     manyUsers[PARENT_TOKENS - 1].address
-        // );
+        let txResult = await parent
+            .withSigner(deployer)
+            .tx.transferMany(
+                tokenDestinationPair,
+            );
+        console.log("txResult", txResult.toString());
+        for (let i = 1; i <= PARENT_TOKENS; i++) {
+            expect((await parent.query.ownerOf({ u64: i })).value.unwrap()).to.equal(
+                manyUsers[i - 1].address
+            );
+        }
 
     });
 });
-
 
 // helper function to mint many tokens
 const mintMany = async (contract: Rmrk, signer: KeyringPair, mintAmount: number): Promise<void> => {
@@ -198,21 +192,17 @@ const mintMany = async (contract: Rmrk, signer: KeyringPair, mintAmount: number)
 }
 
 // helper function to add many children to many parents
-// const addManyChildren = async (contract: Rmrk, signer: KeyringPair, child: Rmrk, parentChildPair: any): Promise<void> => {
-//     let addResult = await contract
-//         .withSigner(signer)
-//         .tx.addManyChildren(
-//             contract.address,
-//             child.address,
-//             parentChildPair,
-//         );
-
-//     // console.log("addResult", addResult.value.unwrap().ok);
-// }
+const addManyChildren = async (contract: Rmrk, signer: KeyringPair, child: Rmrk, parentChildPair: any): Promise<void> => {
+    let addResult = await contract
+        .withSigner(signer)
+        .tx.addManyChildren(
+            child.address,
+            parentChildPair,
+        );
+}
 
 // helper function to approve a token
 const approve = async (child: Rmrk, parent: Rmrk, signer: KeyringPair): Promise<SignAndSendSuccessResponse> => {
-
     let approveResult = await child
         .withSigner(signer)
         .tx.approve(parent.address, null, true);

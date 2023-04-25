@@ -1,5 +1,10 @@
 #![allow(clippy::inline_fn_without_body)]
 
+/// Batch calls for the RMRK contract.
+/// Due to big POV size of this contract only a several Tx can be made per one block.
+/// This trait allows to batch several calls into one Tx.
+/// It is not mandatory to include this trait.
+/// However it is possible to include it only if all crates are compiled.
 use crate::{
     storage::*,
     traits::*,
@@ -66,12 +71,6 @@ pub trait BatchCalls:
         Ok(())
     }
 
-    /// Add the child NFT.
-    #[ink(message)]
-    fn add_single_child(&mut self, parent_id: Id, child_contract: AccountId, child_id: Id) {
-        let _ = Nesting::add_child(self, parent_id, (child_contract, child_id));
-    }
-
     /// Add a list of parent-child token pairs. The child NFT is from a different collection.
     #[ink(message)]
     fn add_many_children(
@@ -84,16 +83,10 @@ pub trait BatchCalls:
             RmrkError::InputVectorTooBig
         );
         for (parent_id, child_id) in parent_child_pair {
-            self.add_single_child(parent_id, child_contract, child_id);
+            _ = Nesting::add_child(self, parent_id, (child_contract, child_id));
         }
 
         Ok(())
-    }
-
-    /// Transfer a single token to specified address
-    #[ink(message)]
-    fn transfer_single_token(&mut self, destination: AccountId, token_id: Id) {
-        _ = Minting::transfer_token(self, destination, token_id, Vec::new());
     }
 
     /// Transfer many tokens to specified addresses
@@ -107,7 +100,7 @@ pub trait BatchCalls:
             RmrkError::InputVectorTooBig
         );
         for (token_id, destination) in token_to_destination {
-            self.transfer_single_token(destination, token_id);
+            _ = Minting::transfer_token(self, destination, token_id, Vec::new());
         }
 
         Ok(())
