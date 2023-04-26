@@ -3,6 +3,7 @@
 use rmrk_common::errors::Result;
 
 use ink::prelude::string::String as PreludeString;
+
 use openbrush::{
     contracts::psp34::extensions::enumerable::*,
     traits::{
@@ -49,7 +50,7 @@ pub trait MintingLazy {
     #[ink(message, payable)]
     fn mint(&mut self) -> Result<()>;
 
-    /// Purchas many tokens.
+    /// Purchase many tokens.
     #[ink(message, payable)]
     fn mint_many(&mut self, mint_amount: u64) -> Result<()>;
 
