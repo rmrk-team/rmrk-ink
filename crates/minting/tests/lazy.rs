@@ -123,6 +123,7 @@ pub mod rmrk_contract_minting {
                 pay_with_call,
                 test,
             },
+            prelude::string::String as PreludeString,
         };
         use openbrush::{
             contracts::{
@@ -151,6 +152,7 @@ pub mod rmrk_contract_minting {
         };
 
         pub const PRICE: Balance = 100_000_000_000_000_000;
+        const RMRK_METADATA: &str = "ipfs://rmrkIpfsUri/";
 
         impl Accessor for super::Rmrk {
             fn _last_token_id(&self) -> u64 {
@@ -226,14 +228,22 @@ pub mod rmrk_contract_minting {
         }
 
         #[ink::test]
-        fn mint_single_lazy_works() {
+        fn mint_single_lazy_and_assign_metadata_works() {
             let mut rmrk = init();
             let accounts = default_accounts();
             assert!(rmrk.has_role(ADMIN, accounts.alice));
             assert_eq!(rmrk.total_supply(), 0);
             set_sender(accounts.bob);
             purchase(1);
-            assert!(rmrk.mint().is_ok());
+            assert_eq!(rmrk.mint(), Ok(Id::U64(1)));
+
+            // assign metadata and check
+            assert!(rmrk.assign_metadata(1, RMRK_METADATA.into()).is_ok());
+            assert_eq!(
+                rmrk.token_uri(1),
+                Ok(PreludeString::from(RMRK_METADATA.to_owned()))
+            );
+
             check_mint_single_outcome(rmrk, accounts.bob, 1);
         }
 

@@ -885,17 +885,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "rmrk_example_basic_child"
-version = "0.6.0"
-dependencies = [
- "ink",
- "openbrush",
- "parity-scale-codec",
- "rmrk",
- "scale-info",
-]
-
-[[package]]
 name = "rmrk_example_equippable"
 version = "0.6.0"
 dependencies = [
@@ -919,6 +908,17 @@ dependencies = [
 
 [[package]]
 name = "rmrk_example_mintable"
+version = "0.6.0"
+dependencies = [
+ "ink",
+ "openbrush",
+ "parity-scale-codec",
+ "rmrk",
+ "scale-info",
+]
+
+[[package]]
+name = "rmrk_example_psp34_child_lazy"
 version = "0.6.0"
 dependencies = [
  "ink",

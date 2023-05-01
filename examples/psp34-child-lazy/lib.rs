@@ -2,7 +2,7 @@
 #![feature(min_specialization)]
 
 #[openbrush::contract]
-pub mod rmrk_example_basic_child {
+pub mod rmrk_example_psp34_child_lazy {
     use ink::{
         codegen::{
             EmitEvent,
@@ -352,8 +352,7 @@ pub mod rmrk_example_basic_child {
             let mint_res = rmrk.mint();
 
             assert_eq!(mint_res.unwrap(), Id::U64(1));
-
-            assert_eq!(rmrk.assign_metadata(1, uri), Ok(()) );
+            assert!(rmrk.assign_metadata(1, uri).is_ok());
         }
 
         fn default_accounts() -> test::DefaultAccounts<ink::env::DefaultEnvironment> {

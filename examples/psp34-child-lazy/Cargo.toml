@@ -1,5 +1,5 @@
 [package]
-name = "rmrk_example_basic_child"
+name = "rmrk_example_psp34_child_lazy"
 version = "0.6.0"
 authors = ["Stake Technologies <devops@stake.co.jp>"]
 edition = "2021"
