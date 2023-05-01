@@ -48,11 +48,15 @@ pub trait Minting {
 pub trait MintingLazy {
     /// Purchase one token.
     #[ink(message, payable)]
-    fn mint(&mut self) -> Result<()>;
+    fn mint(&mut self) -> Result<Id>;
 
     /// Purchase many tokens.
     #[ink(message, payable)]
     fn mint_many(&mut self, mint_amount: u64) -> Result<()>;
+
+    /// Assign metadata to specified token.
+    #[ink(message)]
+    fn assign_metadata(&mut self, token_id: u64, metadata: String) -> Result<()>;
 
     /// Get token mint price.
     #[ink(message)]

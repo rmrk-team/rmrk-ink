@@ -114,12 +114,10 @@ where
         + Utils,
 {
     /// Purchase one token.
-    default fn mint(&mut self) -> Result<()> {
+    default fn mint(&mut self) -> Result<Id> {
         self._check_amount(1)?;
         self._check_value(Self::env().transferred_value(), 1)?;
-        self._mint(Self::env().caller())?;
-
-        Ok(())
+        self._mint(Self::env().caller())
     }
 
     /// Purchase many tokens.
@@ -128,6 +126,17 @@ where
         self._check_amount(mint_amount)?;
         self._check_value(Self::env().transferred_value(), mint_amount)?;
         self._mint_many(Self::env().caller(), mint_amount)?;
+
+        Ok(())
+    }
+
+    /// Assign metadata to specified token.
+    default fn assign_metadata(&mut self, token_id: u64, metadata: String) -> Result<()> {
+        let owner = self.ensure_exists_and_get_owner(&Id::U64(token_id))?;
+        self.ensure_token_owner(owner)?;
+        self.data::<MintingData>()
+            .nft_metadata
+            .insert(Id::U64(token_id), &metadata);
 
         Ok(())
     }
