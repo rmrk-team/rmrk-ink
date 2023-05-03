@@ -2,7 +2,7 @@
 #![feature(min_specialization)]
 
 #[openbrush::contract]
-pub mod rmrk_example_psp34_child_lazy {
+pub mod rmrk_example_psp34_child_multiasset {
     use ink::{
         codegen::{
             EmitEvent,
@@ -31,6 +31,11 @@ pub mod rmrk_example_psp34_child_lazy {
         traits::*,
         types::*,
     };
+
+    // use rmrk::traits::rmrk_minting::{
+    //     traits::Minting,
+    //     MintingData,
+    // };
 
     /// Event emitted when a token transfer occurs.
     #[ink(event)]
@@ -258,6 +263,10 @@ pub mod rmrk_example_psp34_child_lazy {
             Rmrk,
         };
 
+        use ink::{
+            env::test,
+            prelude::string::String as PreludeString,
+        };
         use openbrush::{
             contracts::{
                 access_control::{
@@ -275,16 +284,16 @@ pub mod rmrk_example_psp34_child_lazy {
             },
         };
 
-        use ink::env::test;
-
         use rmrk::{
             roles::ADMIN,
-            traits::MintingLazy,
+            traits::Minting,
             utils::Utils,
         };
 
         const BASE_URI: &str = "ipfs://myIpfsUri/";
         const MAX_SUPPLY: u64 = 10;
+        const TOKEN_METADATA: &str = "ipfs://tokenUri/";
+        const TOKEN_ID1: Id = Id::U64(1);
 
         #[ink::test]
         fn init_works() {
@@ -343,16 +352,29 @@ pub mod rmrk_example_psp34_child_lazy {
         }
 
         #[ink::test]
-        fn lazy_mint_and_assign_metadata_works() {
+        fn mint_and_assign_metadata_works() {
             let accounts = default_accounts();
-            let uri: String = String::from("token_uri/");
             let mut rmrk = init();
 
+            // owner (alice) mints for bob
             set_sender(accounts.alice);
-            let mint_res = rmrk.mint();
+            assert_eq!(rmrk.mint(accounts.bob), Ok(TOKEN_ID1));
+            assert_eq!(rmrk.total_supply(), 1);
+            assert_eq!(rmrk.owner_of(TOKEN_ID1), Some(accounts.bob));
 
-            assert_eq!(mint_res.unwrap(), Id::U64(1));
-            assert!(rmrk.assign_metadata(1, uri).is_ok());
+            // only owner is allowed to mint
+            set_sender(accounts.bob);
+            assert_eq!(
+                rmrk.mint(accounts.bob),
+                Err(AccessControlError::MissingRole.into())
+            );
+
+            // only owner is allowed to assign metadata
+            set_sender(accounts.bob);
+            assert_eq!(
+                rmrk.assign_metadata(TOKEN_ID1, TOKEN_METADATA.into()),
+                Err(AccessControlError::MissingRole.into())
+            );
         }
 
         fn default_accounts() -> test::DefaultAccounts<ink::env::DefaultEnvironment> {

@@ -1,6 +1,6 @@
 [package]
-name = "rmrk_example_psp34_child_lazy"
-version = "0.6.0"
+name = "rmrk_example_psp34_child_multiasset"
+version = "0.7.0"
 authors = ["Stake Technologies <devops@stake.co.jp>"]
 edition = "2021"
 

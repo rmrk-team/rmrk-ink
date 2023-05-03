@@ -130,17 +130,6 @@ where
         Ok(())
     }
 
-    /// Assign metadata to specified token.
-    default fn assign_metadata(&mut self, token_id: u64, metadata: String) -> Result<()> {
-        let owner = self.ensure_exists_and_get_owner(&Id::U64(token_id))?;
-        self.ensure_token_owner(owner)?;
-        self.data::<MintingData>()
-            .nft_metadata
-            .insert(Id::U64(token_id), &metadata);
-
-        Ok(())
-    }
-
     /// Get max supply of tokens.
     default fn max_supply(&self) -> Option<u64> {
         self.data::<MintingData>().max_supply
