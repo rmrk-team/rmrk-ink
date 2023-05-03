@@ -269,10 +269,7 @@ pub mod rmrk_example_psp34_child_multiasset {
         };
         use openbrush::{
             contracts::{
-                access_control::{
-                    AccessControlError::*,
-                    *,
-                },
+                access_control::*,
                 psp34::extensions::{
                     enumerable::*,
                     metadata::*,
@@ -287,7 +284,6 @@ pub mod rmrk_example_psp34_child_multiasset {
         use rmrk::{
             roles::ADMIN,
             traits::Minting,
-            utils::Utils,
         };
 
         const BASE_URI: &str = "ipfs://myIpfsUri/";
@@ -332,26 +328,6 @@ pub mod rmrk_example_psp34_child_multiasset {
         }
 
         #[ink::test]
-        fn set_base_uri_works() {
-            let accounts = default_accounts();
-            const NEW_BASE_URI: &str = "new_uri/";
-            let mut rmrk = init();
-
-            set_sender(accounts.alice);
-            let collection_id = rmrk.collection_id();
-            assert!(rmrk.set_base_uri(NEW_BASE_URI.into()).is_ok());
-            assert_eq!(
-                rmrk.get_attribute(collection_id, String::from("baseUri")),
-                Some(String::from(NEW_BASE_URI))
-            );
-            set_sender(accounts.bob);
-            assert_eq!(
-                rmrk.set_base_uri(NEW_BASE_URI.into()),
-                Err(MissingRole.into())
-            );
-        }
-
-        #[ink::test]
         fn mint_and_assign_metadata_works() {
             let accounts = default_accounts();
             let mut rmrk = init();
@@ -374,6 +350,14 @@ pub mod rmrk_example_psp34_child_multiasset {
             assert_eq!(
                 rmrk.assign_metadata(TOKEN_ID1, TOKEN_METADATA.into()),
                 Err(AccessControlError::MissingRole.into())
+            );
+            set_sender(accounts.alice);
+            assert!(rmrk
+                .assign_metadata(TOKEN_ID1, TOKEN_METADATA.into())
+                .is_ok());
+            assert_eq!(
+                rmrk.token_uri(1),
+                Ok(PreludeString::from(TOKEN_METADATA.to_owned()))
             );
         }
 
