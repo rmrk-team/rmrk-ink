@@ -132,6 +132,19 @@ describe("RMRK Equip tests", () => {
         id: { u64: 1 },
         });
         console.log(`Minted 5 kanarias`);
+ 
+        console.log("Minting Gem tokens");
+        for (let i = 1; i <= 10; i++) {
+            const gemMintResult = await gem.withSigner(bob).tx.mint({
+                value: PRICE_PER_MINT,
+            });
+            emit(gemMintResult, "Transfer", {
+                from: null,
+                to: bob.address,
+                id: { u64: i },
+            });
+        }
+        expect((await gem.query.balanceOf(bob.address)).value.unwrap()).to.equal(10);
 
         // deployer adds two assets for kanaria
         console.log("Adding Kanaria assets");
@@ -175,7 +188,100 @@ describe("RMRK Equip tests", () => {
         ).to.be.equal("2,0");
         console.log("Assets accepted");
 
+        // We'll add 4 assets for each gem, a full version and 3 versions matching each slot.
+        // We will have only 2 types of gems -> 4x2: 8 assets.
+        console.log("Adding Gem assets");
+        console.log("Adding asset entries");
+        const equippableRefIdMidGem = 1;
 
+        await gem
+            .withSigner(deployer)
+            .tx.addAssetEntry(catalog.address, 1, 0, ["ipfs://gems/typeA/full.svg"], []);
+        await gem
+            .withSigner(deployer)
+            .tx.addAssetEntry(
+                catalog.address,
+                2,
+                equippableRefIdMidGem,
+                ["ipfs://gems/typeA/left.svg"],
+                [],
+            );
+        expect(
+            (await gem.withSigner(deployer).query.totalAssets())?.value.unwrap().toString()
+        ).to.be.equal("2");
+    
+        console.log("Setting valid parent reference IDs");
+        await gem
+            .withSigner(bob)
+            .tx.setValidParentForEquippableGroup(
+                equippableRefIdMidGem,
+                kanaria.address,
+                8);
+
+        // Assets are accepted by default since the caller (bob) is token owner, and acceptAsset() does not need to be called
+        console.log("Add assets to tokens");
+        await addAssetToToken(gem, bob, 1, 1)
+        await addAssetToToken(gem, bob, 1, 2)
+        await addAssetToToken(gem, bob, 2, 1)
+        await addAssetToToken(gem, bob, 2, 2)
+
+        expect(
+            (await gem.query.totalTokenAssets({ u64: 1 }))?.value.unwrap().ok.toString()
+        ).to.be.equal("2,0");
+        expect(
+            (await gem.query.totalTokenAssets({ u64: 2 }))?.value.unwrap().ok.toString()
+        ).to.be.equal("2,0");
+
+        console.log("Added 2 assets to each of 2 gems.");
+
+        // bob approves kanaria Contract on gem (for nesting gem on kanaria)
+        for (let i = 1; i <= 10; i++) {
+            await gem.withSigner(bob).tx.approve(kanaria.address, { u64: i }, true);
+            expect(
+                (await gem.query.allowance(bob.address, kanaria.address, { u64: 1 }))
+                .value.ok
+            ).to.equal(true);
+        }
+
+        // bob adds 3 gem nfts to bob's 5 kanaria nfts (kanaria is now parent of gem tokens)
+        for (let k = 1; k < 6; k++) {
+            for (let g = 1; g < 4; g++) {
+                const res = await kanaria
+                    .withSigner(bob)
+                    .tx.addChild({ u64: k }, [gem.address, { u64: g }]);
+                const balance = (
+                    await kanaria.query.childrenBalance({ u64: k })
+                )?.value.ok.toString();
+            }
+            expect(
+                (await kanaria.query.childrenBalance({ u64: k }))?.value.unwrap().ok.toString()
+            ).to.be.equal("3,0");
+        }
+        console.log(`Added 3 gems into each kanaria`);
+
+        // Equipping
+        console.log("Equipping gems to kanaria");
+        await kanaria
+            .withSigner(bob)
+            .tx.equip({ u64: 1 }, assetComposedId, 8, [gem.address, { u64: 1 }], 2);
+            /*
+        await kanaria
+            .withSigner(bob)
+            .tx.equip({ u64: 1 }, assetComposedId, 9, [gem.address, { u64: 2 }], 2);
+            */
+
+        /*
+        expect(
+            (await kanaria.withSigner(bob).query.getEquipment({ u64: 1 }, 8)).value.ok
+        ).to.be.ok;
+        expect(
+            (await kanaria.withSigner(bob).query.getEquipment({ u64: 1 }, 9)).value
+        ).to.be.ok;
+        expect(
+            (await kanaria.withSigner(bob).query.getEquipment({ u64: 1 }, 10)).value
+        ).to.be.ok;
+        console.log("Equipped 3 gems into first kanaria");
+        */
     });
 });
 
