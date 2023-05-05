@@ -90,7 +90,7 @@ describe("RMRK Equip tests", () => {
         );
     });
 
-    it("Equip/Unequip works", async () => {
+    it("Equip works", async () => {
         const PART_LIST: Part[] = [
             // Head option 1
             {
