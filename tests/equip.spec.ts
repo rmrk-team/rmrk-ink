@@ -65,14 +65,14 @@ describe("RMRK Equip tests", () => {
         sword = new Rmrk(
         (
             await swordFactory.new(
-            ["Sword"],
-            ["SWRD"],
-            [BASE_URI],
-            MAX_SUPPLY,
-            PRICE_PER_MINT,
-            [COLLECTION_METADATA],
-            dave.address,
-            100
+                ["Sword"],
+                ["SWRD"],
+                [BASE_URI],
+                MAX_SUPPLY,
+                PRICE_PER_MINT,
+                [COLLECTION_METADATA],
+                dave.address,
+                100
             )
         ).address,
         deployer,
@@ -133,6 +133,8 @@ describe("RMRK Equip tests", () => {
             },
         ];
 
+        const swordSlot = 4;
+
         // add all parts to catalog
         await catalog
             .withSigner(deployer)
@@ -140,7 +142,7 @@ describe("RMRK Equip tests", () => {
         expect((await catalog.query.getPartsCount())?.value.unwrap()).to.be.equal(5);
         console.log("Catalog is set");
 
-        console.log("Minting tokens:");
+        console.log("Minting tokens");
 
         console.log(" Minting avatar tokens");
         let avatarMintResult = await avatar
@@ -234,16 +236,16 @@ describe("RMRK Equip tests", () => {
             (await sword.withSigner(deployer).query.totalAssets())?.value.unwrap().toString()
         ).to.be.equal("3");
         console.log(" Added 3 sword assets");
-        
+
         console.log("Setting valid parent reference ID");
         await sword
             .withSigner(bob)
             .tx.setValidParentForEquippableGroup(
-                equippableCopperSword,
+                equippableWoodenSword,
                 avatar.address,
-                4
+                swordSlot 
             );
-        
+
         console.log("Add assets to swords");
         await addAssetToToken(sword, bob, 1, 1);
         await addAssetToToken(sword, bob, 1, 2);
@@ -265,14 +267,20 @@ describe("RMRK Equip tests", () => {
         console.log("Added a sword to an avatar");
 
         console.log("Equipping sword to avatar");
-        /*
+        // This works because wooden sword is allowed to be equipped to the avatar token.
         await avatar
             .withSigner(bob)
-            .tx.equip({ u64: 1 }, defaultAssetId, 4, [sword.address, { u64: 1 }], 1);
+            .tx.equip({ u64: 1 }, defaultAssetId, swordSlot, [sword.address, { u64: 1 }], equippableWoodenSword);
         expect(
-            (await avatar.withSigner(bob).query.getEquipment({ u64: 1 }, 4)).value.ok
+            (await avatar.withSigner(bob).query.getEquipment({ u64: 1 }, swordSlot)).value.ok
         ).to.be.ok;
-        */
+
+        // This fails because copper sword cannot be equipped to the avatar.
+        expect(
+            async () => await avatar
+                .withSigner(bob)
+                .tx.equip({ u64: 1 }, defaultAssetId, swordSlot, [sword.address, { u64: 2 }], equippableWoodenSword)
+        ).to.throw;
     });
 });
 
