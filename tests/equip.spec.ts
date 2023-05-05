@@ -10,6 +10,7 @@ import {
   PartType,
   Part,
 } from "../types/types-arguments/catalog_example";
+import { RmrkError } from "../types/types-returns/rmrk_example_equippable_lazy";
 import { emit } from "./helper";
 
 const MAX_SUPPLY = 888;
@@ -264,7 +265,10 @@ describe("RMRK Equip tests", () => {
         await avatar
             .withSigner(bob)
             .tx.addChild({ u64: 1 }, [sword.address, { u64: 1 }]);
-        console.log("Added a sword to an avatar");
+        await avatar
+            .withSigner(bob)
+            .tx.addChild({ u64: 2 }, [sword.address, { u64: 1 }]);
+        console.log("Added swords to both avatars");
 
         console.log("Equipping sword to avatar");
         // This works because wooden sword is allowed to be equipped to the avatar token.
@@ -275,12 +279,38 @@ describe("RMRK Equip tests", () => {
             (await avatar.withSigner(bob).query.getEquipment({ u64: 1 }, swordSlot)).value.ok
         ).to.be.ok;
 
-        // This fails because copper sword cannot be equipped to the avatar.
-        expect(
-            async () => await avatar
+        // Fails because copper sword cannot be equipped to the avatar.
+        let equipCopperError: any;
+        try {
+            await avatar
                 .withSigner(bob)
-                .tx.equip({ u64: 1 }, defaultAssetId, swordSlot, [sword.address, { u64: 2 }], equippableWoodenSword)
-        ).to.throw;
+                .tx.equip({ u64: 2 }, defaultAssetId, swordSlot, [sword.address, { u64: 1 }], equippableCopperSword)
+        }catch(err: any) {
+            equipCopperError = err; 
+        }
+        expect(equipCopperError?.error).to.exist;
+
+        // Fails because Dave is not the token owner.
+        let equipNotOwnerFail: any;
+        try {
+            await avatar
+                .withSigner(dave)
+                .tx.equip({ u64: 2 }, defaultAssetId, swordSlot, [sword.address, { u64: 1 }], equippableWoodenSword)
+        }catch(err: any) {
+            equipNotOwnerFail = err; 
+        }
+        expect(equipNotOwnerFail?.error).to.exist;
+
+        // Fails because of non-existent sword asset. 
+        let equipNotAssetFail: any;
+        try {
+            await avatar
+                .withSigner(bob)
+                .tx.equip({ u64: 2 }, defaultAssetId, swordSlot, [sword.address, { u64: 1 }], 7)
+        }catch(err: any) {
+            equipNotAssetFail = err; 
+        }
+        expect(equipNotAssetFail?.error).to.exist;
     });
 });
 
