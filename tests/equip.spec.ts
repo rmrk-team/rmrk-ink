@@ -1,4 +1,4 @@
-import { expect, use } from "chai";
+import { expect } from "chai";
 import Catalog_factory from "../types/constructors/catalog_example";
 import Rmrk_factory from "../types/constructors/rmrk_example_equippable_lazy";
 import Rmrk from "../types/contracts/rmrk_example_equippable_lazy";
@@ -280,37 +280,28 @@ describe("RMRK Equip tests", () => {
         ).to.be.ok;
 
         // Fails because copper sword cannot be equipped to the avatar.
-        let equipCopperError: any;
-        try {
-            await avatar
-                .withSigner(bob)
-                .tx.equip({ u64: 2 }, defaultAssetId, swordSlot, [sword.address, { u64: 1 }], equippableCopperSword)
-        }catch(err: any) {
-            equipCopperError = err; 
-        }
-        expect(equipCopperError?.error).to.exist;
+        const equipCopperError = await avatar
+            .withSigner(bob)
+            .query.equip({ u64: 2 }, defaultAssetId, swordSlot, [sword.address, { u64: 1 }], equippableCopperSword)
+        expect(equipCopperError.value.unwrap().err.rmrk).to.be.equal(
+            RmrkError.unknownPart
+        );
 
         // Fails because Dave is not the token owner.
-        let equipNotOwnerFail: any;
-        try {
-            await avatar
-                .withSigner(dave)
-                .tx.equip({ u64: 2 }, defaultAssetId, swordSlot, [sword.address, { u64: 1 }], equippableWoodenSword)
-        }catch(err: any) {
-            equipNotOwnerFail = err; 
-        }
-        expect(equipNotOwnerFail?.error).to.exist;
+        const notOwnerError = await avatar
+            .withSigner(dave)
+            .query.equip({ u64: 2 }, defaultAssetId, swordSlot, [sword.address, { u64: 1 }], equippableWoodenSword)
+        expect(notOwnerError.value.unwrap().err.rmrk).to.be.equal(
+            RmrkError.notTokenOwner
+        );
 
         // Fails because of non-existent sword asset. 
-        let equipNotAssetFail: any;
-        try {
-            await avatar
-                .withSigner(bob)
-                .tx.equip({ u64: 2 }, defaultAssetId, swordSlot, [sword.address, { u64: 1 }], 7)
-        }catch(err: any) {
-            equipNotAssetFail = err; 
-        }
-        expect(equipNotAssetFail?.error).to.exist;
+        const nonExistentAsset = await avatar
+            .withSigner(bob)
+            .query.equip({ u64: 2 }, defaultAssetId, swordSlot, [sword.address, { u64: 1 }], 7)
+        expect(nonExistentAsset.value.unwrap().err.rmrk).to.be.equal(
+            RmrkError.unknownEquippableAsset
+        );
     });
 });
 
