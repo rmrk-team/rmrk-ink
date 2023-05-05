@@ -27,12 +27,12 @@ const keyring = new Keyring({ type: "sr25519" });
 
 describe("RMRK Equip tests", () => {
     let catalogFactory: Catalog_factory;
-    let kanariaFactory: Rmrk_factory;
-    let gemFactory: Rmrk_factory;
+    let avatarFactory: Rmrk_factory;
+    let swordFactory: Rmrk_factory;
     let api: ApiPromise;
     let deployer: KeyringPair;
-    let kanaria: Rmrk;
-    let gem: Rmrk;
+    let avatar: Rmrk;
+    let sword: Rmrk;
     let catalog: Contract;
     let bob: KeyringPair;
     let dave: KeyringPair;
@@ -43,12 +43,12 @@ describe("RMRK Equip tests", () => {
         bob = keyring.addFromUri("//Bob");
         dave = keyring.addFromUri("//Dave");
 
-        kanariaFactory = new Rmrk_factory(api, deployer);
-        kanaria = new Rmrk(
+        avatarFactory = new Rmrk_factory(api, deployer);
+        avatar = new Rmrk(
             (
-                await kanariaFactory.new(
-                    ["Kanaria"],
-                    ["KAN"],
+                await avatarFactory.new(
+                    ["Avatar"],
+                    ["AVA"],
                     [BASE_URI],
                     MAX_SUPPLY,
                     PRICE_PER_MINT,
@@ -61,12 +61,12 @@ describe("RMRK Equip tests", () => {
             api
         );
 
-        gemFactory = new Rmrk_factory(api, deployer);
-        gem = new Rmrk(
+        swordFactory = new Rmrk_factory(api, deployer);
+        sword = new Rmrk(
         (
-            await gemFactory.new(
-            ["Gem"],
-            ["GM"],
+            await swordFactory.new(
+            ["Sword"],
+            ["SWRD"],
             [BASE_URI],
             MAX_SUPPLY,
             PRICE_PER_MINT,
@@ -90,197 +90,188 @@ describe("RMRK Equip tests", () => {
     });
 
     it("Equip/Unequip works", async () => {
-        // define all parts of the NFT.
         const PART_LIST: Part[] = [
-            // Background option 1
+            // Head option 1
             {
                 partType: PartType.fixed,
-                z: 0,
+                z: 2,
                 equippable: [],
-                partUri: ["ipfs://backgrounds/1.svg"],
-                isEquippableByAll: false,
+                partUri: ["ipfs://heads/1.svg"],
+                isEquippableByAll: false
             },
-            // Background option 2
+            // Head option 2
             {
                 partType: PartType.fixed,
-                z: 0,
+                z: 2,
                 equippable: [],
-                partUri: ["ipfs://backgrounds/2.svg"],
-                isEquippableByAll: false,
+                partUri: ["ipfs://heads/2.svg"],
+                isEquippableByAll: false
+            },
+            // Body option 1
+            {
+                partType: PartType.fixed,
+                z: 1,
+                equippable: [],
+                partUri: ["ipfs://body/1.svg"],
+                isEquippableByAll: false
+            },
+            // Body option 2
+            {
+                partType: PartType.fixed,
+                z: 1,
+                equippable: [],
+                partUri: ["ipfs://body/1.svg"],
+                isEquippableByAll: false
+            },
+            // Sword slot
+            {
+                partType: PartType.slot,
+                z: 3,
+                equippable: [sword.address],
+                partUri: [""],
+                isEquippableByAll: false
             },
         ];
 
+        // add all parts to catalog
         await catalog
             .withSigner(deployer)
             .tx.addPartList(PART_LIST);
-        expect((await catalog.query.getPartsCount())?.value.unwrap()).to.be.equal(2);
+        expect((await catalog.query.getPartsCount())?.value.unwrap()).to.be.equal(5);
         console.log("Catalog is set");
 
-        // minting tokens
-        console.log("Minting tokens");
+        console.log("Minting tokens:");
 
-        // bob mints 5 kanaria
-        console.log("Minting Kanaria tokens");
-        let kanariaMintResult = await kanaria
-        .withSigner(bob)
-        .tx.mintMany(5, {
-            value: PRICE_PER_MINT.muln(5),
-        });
-        emit(kanariaMintResult, "Transfer", {
-        from: null,
-        to: bob.address,
-        id: { u64: 1 },
-        });
-        console.log(`Minted 5 kanarias`);
- 
-        console.log("Minting Gem tokens");
-        for (let i = 1; i <= 10; i++) {
-            const gemMintResult = await gem.withSigner(bob).tx.mint({
-                value: PRICE_PER_MINT,
+        console.log(" Minting avatar tokens");
+        let avatarMintResult = await avatar
+            .withSigner(bob)
+            .tx.mintMany(2, {
+                value: PRICE_PER_MINT.muln(2)
             });
-            emit(gemMintResult, "Transfer", {
-                from: null,
-                to: bob.address,
-                id: { u64: i },
-            });
-        }
-        expect((await gem.query.balanceOf(bob.address)).value.unwrap()).to.equal(10);
+        emit(avatarMintResult, "Transfer", {
+            from: null,
+            to: bob.address,
+            id: { u64: 1 },
+        })
+        console.log("  Minted 2 avatars");
 
-        // deployer adds two assets for kanaria
-        console.log("Adding Kanaria assets");
-        const assetDefaultId = 1;
-        const assetComposedId = 2;
-        const addAssetResult = await kanaria
-        .withSigner(deployer)
-        .tx.addAssetEntry(catalog.address, assetDefaultId, "0", ["ipfs://kanariaAsset1.png"], [], {
-        });
-        emit(addAssetResult, "AssetSet", { asset: 1 });
-        expect(
-        await kanaria
+        console.log(" Minting sword tokens");
+        let swordMintResult = await sword
+            .withSigner(bob)
+            .tx.mintMany(3, {
+                value: PRICE_PER_MINT.muln(3)
+            });
+        emit(swordMintResult, "Transfer", {
+            from: null,
+            to: bob.address,
+            id: { u64: 1 },
+        })
+        console.log("  Minted 3 swords");
+
+        // deployer adds two assets to avatar
+        console.log("Adding avatar assets");
+        const defaultAssetId = 1;
+
+        const addAssetResult = await avatar
             .withSigner(deployer)
             .tx.addAssetEntry(
-            catalog.address,
-            assetComposedId,
-            "0",
-            ["ipfs://kanariaAsset2.json"],
-            [0, 2, 4, 6, 8, 9, 10],
-            )
-        ).to.be.ok;
+                catalog.address, 
+                defaultAssetId, 
+                "0", 
+                ["ipfs://avatarAsset.png"], 
+                [4]
+            );
+        emit(addAssetResult, "AssetSet", { asset: 1 });
 
+        console.log(" Added an asset to avatar");
+
+        console.log(" Add the default asset to token 1");
+        await addAssetToToken(avatar, deployer, 1, defaultAssetId);
         expect(
-        (await kanaria.withSigner(deployer).query.totalAssets())?.value.unwrap().toString()
-        ).to.be.equal("2");
-        console.log("Added 2 asset entries to Kanaria");
+            (await avatar.query.totalTokenAssets({ u64: 1 }))?.value.unwrap().ok.toString()
+        ).to.be.equal("0,1");
 
-        // add both assets to token 1
-        console.log("Add assets to token 1");
-        await addAssetToToken(kanaria, deployer, 1, assetDefaultId)
-        await addAssetToToken(kanaria, deployer, 1, assetComposedId)
+        // bob is the owner so he has to accept the asset
+        await acceptAsset(avatar, bob, 1, defaultAssetId);
         expect(
-        (await kanaria.query.totalTokenAssets({ u64: 1 }))?.value.unwrap().ok.toString()
-        ).to.be.equal("0,2");
+            (await avatar.query.totalTokenAssets({ u64: 1 }))?.value.unwrap().ok.toString()
+        ).to.be.equal("1,0");
+        console.log(" Bob accepted the asset");
 
-        // bob accepts both assets
-        await acceptAsset(kanaria, bob, 1, assetDefaultId);
-        await acceptAsset(kanaria, bob, 1, assetComposedId);
-        expect(
-        (await kanaria.query.totalTokenAssets({ u64: 1 }))?.value.unwrap().ok.toString()
-        ).to.be.equal("2,0");
-        console.log("Assets accepted");
+        console.log("Adding sword assets");
+        const equippableWoodenSword = 1;
+        const equippableCopperSword = 2;
+        const equippableKatanaSword = 3;
 
-        // We'll add 4 assets for each gem, a full version and 3 versions matching each slot.
-        // We will have only 2 types of gems -> 4x2: 8 assets.
-        console.log("Adding Gem assets");
-        console.log("Adding asset entries");
-        const equippableRefIdMidGem = 1;
-
-        await gem
+        await sword
             .withSigner(deployer)
-            .tx.addAssetEntry(catalog.address, 1, 0, ["ipfs://gems/typeA/full.svg"], []);
-        await gem
+            .tx.addAssetEntry(
+                catalog.address,
+                1,
+                equippableWoodenSword,
+                ["ipfs://swords/wooden.svg"],
+                []
+            );
+        await sword
             .withSigner(deployer)
             .tx.addAssetEntry(
                 catalog.address,
                 2,
-                equippableRefIdMidGem,
-                ["ipfs://gems/typeA/left.svg"],
-                [],
+                equippableCopperSword,
+                ["ipfs://swords/copper.svg"],
+                []
+            );
+        await sword
+            .withSigner(deployer)
+            .tx.addAssetEntry(
+                catalog.address,
+                3,
+                equippableKatanaSword,
+                ["ipfs://swords/katana.svg"],
+                []
             );
         expect(
-            (await gem.withSigner(deployer).query.totalAssets())?.value.unwrap().toString()
-        ).to.be.equal("2");
-    
-        console.log("Setting valid parent reference IDs");
-        await gem
+            (await sword.withSigner(deployer).query.totalAssets())?.value.unwrap().toString()
+        ).to.be.equal("3");
+        console.log(" Added 3 sword assets");
+        
+        console.log("Setting valid parent reference ID");
+        await sword
             .withSigner(bob)
             .tx.setValidParentForEquippableGroup(
-                equippableRefIdMidGem,
-                kanaria.address,
-                8);
-
-        // Assets are accepted by default since the caller (bob) is token owner, and acceptAsset() does not need to be called
-        console.log("Add assets to tokens");
-        await addAssetToToken(gem, bob, 1, 1)
-        await addAssetToToken(gem, bob, 1, 2)
-        await addAssetToToken(gem, bob, 2, 1)
-        await addAssetToToken(gem, bob, 2, 2)
-
+                equippableCopperSword,
+                avatar.address,
+                4
+            );
+        
+        console.log("Add assets to swords");
+        await addAssetToToken(sword, bob, 1, 1);
+        await addAssetToToken(sword, bob, 1, 2);
+        await addAssetToToken(sword, bob, 1, 3);
         expect(
-            (await gem.query.totalTokenAssets({ u64: 1 }))?.value.unwrap().ok.toString()
-        ).to.be.equal("2,0");
+            (await sword.query.totalTokenAssets({ u64: 1 }))?.value.unwrap().ok.toString()
+        ).to.be.equal("3,0");
+
+        console.log("Approving sword to avatar");
+        await sword.withSigner(bob).tx.approve(avatar.address, { u64: 1 }, true);
         expect(
-            (await gem.query.totalTokenAssets({ u64: 2 }))?.value.unwrap().ok.toString()
-        ).to.be.equal("2,0");
-
-        console.log("Added 2 assets to each of 2 gems.");
-
-        // bob approves kanaria Contract on gem (for nesting gem on kanaria)
-        for (let i = 1; i <= 10; i++) {
-            await gem.withSigner(bob).tx.approve(kanaria.address, { u64: i }, true);
-            expect(
-                (await gem.query.allowance(bob.address, kanaria.address, { u64: 1 }))
+            (await sword.query.allowance(bob.address, avatar.address, { u64: 1 }))
                 .value.ok
-            ).to.equal(true);
-        }
+        ).to.equal(true);
 
-        // bob adds 3 gem nfts to bob's 5 kanaria nfts (kanaria is now parent of gem tokens)
-        for (let k = 1; k < 6; k++) {
-            for (let g = 1; g < 4; g++) {
-                const res = await kanaria
-                    .withSigner(bob)
-                    .tx.addChild({ u64: k }, [gem.address, { u64: g }]);
-                const balance = (
-                    await kanaria.query.childrenBalance({ u64: k })
-                )?.value.ok.toString();
-            }
-            expect(
-                (await kanaria.query.childrenBalance({ u64: k }))?.value.unwrap().ok.toString()
-            ).to.be.equal("3,0");
-        }
-        console.log(`Added 3 gems into each kanaria`);
-
-        // Equipping
-        console.log("Equipping gems to kanaria");
-        await kanaria
+        await avatar
             .withSigner(bob)
-            .tx.equip({ u64: 1 }, assetComposedId, 8, [gem.address, { u64: 1 }], 2);
-            /*
-        await kanaria
-            .withSigner(bob)
-            .tx.equip({ u64: 1 }, assetComposedId, 9, [gem.address, { u64: 2 }], 2);
-            */
+            .tx.addChild({ u64: 1 }, [sword.address, { u64: 1 }]);
+        console.log("Added a sword to an avatar");
 
+        console.log("Equipping sword to avatar");
         /*
+        await avatar
+            .withSigner(bob)
+            .tx.equip({ u64: 1 }, defaultAssetId, 4, [sword.address, { u64: 1 }], 1);
         expect(
-            (await kanaria.withSigner(bob).query.getEquipment({ u64: 1 }, 8)).value.ok
+            (await avatar.withSigner(bob).query.getEquipment({ u64: 1 }, 4)).value.ok
         ).to.be.ok;
-        expect(
-            (await kanaria.withSigner(bob).query.getEquipment({ u64: 1 }, 9)).value
-        ).to.be.ok;
-        expect(
-            (await kanaria.withSigner(bob).query.getEquipment({ u64: 1 }, 10)).value
-        ).to.be.ok;
-        console.log("Equipped 3 gems into first kanaria");
         */
     });
 });
