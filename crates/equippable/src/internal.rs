@@ -20,10 +20,7 @@ use openbrush::{
         access_control::*,
         psp34::extensions::enumerable::*,
     },
-    traits::{
-        AccountId,
-        Storage,
-    },
+    traits::Storage,
 };
 
 /// Trait definitions for Resource helper functions

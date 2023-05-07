@@ -2,13 +2,13 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 #![feature(min_specialization)]
 #![allow(clippy::inline_fn_without_body)]
+#![feature(option_result_contains)]
 
 pub mod internal;
 pub mod traits;
 
 use internal::Internal;
 
-use crate::traits::EquippableRef;
 use rmrk_catalog::traits::CatalogRef;
 use rmrk_common::{
     errors::{
@@ -28,6 +28,7 @@ use rmrk_multiasset::{
 use traits::{
     Equippable,
     EquippableEvents,
+    EquippableRef,
 };
 
 use ink::storage::Mapping;
@@ -174,7 +175,7 @@ where
         parent_address: AccountId,
         token_id: Id,
         asset_id: AssetId,
-        _part_slot_id: PartId,
+        part_slot_id: PartId,
     ) -> Result<()> {
         let asset = self
             .data::<MultiAssetData>()
@@ -186,7 +187,7 @@ where
             .data::<EquippableData>()
             .valid_parent_slot
             .get((asset.equippable_group_id, parent_address))
-            .is_some()
+            .contains(&part_slot_id)
         {
             self.ensure_asset_accepted(&token_id, &asset_id)?;
         } else {
