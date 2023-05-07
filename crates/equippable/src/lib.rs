@@ -187,7 +187,7 @@ where
             .valid_parent_slot
             .get((asset.equippable_group_id, parent_address));
 
-        if part_id.is_some() && part_id == Some(part_slot_id) {
+        if part_id == Some(part_slot_id) {
             self.ensure_asset_accepted(&token_id, &asset_id)?;
         } else {
             return Err(RmrkError::UnknownPart.into())
