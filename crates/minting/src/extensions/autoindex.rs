@@ -28,11 +28,11 @@ use rmrk_common::{
     roles::CONTRIBUTOR,
 };
 
-pub const STORAGE_KEY: u32 = openbrush::storage_unique_key!(MintingAutoIndex);
+pub const STORAGE_MINTING_AUTOINDEX: u32 = openbrush::storage_unique_key!(MintingAutoIndex);
 
 /// Storage for AutoIndex `Id` counter
 #[derive(Default, Debug)]
-#[openbrush::upgradeable_storage(STORAGE_KEY)]
+#[openbrush::upgradeable_storage(STORAGE_MINTING_AUTOINDEX)]
 pub struct MintingAutoIndexData {
     pub token_id: Counter<Id>,
 }

@@ -885,6 +885,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "rmrk_example_autoindex"
+version = "0.6.0"
+dependencies = [
+ "ink",
+ "openbrush",
+ "parity-scale-codec",
+ "rmrk",
+ "scale-info",
+]
+
+[[package]]
 name = "rmrk_example_equippable"
 version = "0.6.0"
 dependencies = [

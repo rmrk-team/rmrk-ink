@@ -2,7 +2,10 @@
 
 use rmrk_common::errors::Result;
 
-use ink::prelude::string::String as PreludeString;
+use ink::prelude::{
+    string::String as PreludeString,
+    vec::Vec,
+};
 
 use openbrush::{
     contracts::psp34::extensions::enumerable::*,
@@ -25,9 +28,13 @@ pub type MintingAutoIndexRef = dyn MintingAutoIndex;
 /// Trait definitions for core Minting functions
 #[openbrush::trait_definition]
 pub trait Minting {
-    /// Mint one or more tokens.
+    /// Mint a single token
     #[ink(message)]
     fn mint(&mut self, to: AccountId, token_id: Id) -> Result<()>;
+
+    /// Mint one or more tokens
+    #[ink(message)]
+    fn mint_many(&mut self, to: AccountId, token_ids: Vec<Id>) -> Result<()>;
 
     /// Assign metadata to specified token.
     #[ink(message)]
@@ -77,4 +84,3 @@ pub trait MintingAutoIndex {
     #[ink(message)]
     fn mint_many(&mut self, to: AccountId, mint_amount: u64) -> Result<(Id, Id)>;
 }
-

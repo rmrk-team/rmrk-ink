@@ -19,7 +19,10 @@ use rmrk_common::{
 };
 
 use ink::{
-    prelude::string::String as PreludeString,
+    prelude::{
+        string::String as PreludeString,
+        vec::Vec,
+    },
     storage::Mapping,
 };
 
@@ -78,13 +81,22 @@ where
         Ok(())
     }
 
+    /// Mint many tokens to the specified account.
+    #[modifiers(only_role(CONTRIBUTOR), non_reentrant)]
+    default fn mint_many(&mut self, to: AccountId, token_ids: Vec<Id>) -> Result<()> {
+        self._check_amount(token_ids.len() as u64)?;
+        for token_id in token_ids {
+            self._mint_to(to, token_id)?;
+        }
+        Ok(())
+    }
+
     /// Assign metadata to specified token.
     #[modifiers(only_role(CONTRIBUTOR))]
     default fn assign_metadata(&mut self, token_id: Id, metadata: String) -> Result<()> {
         self.data::<MintingData>()
             .nft_metadata
             .insert(token_id, &metadata);
-
         Ok(())
     }
 
