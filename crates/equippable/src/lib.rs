@@ -27,6 +27,7 @@ use rmrk_multiasset::{
 use traits::{
     Equippable,
     EquippableEvents,
+    EquippableRef,
 };
 
 use ink::storage::Mapping;
@@ -76,11 +77,13 @@ where
         self.ensure_asset_accepts_slot(&asset_id, &slot_part_id)?;
         self.ensure_token_slot_free(&token_id, &slot_part_id)?;
 
-        // TODO Cross contract call to check from child prespective. Implement as issue#33
-        // EquippableRef::ensure_token_can_be_equipped_with_asset_into_slot(child_nft.0, Self::env().account_id(),
-        //     child_nft.1,
-        //     child_asset_id,
-        //     slot_part_id)?;
+        EquippableRef::ensure_token_can_be_equipped_with_asset_into_slot(
+            &child_nft.0,
+            Self::env().account_id(),
+            child_nft.1.clone(),
+            child_asset_id,
+            slot_part_id,
+        )?;
 
         // Check from base perspective. If catalog for this asset is None, then it is not equippable.
         match self
@@ -162,6 +165,32 @@ where
             Ok(asset)
         } else {
             Err(RmrkError::AssetIdNotFound.into())
+        }
+    }
+
+    // Used to ensure a token can be equipped into a given parent's slot. Check in child NFT
+    default fn ensure_token_can_be_equipped_with_asset_into_slot(
+        &self,
+        parent_address: AccountId,
+        token_id: Id,
+        asset_id: AssetId,
+        part_slot_id: PartId,
+    ) -> Result<()> {
+        let asset = self
+            .data::<MultiAssetData>()
+            .collection_asset_entries
+            .get(asset_id)
+            .ok_or(RmrkError::UnknownEquippableAsset)?;
+
+        let part_id = self
+            .data::<EquippableData>()
+            .valid_parent_slot
+            .get((asset.equippable_group_id, parent_address));
+
+        if part_id == Some(part_slot_id) {
+            self.ensure_asset_accepted(&token_id, &asset_id)
+        } else {
+            return Err(RmrkError::UnknownPart.into())
         }
     }
 }

@@ -12,8 +12,8 @@ import {
 
 import { ApiPromise, WsProvider, Keyring } from "@polkadot/api";
 import { KeyringPair } from "@polkadot/keyring/types";
+import { RmrkError } from "../types/types-returns/rmrk_example_equippable_lazy";
 import { emit } from "./helper";
-
 
 use(chaiAsPromised);
 
@@ -34,14 +34,17 @@ describe("RMRK Merged Equippable", () => {
   let kanariaFactory: Rmrk_factory;
   let gemFactory: Rmrk_factory;
   let catalogFactory: Catalog_Factory;
+  let avatarFactory: Rmrk_factory;
+  let swordFactory: Rmrk_factory;
   let api: ApiPromise;
   let deployer: KeyringPair;
   let bob: KeyringPair;
   let dave: KeyringPair;
   let kanaria: Rmrk;
   let gem: Rmrk;
+  let avatar: Rmrk;
+  let sword: Rmrk;
   let catalog: Contract;
-
 
   beforeEach(async function (): Promise<void> {
     api = await ApiPromise.create({ provider: wsProvider, noInitWarn: true });
@@ -85,6 +88,41 @@ describe("RMRK Merged Equippable", () => {
       api
     );
 
+    avatarFactory = new Rmrk_factory(api, deployer);
+    avatar = new Rmrk(
+      (
+        await avatarFactory.new(
+          ["Avatar"],
+          ["AVA"],
+          [BASE_URI],
+          MAX_SUPPLY,
+          PRICE_PER_MINT,
+          [COLLECTION_METADATA],
+          deployer.address,
+          10
+        )
+      ).address,
+      deployer,
+      api
+    );
+
+    swordFactory = new Rmrk_factory(api, deployer);
+    sword = new Rmrk(
+    (
+      await swordFactory.new(
+        ["Sword"],
+        ["SWRD"],
+        [BASE_URI],
+        MAX_SUPPLY,
+        PRICE_PER_MINT,
+        [COLLECTION_METADATA],
+        dave.address,
+        100
+      )
+    ).address,
+    deployer,
+    api
+    );
 
     catalogFactory = new Catalog_Factory(api, deployer);
     catalog = new Contract(
@@ -94,6 +132,261 @@ describe("RMRK Merged Equippable", () => {
       deployer,
       api
     );
+  });
+
+  it("Equip/Unequip works", async () => {
+   const PART_LIST: Part[] = [
+      // Head option 1
+      {
+          partType: PartType.fixed,
+          z: 2,
+          equippable: [],
+          partUri: ["ipfs://heads/1.svg"],
+          isEquippableByAll: false
+      },
+      // Head option 2
+      {
+          partType: PartType.fixed,
+          z: 2,
+          equippable: [],
+          partUri: ["ipfs://heads/2.svg"],
+          isEquippableByAll: false
+      },
+      // Body option 1
+      {
+          partType: PartType.fixed,
+          z: 1,
+          equippable: [],
+          partUri: ["ipfs://body/1.svg"],
+          isEquippableByAll: false
+      },
+      // Body option 2
+      {
+          partType: PartType.fixed,
+          z: 1,
+          equippable: [],
+          partUri: ["ipfs://body/1.svg"],
+          isEquippableByAll: false
+      },
+      // Sword slot
+      {
+          partType: PartType.slot,
+          z: 3,
+          equippable: [sword.address],
+          partUri: [""],
+          isEquippableByAll: false
+      },
+    ];
+
+    const swordSlot = 4;
+
+    // add all parts to catalog
+    await catalog
+      .withSigner(deployer)
+      .tx.addPartList(PART_LIST);
+    expect((await catalog.query.getPartsCount())?.value.unwrap()).to.be.equal(5);
+    console.log("Catalog is set");
+
+    console.log("Minting tokens");
+
+    console.log(" Minting avatar tokens");
+    let avatarMintResult = await avatar
+      .withSigner(bob)
+      .tx.mintMany(2, {
+          value: PRICE_PER_MINT.muln(2)
+      });
+    emit(avatarMintResult, "Transfer", {
+      from: null,
+      to: bob.address,
+      id: { u64: 1 },
+    })
+    console.log("  Minted 2 avatars");
+
+    console.log(" Minting sword tokens");
+    let swordMintResult = await sword
+      .withSigner(bob)
+      .tx.mintMany(3, {
+          value: PRICE_PER_MINT.muln(3)
+      });
+    emit(swordMintResult, "Transfer", {
+      from: null,
+      to: bob.address,
+      id: { u64: 1 },
+    })
+    console.log("  Minted 3 swords");
+
+    // deployer adds two assets to avatar
+    console.log("Adding avatar assets");
+    const defaultAssetId = 1;
+
+    const addAssetResult = await avatar
+      .withSigner(deployer)
+      .tx.addAssetEntry(
+        catalog.address, 
+        defaultAssetId, 
+        "0", 
+        ["ipfs://avatarAsset.png"], 
+        [4]
+      );
+    emit(addAssetResult, "AssetSet", { asset: 1 });
+
+    console.log(" Added an asset to avatar");
+
+    console.log(" Add the default asset to token 1");
+    await addAssetToToken(avatar, deployer, 1, defaultAssetId);
+    expect(
+      (await avatar.query.totalTokenAssets({ u64: 1 }))?.value.unwrap().ok.toString()
+    ).to.be.equal("0,1");
+
+    // bob is the owner so he has to accept the asset
+    await acceptAsset(avatar, bob, 1, defaultAssetId);
+    expect(
+      (await avatar.query.totalTokenAssets({ u64: 1 }))?.value.unwrap().ok.toString()
+    ).to.be.equal("1,0");
+    console.log(" Bob accepted the asset");
+
+    console.log("Adding sword assets");
+    const equippableWoodenSword = 1;
+    const equippableCopperSword = 2;
+    const equippableKatanaSword = 3;
+
+    await sword
+      .withSigner(deployer)
+      .tx.addAssetEntry(
+          catalog.address,
+          1,
+          equippableWoodenSword,
+          ["ipfs://swords/wooden.svg"],
+          []
+      );
+    await sword
+      .withSigner(deployer)
+      .tx.addAssetEntry(
+        catalog.address,
+        2,
+        equippableCopperSword,
+        ["ipfs://swords/copper.svg"],
+        []
+      );
+    await sword
+      .withSigner(deployer)
+      .tx.addAssetEntry(
+        catalog.address,
+        3,
+        equippableKatanaSword,
+        ["ipfs://swords/katana.svg"],
+        []
+      );
+    expect(
+      (await sword.withSigner(deployer).query.totalAssets())?.value.unwrap().toString()
+    ).to.be.equal("3");
+    console.log(" Added 3 sword assets");
+
+    console.log("Setting valid parent reference ID");
+    await sword
+      .withSigner(bob)
+      .tx.setValidParentForEquippableGroup(
+        equippableWoodenSword,
+        avatar.address,
+        swordSlot 
+      );
+
+    console.log("Add assets to swords");
+    await addAssetToToken(sword, bob, 1, 1);
+    await addAssetToToken(sword, bob, 1, 2);
+    await addAssetToToken(sword, bob, 1, 3);
+    expect(
+      (await sword.query.totalTokenAssets({ u64: 1 }))?.value.unwrap().ok.toString()
+    ).to.be.equal("3,0");
+
+    console.log("Approving sword to avatar");
+    await sword.withSigner(bob).tx.approve(avatar.address, { u64: 1 }, true);
+    expect(
+      (await sword.query.allowance(bob.address, avatar.address, { u64: 1 }))
+        .value.ok
+    ).to.equal(true);
+
+    await avatar
+      .withSigner(bob)
+      .tx.addChild({ u64: 1 }, [sword.address, { u64: 1 }]);
+    await avatar
+      .withSigner(bob)
+      .tx.addChild({ u64: 2 }, [sword.address, { u64: 1 }]);
+    console.log("Added swords to both avatars");
+
+    console.log("Equipping sword to avatar");
+    // This works because wooden sword is allowed to be equipped to the avatar token.
+    await avatar
+      .withSigner(bob)
+      .tx.equip({ u64: 1 }, defaultAssetId, swordSlot, [sword.address, { u64: 1 }], equippableWoodenSword);
+    expect(
+      (await avatar.withSigner(bob).query.getEquipment({ u64: 1 }, swordSlot)).value.ok
+    ).to.be.ok;
+
+    // Fails because copper sword cannot be equipped to the avatar.
+    const equipCopperError = await avatar
+      .withSigner(bob)
+      .query.equip({ u64: 2 }, defaultAssetId, swordSlot, [sword.address, { u64: 1 }], equippableCopperSword)
+    expect(equipCopperError.value.unwrap().err.rmrk).to.be.equal(
+      RmrkError.unknownPart
+    );
+
+    // Fails because Dave is not the token owner.
+    const notOwnerError = await avatar
+      .withSigner(dave)
+      .query.equip({ u64: 2 }, defaultAssetId, swordSlot, [sword.address, { u64: 1 }], equippableWoodenSword)
+    expect(notOwnerError.value.unwrap().err.rmrk).to.be.equal(
+      RmrkError.notTokenOwner
+    );
+
+    // Fails because of non-existent sword asset. 
+    const nonExistentAsset = await avatar
+      .withSigner(bob)
+      .query.equip({ u64: 2 }, defaultAssetId, swordSlot, [sword.address, { u64: 1 }], 7)
+    expect(nonExistentAsset.value.unwrap().err.rmrk).to.be.equal(
+      RmrkError.unknownEquippableAsset
+    );
+
+    // Fails because wrong slot id.
+    const wrongSlotId = await avatar
+      .withSigner(bob)
+      .query.equip({ u64: 2 }, defaultAssetId, 1, [sword.address, { u64: 1 }], 7)
+    expect(wrongSlotId.value.unwrap().err.rmrk).to.be.equal(
+      RmrkError.targetAssetCannotReceiveSlot
+    );
+
+    // Cannot be equipped when slot isn't free.
+    const slotAlreadyUsed = await avatar
+      .withSigner(bob)
+      .query.equip({ u64: 1 }, defaultAssetId, swordSlot, [sword.address, { u64: 1 }], 7)
+    expect(slotAlreadyUsed.value.unwrap().err.rmrk).to.be.equal(
+      RmrkError.slotAlreadyUsed
+    );
+
+    // Now we ensure that unequip also works.
+ 
+    // Dave cannot unequip
+    const daveCannotUnequip = await avatar
+      .withSigner(dave)
+      .query.unequip({ u64: 1 }, swordSlot)
+    expect(daveCannotUnequip.value.unwrap().err.rmrk).to.be.equal(
+      RmrkError.notTokenOwner
+    );
+
+    // Cannot unequip if it is not equipped.
+    const notEquipped = await avatar
+      .withSigner(bob)
+      .query.unequip({ u64: 2 }, swordSlot)
+    expect(notEquipped.value.unwrap().err.rmrk).to.be.equal(
+      RmrkError.notEquipped
+    );
+
+    await avatar
+      .withSigner(bob)
+      .tx.unequip({ u64: 1 }, swordSlot);
+    expect(
+      (await avatar.withSigner(bob).query.getEquipment({ u64: 1 }, swordSlot)).value.ok
+    ).to.be.null;
   });
 
   it("Merged Equippable user journey", async () => {

@@ -101,6 +101,22 @@ pub trait Equippable {
     ///    * EquippableAsset
     #[ink(message)]
     fn get_asset_and_equippable_data(&self, token_id: Id, asset_id: AssetId) -> Result<Asset>;
+
+    /// Used to ensure a token can be equipped into a given parent's slot.
+    /// # Arguments:
+    ///  * parent Address of the parent token's smart contract
+    ///  * tokenId ID of the token we want to equip
+    ///  * asset_id ID of the asset associated with the token we want to equip
+    ///  * slotId ID of the slot that we want to equip the token into
+    /// * @return bool The boolean indicating whether the token with the given asset can be equipped into the desired
+    #[ink(message)]
+    fn ensure_token_can_be_equipped_with_asset_into_slot(
+        &self,
+        parent_address: AccountId,
+        parent_token_id: Id,
+        asset_id: AssetId,
+        slot_part_id: PartId,
+    ) -> Result<()>;
 }
 
 /// Trait definitions for Resource ink events
