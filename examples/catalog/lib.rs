@@ -13,6 +13,7 @@ pub mod catalog_example {
 
     use rmrk::{
         errors::Result,
+        extensions::*,
         roles::*,
         storage::*,
     };
@@ -25,9 +26,13 @@ pub mod catalog_example {
         access: access_control::Data,
         #[storage_field]
         catalog: CatalogData,
+        #[storage_field]
+        catalog_autoindex: CatalogAutoIndexData,
     }
 
     impl Catalog for CatalogContract {}
+
+    impl CatalogAutoIndex for CatalogContract {}
 
     impl CatalogContract {
         /// Instantiate new CatalogContract contract
@@ -60,6 +65,8 @@ pub mod catalog_example {
         const EQUIPPABLE_ADDRESS1: [u8; 32] = [1; 32];
         const EQUIPPABLE_ADDRESS2: [u8; 32] = [2; 32];
         const EQUIPPABLE_ADDRESS3: [u8; 32] = [3; 32];
+        const PART_ID0: PartId = 0;
+        const PART_ID1: PartId = 1;
 
         #[ink::test]
         fn role_works() {
@@ -69,7 +76,7 @@ pub mod catalog_example {
         }
 
         fn init() -> CatalogContract {
-            CatalogContract::new(String::from(METADATA).into()).expect("Contract instantiated")
+            CatalogContract::new(String::from(METADATA)).expect("Contract instantiated")
         }
 
         #[ink::test]
@@ -78,8 +85,6 @@ pub mod catalog_example {
             // const ASSET_ID: AssetId = 1;
             // const TOKEN_ID1: Id = Id::U64(1);
             // const TOKEN_ID2: Id = Id::U64(2);
-            const PART_ID0: PartId = 0;
-            const PART_ID1: PartId = 1;
 
             // Create 2 parts,
             // The first is equippable and can accept 2 equipment from 2 contracts
@@ -103,9 +108,22 @@ pub mod catalog_example {
 
             let mut catalog = init();
 
+            let part_ids = vec![PART_ID0, PART_ID1];
+
             // verify add/get parts
             assert!(catalog.get_parts_count() == 0);
-            assert!(catalog.add_part_list(part_list.clone()).is_ok());
+            assert!(
+                Catalog::add_part_list(&mut catalog, part_ids.clone(), part_list.clone()).is_ok()
+            );
+
+            assert_eq!(
+                Catalog::add_part_list(&mut catalog, vec![], part_list.clone()),
+                Err(RmrkError::BadConfig.into())
+            );
+            assert_eq!(
+                Catalog::add_part_list(&mut catalog, part_ids, vec![]),
+                Err(RmrkError::BadConfig.into())
+            );
             assert_eq!(catalog.get_parts_count(), part_list.len() as u32);
             assert_eq!(catalog.get_part(PART_ID0).unwrap().z, part_list[0].z);
             assert_eq!(
@@ -187,14 +205,63 @@ pub mod catalog_example {
                 is_equippable_by_all: true,
             }];
 
+            let part_ids = vec![PART_ID0, PART_ID1];
+
             assert_eq!(
-                catalog.add_part_list(bad_part_list1.clone()),
+                Catalog::add_part_list(&mut catalog, part_ids.clone(), bad_part_list1),
                 Err(RmrkError::BadConfig.into())
             );
             assert_eq!(
-                catalog.add_part_list(bad_part_list2.clone()),
+                Catalog::add_part_list(&mut catalog, part_ids, bad_part_list2),
                 Err(RmrkError::BadConfig.into())
             );
+        }
+
+        #[ink::test]
+        fn autoindex_works() {
+            let mut catalog = init();
+
+            let part_list = vec![
+                Part {
+                    part_type: PartType::Slot,
+                    z: 0,
+                    equippable: vec![EQUIPPABLE_ADDRESS1.into(), EQUIPPABLE_ADDRESS2.into()],
+                    part_uri: String::from("ipfs://backgrounds/1.svg"),
+                    is_equippable_by_all: false,
+                },
+                Part {
+                    part_type: PartType::Fixed,
+                    z: 0,
+                    equippable: vec![],
+                    part_uri: String::from("ipfs://backgrounds/2.svg"),
+                    is_equippable_by_all: false,
+                },
+                Part {
+                    part_type: PartType::Fixed,
+                    z: 0,
+                    equippable: vec![],
+                    part_uri: String::from("ipfs://backgrounds/3.svg"),
+                    is_equippable_by_all: false,
+                },
+            ];
+
+            assert_eq!(
+                CatalogAutoIndex::add_part_list(&mut catalog, part_list.clone()),
+                Ok((1, 3))
+            );
+
+            assert_eq!(catalog.get_parts_count(), part_list.len() as u32);
+
+            assert_eq!(
+                CatalogAutoIndex::add_part_list(&mut catalog, part_list),
+                Ok((4, 6))
+            );
+
+            assert_eq!(
+                CatalogAutoIndex::add_part_list(&mut catalog, vec![]),
+                Err(RmrkError::BadConfig.into())
+            );
+
         }
 
         #[ink::test]

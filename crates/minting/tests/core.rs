@@ -95,7 +95,7 @@ pub mod rmrk_contract_minting {
             let collection_id = instance.collection_id();
             instance._set_attribute(collection_id.clone(), String::from("name"), name);
             instance._set_attribute(collection_id.clone(), String::from("symbol"), symbol);
-            instance._set_attribute(collection_id.clone(), String::from("baseUri"), base_uri);
+            instance._set_attribute(collection_id, String::from("baseUri"), base_uri);
             instance.minting.max_supply = max_supply;
             instance
         }
@@ -161,10 +161,6 @@ pub mod rmrk_contract_minting {
         };
 
         impl Accessor for super::Rmrk {
-            fn _last_token_id(&self) -> u64 {
-                self.minting.last_token_id
-            }
-
             fn _owners_token_by_index(
                 &self,
                 account: AccountId,
@@ -192,7 +188,7 @@ pub mod rmrk_contract_minting {
             let accounts = default_accounts();
             assert!(rmrk.has_role(ADMIN, accounts.alice));
             assert_eq!(rmrk.total_supply(), 0);
-            assert_eq!(rmrk.mint(accounts.bob), Ok(Id::U64(1)));
+            assert_eq!(rmrk.mint(accounts.bob, Id::U64(1)), Ok(()));
             check_mint_single_outcome(rmrk, accounts.bob, 1);
         }
 
@@ -204,11 +200,12 @@ pub mod rmrk_contract_minting {
             let num_of_mints: u64 = 5;
 
             assert_eq!(rmrk.total_supply(), 0);
-            assert_eq!(
-                rmrk.mint_many(accounts.bob, num_of_mints),
-                Ok((Id::U64(1), Id::U64(5)))
-            );
-            check_mint_many_outcome(rmrk, accounts.bob, num_of_mints);
+
+            (1..=num_of_mints).for_each(|i| {
+                assert_eq!(rmrk.mint(accounts.alice, Id::U64(i)), Ok(()));
+            });
+
+            check_mint_many_outcome(rmrk, accounts.alice, num_of_mints);
         }
 
         #[ink::test]
@@ -217,19 +214,22 @@ pub mod rmrk_contract_minting {
             let accounts = default_accounts();
             assert!(rmrk.has_role(ADMIN, accounts.alice));
 
-            let mut id = rmrk.mint(accounts.bob).unwrap();
+            let mut id = Id::U64(1);
+            rmrk.mint(accounts.bob, id).unwrap();
             set_sender(accounts.bob);
 
             // only owner is allowed to assign metadata
             assert_eq!(
-                rmrk.assign_metadata(id, RMRK_METADATA.into()),
+                rmrk.assign_metadata(Id::U64(1), RMRK_METADATA.into()),
                 Err(AccessControlError::MissingRole.into())
             );
 
             // owner mints
             set_sender(accounts.alice);
             assert_eq!(rmrk.total_supply(), 1);
-            id = rmrk.mint(accounts.alice).unwrap();
+
+            id = Id::U64(2);
+            rmrk.mint(accounts.alice, id.clone()).unwrap();
 
             assert!(rmrk.assign_metadata(id, RMRK_METADATA.into()).is_ok());
             assert_eq!(rmrk.total_supply(), 2);
@@ -241,7 +241,7 @@ pub mod rmrk_contract_minting {
             // token_uri for rmrk mint works
             assert_eq!(
                 rmrk.token_uri(2),
-                Ok(PreludeString::from(RMRK_METADATA.to_owned()))
+                Ok(RMRK_METADATA.to_owned())
             );
         }
 
@@ -249,16 +249,22 @@ pub mod rmrk_contract_minting {
         fn mint_above_limit_fails() {
             let mut rmrk = init();
             let accounts = default_accounts();
-            let num_of_mints: u64 = MAX_SUPPLY + 1;
             assert_eq!(rmrk.total_supply(), 0);
+
+            for i in 0..MAX_SUPPLY {
+                assert_eq!(rmrk.mint(accounts.alice, Id::U64(i)), Ok(()));
+            }
+
+            assert_eq!(rmrk.total_supply(), MAX_SUPPLY as u128);
+
             assert_eq!(
-                rmrk.mint_many(accounts.alice, num_of_mints),
+                rmrk.mint(accounts.alice, Id::U64(1)),
                 Err(RmrkError::CollectionIsFull.into())
             );
         }
 
         #[ink::test]
-        fn mint_single_without_limit_works() {
+        fn mint_without_limit_works() {
             let mut rmrk = Rmrk::new(
                 String::from("Rmrk Project"),
                 String::from("RMK"),
@@ -267,16 +273,18 @@ pub mod rmrk_contract_minting {
             );
 
             let accounts = default_accounts();
-            assert_eq!(rmrk.total_supply(), 0);
-            (0..MAX_SUPPLY + 1).for_each(|_| {
-                let _ = rmrk.mint(accounts.alice);
+            let num_of_mints = MAX_SUPPLY + 1;
+            (1..=num_of_mints).for_each(|i| {
+                assert_eq!(rmrk.mint(accounts.alice, Id::U64(i)), Ok(()));
             });
 
-            assert_eq!(rmrk._last_token_id(), MAX_SUPPLY + 1);
+            assert_eq!(rmrk.total_supply(), num_of_mints as u128);
+
+            check_mint_many_outcome(rmrk, accounts.alice, num_of_mints);
         }
 
         #[ink::test]
-        fn mint_single_with_limit_set_to_zero_works() {
+        fn mint_with_limit_set_to_zero_works() {
             let mut rmrk = Rmrk::new(
                 String::from("Rmrk Project"),
                 String::from("RMK"),
@@ -285,48 +293,15 @@ pub mod rmrk_contract_minting {
             );
 
             let accounts = default_accounts();
-            assert_eq!(rmrk.total_supply(), 0);
-            (0..MAX_SUPPLY + 1).for_each(|_| {
-                let _ = rmrk.mint(accounts.alice);
+            let num_of_mints = MAX_SUPPLY + 1;
+
+            (1..=num_of_mints).for_each(|i| {
+                assert_eq!(rmrk.mint(accounts.alice, Id::U64(i)), Ok(()));
             });
 
-            assert_eq!(rmrk._last_token_id(), MAX_SUPPLY + 1);
-        }
+            assert_eq!(rmrk.total_supply(), num_of_mints as u128);
 
-        #[ink::test]
-        fn mint_many_without_limit_works() {
-            let mut rmrk = Rmrk::new(
-                String::from("Rmrk Project"),
-                String::from("RMK"),
-                String::from(BASE_URI),
-                None,
-            );
-
-            let accounts = default_accounts();
-            assert_eq!(rmrk.total_supply(), 0);
-            let num_of_mints = MAX_SUPPLY + 42;
-            assert_eq!(
-                rmrk.mint_many(accounts.alice, num_of_mints),
-                Ok((Id::U64(1), Id::U64(MAX_SUPPLY + 42)))
-            );
-        }
-
-        #[ink::test]
-        fn mint_many_with_limit_set_to_zero_works() {
-            let mut rmrk = Rmrk::new(
-                String::from("Rmrk Project"),
-                String::from("RMK"),
-                String::from(BASE_URI),
-                Some(0),
-            );
-
-            let accounts = default_accounts();
-            assert_eq!(rmrk.total_supply(), 0);
-            let num_of_mints = MAX_SUPPLY + 42;
-            assert_eq!(
-                rmrk.mint_many(accounts.alice, num_of_mints),
-                Ok((Id::U64(1), Id::U64(MAX_SUPPLY + 42)))
-            );
+            check_mint_many_outcome(rmrk, accounts.alice, num_of_mints);
         }
 
         #[ink::test]
@@ -336,7 +311,7 @@ pub mod rmrk_contract_minting {
             set_sender(accounts.bob);
 
             assert_eq!(
-                rmrk.mint(accounts.bob),
+                rmrk.mint(accounts.bob, Id::U64(1)),
                 Err(AccessControlError::MissingRole.into())
             );
 
@@ -344,7 +319,7 @@ pub mod rmrk_contract_minting {
             assert!(rmrk.grant_role(CONTRIBUTOR, accounts.bob).is_ok());
 
             set_sender(accounts.bob);
-            assert!(rmrk.mint(accounts.bob).is_ok());
+            assert!(rmrk.mint(accounts.bob, Id::U64(2)).is_ok());
         }
 
         #[ink::test]
@@ -353,7 +328,7 @@ pub mod rmrk_contract_minting {
             let accounts = default_accounts();
             set_sender(accounts.alice);
 
-            assert!(rmrk.mint(accounts.alice).is_ok());
+            assert!(rmrk.mint(accounts.alice, Id::U64(1)).is_ok());
             // return error if request is for not yet minted token
             assert_eq!(rmrk.token_uri(42), Err(PSP34Error::TokenNotExists.into()));
             // return error if metadata is net yet assigned

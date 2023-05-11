@@ -5,6 +5,9 @@
 pub mod catalog;
 pub mod internal;
 pub mod traits;
+pub mod extensions {
+    pub mod autoindex;
+}
 
 pub use catalog::*;
 pub use internal::*;

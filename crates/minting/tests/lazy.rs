@@ -24,6 +24,7 @@ pub mod rmrk_contract_minting {
     };
     use rmrk_common::roles::CONTRIBUTOR;
     use rmrk_minting::{
+        extensions::autoindex::*,
         traits::*,
         MintingData,
     };
@@ -63,6 +64,8 @@ pub mod rmrk_contract_minting {
         metadata: metadata::Data,
         #[storage_field]
         minting: MintingData,
+        #[storage_field]
+        minting_autoindex: MintingAutoIndexData,
     }
 
     impl PSP34 for Rmrk {}
@@ -153,10 +156,6 @@ pub mod rmrk_contract_minting {
         pub const PRICE: Balance = 100_000_000_000_000_000;
 
         impl Accessor for super::Rmrk {
-            fn _last_token_id(&self) -> u64 {
-                self.minting.last_token_id
-            }
-
             fn _owners_token_by_index(
                 &self,
                 account: AccountId,
@@ -242,7 +241,7 @@ pub mod rmrk_contract_minting {
             let mut rmrk = init();
             let num_of_mints: u64 = 5;
             purchase(num_of_mints);
-            assert!(rmrk.mint_many(num_of_mints).is_ok());
+            assert_eq!(rmrk.mint_many(num_of_mints), Ok(()));
             assert_eq!(
                 num_of_mints as usize,
                 ink::env::test::recorded_events().count()
@@ -262,14 +261,14 @@ pub mod rmrk_contract_minting {
         }
 
         #[ink::test]
-        fn mint_above_limit_fails() {
+        fn mint_lazy_above_limit_fails() {
             let mut rmrk = init();
-            let num_of_mints: u64 = MAX_SUPPLY + 1;
+            let num_of_mints: u64 = MAX_SUPPLY;
             assert_eq!(rmrk.total_supply(), 0);
-            assert_eq!(
-                rmrk.mint_many(num_of_mints),
-                Err(RmrkError::CollectionIsFull.into())
-            );
+            purchase(num_of_mints);
+            assert_eq!(rmrk.mint_many(num_of_mints), Ok(()));
+            purchase(1);
+            assert_eq!(rmrk.mint_many(1), Err(RmrkError::CollectionIsFull.into()));
         }
 
         #[ink::test]
@@ -302,7 +301,7 @@ pub mod rmrk_contract_minting {
 
             (0..num_of_mints).for_each(|_| {
                 purchase(1);
-                assert!(rmrk.mint().is_ok());
+                assert_eq!(rmrk.mint(), Ok(()));
             });
 
             check_mint_many_outcome(rmrk, accounts.bob, num_of_mints);
@@ -319,7 +318,7 @@ pub mod rmrk_contract_minting {
             assert_eq!(rmrk.total_supply(), 0);
 
             purchase(num_of_mints);
-            assert!(rmrk.mint_many(num_of_mints).is_ok());
+            assert_eq!(rmrk.mint_many(num_of_mints), Ok(()));
             check_mint_many_outcome(rmrk, accounts.bob, num_of_mints);
         }
 
@@ -334,7 +333,7 @@ pub mod rmrk_contract_minting {
             assert_eq!(rmrk.total_supply(), 0);
 
             purchase(num_of_mints);
-            assert!(rmrk.mint_many(num_of_mints).is_ok());
+            assert_eq!(rmrk.mint_many(num_of_mints), Ok(()));
             check_mint_many_outcome(rmrk, accounts.bob, num_of_mints);
         }
     }

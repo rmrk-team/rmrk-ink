@@ -5,6 +5,7 @@ pub mod config;
 pub mod query;
 
 pub use rmrk_common::{
+    counter,
     errors,
     roles,
     types,
@@ -25,4 +26,10 @@ pub mod traits {
     pub use rmrk_minting::traits::*;
     pub use rmrk_multiasset::traits::*;
     pub use rmrk_nesting::traits::*;
+}
+
+pub mod extensions {
+    pub use rmrk_catalog::extensions::autoindex::*;
+    pub use rmrk_minting::extensions::autoindex::*;
+    pub use rmrk_multiasset::extensions::autoindex::*;
 }

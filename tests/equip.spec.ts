@@ -46,7 +46,7 @@ describe("RMRK Merged Equippable", () => {
   let sword: Rmrk;
   let catalog: Contract;
 
-  beforeEach(async function (): Promise<void> {
+  beforeEach(async function(): Promise<void> {
     api = await ApiPromise.create({ provider: wsProvider, noInitWarn: true });
     deployer = keyring.addFromUri("//Alice");
     bob = keyring.addFromUri("//Bob");
@@ -108,20 +108,20 @@ describe("RMRK Merged Equippable", () => {
 
     swordFactory = new Rmrk_factory(api, deployer);
     sword = new Rmrk(
-    (
-      await swordFactory.new(
-        ["Sword"],
-        ["SWRD"],
-        [BASE_URI],
-        MAX_SUPPLY,
-        PRICE_PER_MINT,
-        [COLLECTION_METADATA],
-        dave.address,
-        100
-      )
-    ).address,
-    deployer,
-    api
+      (
+        await swordFactory.new(
+          ["Sword"],
+          ["SWRD"],
+          [BASE_URI],
+          MAX_SUPPLY,
+          PRICE_PER_MINT,
+          [COLLECTION_METADATA],
+          dave.address,
+          100
+        )
+      ).address,
+      deployer,
+      api
     );
 
     catalogFactory = new Catalog_Factory(api, deployer);
@@ -135,55 +135,57 @@ describe("RMRK Merged Equippable", () => {
   });
 
   it("Equip/Unequip works", async () => {
-   const PART_LIST: Part[] = [
+    const PART_LIST: Part[] = [
       // Head option 1
       {
-          partType: PartType.fixed,
-          z: 2,
-          equippable: [],
-          partUri: ["ipfs://heads/1.svg"],
-          isEquippableByAll: false
+        partType: PartType.fixed,
+        z: 2,
+        equippable: [],
+        partUri: ["ipfs://heads/1.svg"],
+        isEquippableByAll: false
       },
       // Head option 2
       {
-          partType: PartType.fixed,
-          z: 2,
-          equippable: [],
-          partUri: ["ipfs://heads/2.svg"],
-          isEquippableByAll: false
+        partType: PartType.fixed,
+        z: 2,
+        equippable: [],
+        partUri: ["ipfs://heads/2.svg"],
+        isEquippableByAll: false
       },
       // Body option 1
       {
-          partType: PartType.fixed,
-          z: 1,
-          equippable: [],
-          partUri: ["ipfs://body/1.svg"],
-          isEquippableByAll: false
+        partType: PartType.fixed,
+        z: 1,
+        equippable: [],
+        partUri: ["ipfs://body/1.svg"],
+        isEquippableByAll: false
       },
       // Body option 2
       {
-          partType: PartType.fixed,
-          z: 1,
-          equippable: [],
-          partUri: ["ipfs://body/1.svg"],
-          isEquippableByAll: false
+        partType: PartType.fixed,
+        z: 1,
+        equippable: [],
+        partUri: ["ipfs://body/1.svg"],
+        isEquippableByAll: false
       },
       // Sword slot
       {
-          partType: PartType.slot,
-          z: 3,
-          equippable: [sword.address],
-          partUri: [""],
-          isEquippableByAll: false
+        partType: PartType.slot,
+        z: 3,
+        equippable: [sword.address],
+        partUri: [""],
+        isEquippableByAll: false
       },
     ];
+
+    let PART_IDS = [0, 1, 2, 3, 4]
 
     const swordSlot = 4;
 
     // add all parts to catalog
     await catalog
       .withSigner(deployer)
-      .tx.addPartList(PART_LIST);
+      .tx["catalog::addPartList"](PART_IDS, PART_LIST);
     expect((await catalog.query.getPartsCount())?.value.unwrap()).to.be.equal(5);
     console.log("Catalog is set");
 
@@ -193,20 +195,21 @@ describe("RMRK Merged Equippable", () => {
     let avatarMintResult = await avatar
       .withSigner(bob)
       .tx.mintMany(2, {
-          value: PRICE_PER_MINT.muln(2)
+        value: PRICE_PER_MINT.muln(2)
       });
     emit(avatarMintResult, "Transfer", {
       from: null,
       to: bob.address,
       id: { u64: 1 },
     })
+
     console.log("  Minted 2 avatars");
 
     console.log(" Minting sword tokens");
     let swordMintResult = await sword
       .withSigner(bob)
       .tx.mintMany(3, {
-          value: PRICE_PER_MINT.muln(3)
+        value: PRICE_PER_MINT.muln(3)
       });
     emit(swordMintResult, "Transfer", {
       from: null,
@@ -222,10 +225,10 @@ describe("RMRK Merged Equippable", () => {
     const addAssetResult = await avatar
       .withSigner(deployer)
       .tx.addAssetEntry(
-        catalog.address, 
-        defaultAssetId, 
-        "0", 
-        ["ipfs://avatarAsset.png"], 
+        catalog.address,
+        defaultAssetId,
+        "0",
+        ["ipfs://avatarAsset.png"],
         [4]
       );
     emit(addAssetResult, "AssetSet", { asset: 1 });
@@ -253,11 +256,11 @@ describe("RMRK Merged Equippable", () => {
     await sword
       .withSigner(deployer)
       .tx.addAssetEntry(
-          catalog.address,
-          1,
-          equippableWoodenSword,
-          ["ipfs://swords/wooden.svg"],
-          []
+        catalog.address,
+        1,
+        equippableWoodenSword,
+        ["ipfs://swords/wooden.svg"],
+        []
       );
     await sword
       .withSigner(deployer)
@@ -288,7 +291,7 @@ describe("RMRK Merged Equippable", () => {
       .tx.setValidParentForEquippableGroup(
         equippableWoodenSword,
         avatar.address,
-        swordSlot 
+        swordSlot
       );
 
     console.log("Add assets to swords");
@@ -364,7 +367,7 @@ describe("RMRK Merged Equippable", () => {
     );
 
     // Now we ensure that unequip also works.
- 
+
     // Dave cannot unequip
     const daveCannotUnequip = await avatar
       .withSigner(dave)
@@ -489,10 +492,12 @@ describe("RMRK Merged Equippable", () => {
       },
     ];
 
+    const PART_IDS = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+
     // add parts to catalog
     await catalog
       .withSigner(deployer)
-      .tx.addPartList(PART_LIST);
+      .tx["catalog::addPartList"](PART_IDS, PART_LIST);
     expect((await catalog.query.getPartsCount())?.value.unwrap()).to.be.equal(11);
     console.log("Catalog is set");
 
@@ -731,6 +736,7 @@ describe("RMRK Merged Equippable", () => {
     await kanaria
       .withSigner(bob)
       .tx.equip({ u64: 1 }, assetComposedId, 10, [gem.address, { u64: 3 }], 8);
+
     expect(
       (await kanaria.withSigner(bob).query.getEquipment({ u64: 1 }, 8)).value.ok
     ).to.be.ok;

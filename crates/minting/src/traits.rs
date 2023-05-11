@@ -2,7 +2,10 @@
 
 use rmrk_common::errors::Result;
 
-use ink::prelude::string::String as PreludeString;
+use ink::prelude::{
+    string::String as PreludeString,
+    vec::Vec,
+};
 
 use openbrush::{
     contracts::psp34::extensions::enumerable::*,
@@ -19,16 +22,19 @@ pub type MintingRef = dyn Minting;
 #[openbrush::wrapper]
 pub type MintingLazyRef = dyn MintingLazy;
 
+#[openbrush::wrapper]
+pub type MintingAutoIndexRef = dyn MintingAutoIndex;
+
 /// Trait definitions for core Minting functions
 #[openbrush::trait_definition]
 pub trait Minting {
-    /// Mint one or more tokens.
+    /// Mint a single token
     #[ink(message)]
-    fn mint(&mut self, to: AccountId) -> Result<Id>;
+    fn mint(&mut self, to: AccountId, token_id: Id) -> Result<()>;
 
-    /// Mint many to specified account.
+    /// Mint one or more tokens
     #[ink(message)]
-    fn mint_many(&mut self, to: AccountId, mint_amount: u64) -> Result<(Id, Id)>;
+    fn mint_many(&mut self, to: AccountId, token_ids: Vec<Id>) -> Result<()>;
 
     /// Assign metadata to specified token.
     #[ink(message)]
@@ -65,4 +71,16 @@ pub trait MintingLazy {
     /// Get URI for the token Id.
     #[ink(message)]
     fn token_uri(&self, token_id: u64) -> Result<PreludeString>;
+}
+
+/// Trait definitions for MintingAutoIndex functions
+#[openbrush::trait_definition]
+pub trait MintingAutoIndex {
+    /// Mint one token to the specified account, with auto-generated Id
+    #[ink(message)]
+    fn mint(&mut self, to: AccountId) -> Result<Id>;
+
+    /// Mint one or more tokens to the specified account, with auto-generated Ids
+    #[ink(message)]
+    fn mint_many(&mut self, to: AccountId, mint_amount: u64) -> Result<(Id, Id)>;
 }

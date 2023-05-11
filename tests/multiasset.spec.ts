@@ -36,7 +36,7 @@ describe("RMRK Multi Asset tests", () => {
   let gem: Rmrk;
   let catalog: Contract;
 
-  beforeEach(async function (): Promise<void> {
+  beforeEach(async function(): Promise<void> {
     api = await ApiPromise.create({ provider: wsProvider, noInitWarn: true });
     deployer = keyring.addFromUri("//Alice");
     bob = keyring.addFromUri("//Bob");

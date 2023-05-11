@@ -27,6 +27,7 @@ pub mod rmrk_example_equippable {
 
     use rmrk::{
         config,
+        extensions::*,
         query::*,
         storage::*,
         traits::*,
@@ -207,6 +208,8 @@ pub mod rmrk_example_equippable {
         multiasset: MultiAssetData,
         #[storage_field]
         minting: MintingData,
+        #[storage_field]
+        minting_autoindex: MintingAutoIndexData,
         #[storage_field]
         equippable: EquippableData,
     }

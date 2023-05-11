@@ -8,11 +8,11 @@ use rmrk_common::errors::{
 use ink::prelude::string::String as PreludeString;
 
 use openbrush::{
-    contracts::psp34::extensions::enumerable::*,
-    traits::{
-        AccountId,
-        Storage,
+    contracts::psp34::{
+        balances::BalancesManager,
+        extensions::enumerable::*,
     },
+    traits::Storage,
 };
 
 /// Trait definitions for Minting internal functions.
@@ -22,12 +22,6 @@ pub trait Internal {
 
     /// Check amount of tokens to be minted.
     fn _check_amount(&self, mint_amount: u64) -> Result<()>;
-
-    /// Mint next token to specified account
-    fn _mint(&mut self, to: AccountId) -> Result<Id>;
-
-    /// Mint many tokens to specified account
-    fn _mint_many(&mut self, to: AccountId, mint_amount: u64) -> Result<(Id, Id)>;
 
     /// Get URI for the token Id.
     fn _token_uri(&self, token_id: u64) -> Result<PreludeString>;
@@ -59,46 +53,21 @@ where
         if mint_amount == 0 {
             return Err(RmrkError::CannotMintZeroTokens.into())
         }
+
         if let Some(amount) = self
-            .data::<MintingData>()
-            .last_token_id
-            .checked_add(mint_amount)
+            .data::<psp34::Data<enumerable::Balances>>()
+            .balances
+            .total_supply()
+            .checked_add(mint_amount as u128)
         {
             return match self.data::<MintingData>().max_supply {
-                Some(max_supply) if amount <= max_supply => Ok(()),
+                Some(max_supply) if amount <= max_supply as u128 => Ok(()),
                 Some(0) | None => Ok(()),
                 _ => Err(RmrkError::CollectionIsFull.into()),
             }
         }
 
         Err(RmrkError::CollectionIsFull.into())
-    }
-
-    /// Mint next token to specified account
-    default fn _mint(&mut self, to: AccountId) -> Result<Id> {
-        let token_id = self
-            .data::<MintingData>()
-            .last_token_id
-            .checked_add(1)
-            .ok_or(RmrkError::CollectionIsFull)?;
-
-        self._mint_to(to, Id::U64(token_id))?;
-
-        self.data::<MintingData>().last_token_id = token_id;
-
-        Ok(Id::U64(token_id))
-    }
-
-    /// Mint many tokens to specified account
-    default fn _mint_many(&mut self, to: AccountId, mint_amount: u64) -> Result<(Id, Id)> {
-        let next_to_mint = self.data::<MintingData>().last_token_id + 1; // first mint id is 1
-        let mint_offset = next_to_mint + mint_amount;
-
-        for _ in next_to_mint..mint_offset {
-            self._mint(to)?;
-        }
-
-        Ok((Id::U64(next_to_mint), Id::U64(mint_offset - 1)))
     }
 
     /// Get URI for the token Id.

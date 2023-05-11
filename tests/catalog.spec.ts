@@ -26,7 +26,7 @@ describe("RMRK Catalog tests", () => {
   let deployer: KeyringPair;
   let catalog: Contract;
 
-  beforeEach(async function (): Promise<void> {
+  beforeEach(async function(): Promise<void> {
     api = await ApiPromise.create({ provider: wsProvider, noInitWarn: true });
     deployer = keyring.addFromUri("//Alice");
     catalogFactory = new Catalog_Factory(api, deployer);
@@ -59,9 +59,11 @@ describe("RMRK Catalog tests", () => {
     ];
 
     // add parts to catalog
+    //
+    const PART_IDS = [0, 1]
     await catalog
       .withSigner(deployer)
-      .tx.addPartList(PART_LIST);
+      .tx["catalog::addPartList"](PART_IDS, PART_LIST);
     expect((await catalog.query.getPartsCount())?.value.unwrap()).to.be.equal(2);
 
     // should fail since no addresses are added to equippable list for part 0

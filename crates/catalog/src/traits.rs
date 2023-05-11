@@ -17,12 +17,15 @@ use openbrush::traits::{
 #[openbrush::wrapper]
 pub type CatalogRef = dyn Catalog;
 
+#[openbrush::wrapper]
+pub type CatalogAutoIndexRef = dyn CatalogAutoIndex;
+
 /// Trait definitions for Catalog
 #[openbrush::trait_definition]
 pub trait Catalog {
     /// Add one or more parts to the Catalog
     #[ink(message)]
-    fn add_part_list(&mut self, parts: Vec<Part>) -> Result<()>;
+    fn add_part_list(&mut self, part_ids: Vec<PartId>, parts: Vec<Part>) -> Result<()>;
 
     /// Add collection address(es) that can be used to equip given `PartId`.
     #[ink(message)]
@@ -50,7 +53,7 @@ pub trait Catalog {
 
     /// Get the list of all parts.
     #[ink(message)]
-    fn get_parts_count(&self) -> PartId;
+    fn get_parts_count(&self) -> u32;
 
     /// Get the part details for the given PartId.
     #[ink(message)]
@@ -63,4 +66,12 @@ pub trait Catalog {
     /// Checks if the given `PartId` can be equipped by any collection
     #[ink(message)]
     fn is_equippable_by_all(&self, part_id: PartId) -> bool;
+}
+
+/// Trait definition for CatalogAutoIndex functions
+#[openbrush::trait_definition]
+pub trait CatalogAutoIndex {
+    /// Add one or more parts to the Catalog, with auto-generated PartIds
+    #[ink(message)]
+    fn add_part_list(&mut self, parts: Vec<Part>) -> Result<(PartId, PartId)>;
 }
