@@ -261,7 +261,6 @@ pub mod catalog_example {
                 CatalogAutoIndex::add_part_list(&mut catalog, vec![]),
                 Err(RmrkError::BadConfig.into())
             );
-
         }
 
         #[ink::test]
