@@ -232,6 +232,9 @@ describe("RMRK Merged Equippable", () => {
         [4]
       );
     emit(addAssetResult, "AssetSet", { asset: 1 });
+    expect(
+      (await avatar.withSigner(deployer).query.getAssetAndEquippableData({ u64: 1 }, defaultAssetId))?.value.unwrap().ok.catalog
+    ).to.be.equal(catalog.address);
 
     console.log(" Added an asset to avatar");
 
@@ -283,6 +286,16 @@ describe("RMRK Merged Equippable", () => {
     expect(
       (await sword.withSigner(deployer).query.totalAssets())?.value.unwrap().toString()
     ).to.be.equal("3");
+
+    expect(
+      (await sword.withSigner(deployer).query.getAssetAndEquippableData({ u64: 1 }, equippableWoodenSword))?.value.unwrap().ok.catalog
+    ).to.be.equal(catalog.address);
+    expect(
+      (await sword.withSigner(deployer).query.getAssetAndEquippableData({ u64: 1 }, equippableCopperSword))?.value.unwrap().ok.catalog
+    ).to.be.equal(catalog.address);
+    expect(
+      (await sword.withSigner(deployer).query.getAssetAndEquippableData({ u64: 1 }, equippableKatanaSword))?.value.unwrap().ok.catalog
+    ).to.be.equal(catalog.address);
     console.log(" Added 3 sword assets");
 
     console.log("Setting valid parent reference ID");
