@@ -239,10 +239,7 @@ pub mod rmrk_contract_minting {
             assert_eq!(2, ink::env::test::recorded_events().count());
 
             // token_uri for rmrk mint works
-            assert_eq!(
-                rmrk.token_uri(2),
-                Ok(RMRK_METADATA.to_owned())
-            );
+            assert_eq!(rmrk.token_uri(2), Ok(RMRK_METADATA.to_owned()));
         }
 
         #[ink::test]

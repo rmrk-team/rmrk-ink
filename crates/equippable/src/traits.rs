@@ -99,6 +99,7 @@ pub trait Equippable {
     /// # Returns:
     ///    * asset_id metadataURI,
     ///    * EquippableAsset
+    ///    * catalog address
     #[ink(message)]
     fn get_asset_and_equippable_data(&self, token_id: Id, asset_id: AssetId) -> Result<Asset>;
 

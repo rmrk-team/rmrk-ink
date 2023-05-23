@@ -35,6 +35,9 @@ pub struct Asset {
 
     /// list of parts for this asset
     pub part_ids: Vec<PartId>,
+
+    /// The catalog to which the asset belongs to.
+    pub catalog: Option<AccountId>,
 }
 
 /// Part's details

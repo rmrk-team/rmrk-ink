@@ -86,12 +86,7 @@ where
         )?;
 
         // Check from base perspective. If catalog for this asset is None, then it is not equippable.
-        match self
-            .data::<MultiAssetData>()
-            .asset_catalog_address
-            .get(asset_id)
-            .ok_or(RmrkError::CatalogNotFoundForAsset)?
-        {
+        match self.get_asset_catalog_address(asset_id) {
             Some(catalog_address) => {
                 CatalogRef::ensure_equippable(&catalog_address, slot_part_id, child_nft.0)?;
             }
