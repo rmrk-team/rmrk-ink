@@ -1,6 +1,6 @@
 [package]
-name = "rmrk_inkredible_equippable_lazy"
-version = "0.6.1"
+name = "rmrk_example_equippable_lazy"
+version = "0.6.0"
 authors = ["Stake Technologies <devops@stake.co.jp>"]
 edition = "2021"
 
