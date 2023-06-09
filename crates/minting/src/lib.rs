@@ -114,22 +114,20 @@ where
         + Utils,
 {
     /// Purchase one token.
-    default fn mint(&mut self) -> Result<()> {
+    default fn mint(&mut self) -> Result<Id> {
         self._check_amount(1)?;
         self._check_value(Self::env().transferred_value(), 1)?;
-        self._mint(Self::env().caller())?;
-
-        Ok(())
+        
+        self._mint(Self::env().caller())
     }
 
     /// Purchase many tokens.
     #[modifiers(non_reentrant)]
-    default fn mint_many(&mut self, mint_amount: u64) -> Result<()> {
+    default fn mint_many(&mut self, mint_amount: u64) -> Result<(Id, Id)> {
         self._check_amount(mint_amount)?;
         self._check_value(Self::env().transferred_value(), mint_amount)?;
-        self._mint_many(Self::env().caller(), mint_amount)?;
-
-        Ok(())
+       
+        self._mint_many(Self::env().caller(), mint_amount)
     }
 
     /// Get max supply of tokens.
