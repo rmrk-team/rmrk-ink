@@ -240,7 +240,7 @@ pub mod rmrk_contract_minting {
 
             // token_uri for rmrk mint works
             assert_eq!(
-                rmrk.token_uri(2),
+                rmrk.token_uri(Id::U64(2)),
                 Ok(RMRK_METADATA.to_owned())
             );
         }
@@ -330,15 +330,15 @@ pub mod rmrk_contract_minting {
 
             assert!(rmrk.mint(accounts.alice, Id::U64(1)).is_ok());
             // return error if request is for not yet minted token
-            assert_eq!(rmrk.token_uri(42), Err(PSP34Error::TokenNotExists.into()));
+            assert_eq!(rmrk.token_uri(Id::U64(42)), Err(PSP34Error::TokenNotExists.into()));
             // return error if metadata is net yet assigned
-            assert_eq!(rmrk.token_uri(1), Err(RmrkError::UriNotFound.into()));
+            assert_eq!(rmrk.token_uri(Id::U64(1)), Err(RmrkError::UriNotFound.into()));
 
             assert!(rmrk
                 .assign_metadata(Id::U64(1), String::from(RMRK_METADATA))
                 .is_ok());
 
-            assert_eq!(rmrk.token_uri(1), Ok(PreludeString::from(RMRK_METADATA)));
+            assert_eq!(rmrk.token_uri(Id::U64(1)), Ok(PreludeString::from(RMRK_METADATA)));
         }
     }
 }

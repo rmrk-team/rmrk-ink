@@ -77,15 +77,10 @@ pub trait Query: DefaultEnv {
 
     #[ink(message)]
     fn get_token(&self, id: Id) -> Token {
-        let id_u64 = match id {
-            Id::U64(id) => id.clone(),
-            _ => panic!("expecting Id::U64"),
-        };
-
         let collection_id = <Self as DefaultEnv>::env().account_id();
 
         let token_uri = nested_deep_result_unwrap_or_default(
-            MintingRef::token_uri_builder(&collection_id, id_u64)
+            MintingRef::token_uri_builder(&collection_id, id.clone())
                 .call_flags(ink::env::CallFlags::default().set_allow_reentry(true))
                 .try_invoke(),
         );

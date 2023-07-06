@@ -46,7 +46,7 @@ pub trait Minting {
 
     /// Get URI for the token Id.
     #[ink(message)]
-    fn token_uri(&self, token_id: u64) -> Result<PreludeString>;
+    fn token_uri(&self, token_id: Id) -> Result<PreludeString>;
 }
 
 /// Trait definitions for lazy Minting functions
@@ -70,7 +70,7 @@ pub trait MintingLazy {
 
     /// Get URI for the token Id.
     #[ink(message)]
-    fn token_uri(&self, token_id: u64) -> Result<PreludeString>;
+    fn token_uri(&self, token_id: Id) -> Result<PreludeString>;
 }
 
 /// Trait definitions for MintingAutoIndex functions
