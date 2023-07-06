@@ -24,7 +24,7 @@ pub trait Internal {
     fn _check_amount(&self, mint_amount: u64) -> Result<()>;
 
     /// Get URI for the token Id.
-    fn _token_uri(&self, token_id: u64) -> Result<PreludeString>;
+    fn _token_uri(&self, token_id: Id) -> Result<PreludeString>;
 }
 
 /// Helper trait for Minting
@@ -71,10 +71,8 @@ where
     }
 
     /// Get URI for the token Id.
-    default fn _token_uri(&self, token_id: u64) -> Result<PreludeString> {
-        self.data::<MintingData>()
-            .nft_metadata
-            .get(Id::U64(token_id))
+    default fn _token_uri(&self, token_id: Id) -> Result<PreludeString> {
+        self.get_attribute(token_id, PreludeString::from("token_uri").into())
             .and_then(|token_uri| PreludeString::from_utf8(token_uri).ok())
             .ok_or(RmrkError::UriNotFound.into())
     }

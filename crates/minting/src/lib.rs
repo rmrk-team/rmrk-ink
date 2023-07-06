@@ -18,12 +18,9 @@ use rmrk_common::{
     utils::Utils,
 };
 
-use ink::{
-    prelude::{
-        string::String as PreludeString,
-        vec::Vec,
-    },
-    storage::Mapping,
+use ink::prelude::{
+    string::String as PreludeString,
+    vec::Vec,
 };
 
 use openbrush::{
@@ -59,7 +56,6 @@ pub const STORAGE_MINTING_KEY: u32 = openbrush::storage_unique_key!(MintingData)
 pub struct MintingData {
     pub max_supply: Option<u64>,
     pub price_per_mint: Balance,
-    pub nft_metadata: Mapping<Id, String>,
 }
 
 impl<T> Minting for T
@@ -94,9 +90,7 @@ where
     /// Assign metadata to specified token.
     #[modifiers(only_role(CONTRIBUTOR))]
     default fn assign_metadata(&mut self, token_id: Id, metadata: String) -> Result<()> {
-        self.data::<MintingData>()
-            .nft_metadata
-            .insert(token_id, &metadata);
+        self._set_attribute(token_id, String::from("token_uri"), metadata);
         Ok(())
     }
 
@@ -106,8 +100,8 @@ where
     }
 
     /// Get URI for the token Id.
-    default fn token_uri(&self, token_id: u64) -> Result<PreludeString> {
-        self.ensure_exists_and_get_owner(&Id::U64(token_id))?;
+    default fn token_uri(&self, token_id: Id) -> Result<PreludeString> {
+        self.ensure_exists_and_get_owner(&token_id)?;
         self._token_uri(token_id)
     }
 }
@@ -144,8 +138,8 @@ where
     }
 
     /// Get URI for the token Id.
-    default fn token_uri(&self, token_id: u64) -> Result<PreludeString> {
-        self.ensure_exists_and_get_owner(&Id::U64(token_id))?;
+    default fn token_uri(&self, token_id: Id) -> Result<PreludeString> {
+        self.ensure_exists_and_get_owner(&token_id)?;
         self._token_uri(token_id)
     }
 
