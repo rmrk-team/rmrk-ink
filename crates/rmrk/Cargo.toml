@@ -8,14 +8,10 @@ edition = "2021"
 ink = { version = "4.1.0", default-features = false }
 scale = { package = "parity-scale-codec", version = "3", default-features = false, features = ["derive"] }
 scale-info = { version = "2.3", default-features = false, features = ["derive"], optional = true }
-openbrush = { tag = "3.1.0", git = "https://github.com/727-Ventures/openbrush-contracts", default-features = false, features = ["access_control", "reentrancy_guard", "psp34"] }
 
+rmrk_storage = { path = "../storage", default-features = false }
+rmrk_traits = { path = "../traits", default-features = false }
 rmrk_minting = { path = "../minting", default-features = false }
-rmrk_multiasset = { path = "../multiasset", default-features = false }
-rmrk_nesting = { path = "../nesting", default-features = false }
-rmrk_common = { path = "../common", default-features = false }
-rmrk_equippable = { path = "../equippable", default-features = false }
-rmrk_catalog = { path = "../catalog", default-features = false }
 
 [lib]
 path = "src/lib.rs"
@@ -28,13 +24,10 @@ std = [
     "scale/std",
     "scale-info",
     "scale-info/std",
-    "openbrush/std",
-    "rmrk_common/std",
-    "rmrk_catalog/std",
+
+    "rmrk_storage/std",
+    "rmrk_traits/std",
     "rmrk_minting/std",
-    "rmrk_multiasset/std",
-    "rmrk_nesting/std",
-    "rmrk_equippable/std",
 ]
 
 

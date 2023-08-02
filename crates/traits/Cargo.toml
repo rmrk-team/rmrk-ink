@@ -1,5 +1,5 @@
 [package]
-name = "rmrk_minting"
+name = "rmrk_traits"
 version = "0.6.0"
 authors = ["Stake Technologies <devops@stake.co.jp>"]
 edition = "2021"
@@ -8,10 +8,7 @@ edition = "2021"
 ink = { version = "4.1.0", default-features = false } 
 scale = { package = "parity-scale-codec", version = "3", default-features = false, features = ["derive"] }
 scale-info = { version = "2.3", default-features = false, features = ["derive"], optional = true }
-
-rmrk_storage = { path = "../storage", default-features = false }
-rmrk_traits = { path = "../traits", default-features = false }
-
+primitive-types = "0.12.1"
 
 [lib]
 path = "src/lib.rs"

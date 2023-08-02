@@ -1,11 +1,8 @@
 [workspace]
 members = [
-    "crates/catalog",
-    "crates/common",
-    "crates/equippable",
+    "crates/storage",
     "crates/minting",
-    "crates/multiasset",
-    "crates/nesting",
     "crates/rmrk",
-    "examples/*",
+    "crates/traits",
+    "examples/mintable",
 ]
