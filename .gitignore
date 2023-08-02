@@ -229,5 +229,6 @@ oclif.manifest.json
 artifacts/
 old_package.json
 yarn.lock
+.direnv
 
 
